@@ -1,0 +1,12 @@
+*.pyc
+*.h5
+*.xdmf
+*.gz
+*.ply
+
+# private files
+private_*
+
+# pixi environments
+.pixi
+*.egg-info
