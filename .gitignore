@@ -3,6 +3,9 @@
 *.xdmf
 *.gz
 *.ply
+*.elem
+*.lon
+*.pts
 
 # raw mesh files
 data/cn617_*
