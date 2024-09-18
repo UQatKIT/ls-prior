@@ -4,6 +4,12 @@
 *.gz
 *.ply
 
+# raw mesh files
+data/cn617_*
+
+# figures
+figures/*
+
 # private files
 private_*
 

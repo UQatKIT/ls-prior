@@ -1,11 +1,24 @@
 import warnings
 
-import dolfin as dl
 import numpy as np
+from dolfin import (
+    Argument,
+    Function,
+    FunctionSpace,
+    Matrix,
+    Mesh,
+    PETScKrylovSolver,
+    TestFunction,
+    TrialFunction,
+    UserExpression,
+    Vector,
+    assemble,
+    parameters,
+)
 from ffc.quadrature.deprecation import QuadratureRepresentationDeprecationWarning
 from ufl import FiniteElement, Form, ds, dx, grad, inner
 
-from prior_fields.converter import (
+from prior_fields.prior.converter import (
     create_triangle_mesh_from_coordinates,
     function_to_numpy,
     matrix_to_numpy,
@@ -13,13 +26,13 @@ from prior_fields.converter import (
     numpy_to_vector,
     vector_to_numpy,
 )
-from prior_fields.dtypes import Array1d, ArrayNx3
-from prior_fields.utils import (
+from prior_fields.prior.dtypes import Array1d, ArrayNx3
+from prior_fields.prior.linalg import multiply_matrices
+from prior_fields.prior.parameterization import (
     get_kappa_from_ell,
     get_tau_from_sigma_and_ell,
-    multiply_matrices,
-    random_normal_vector,
 )
+from prior_fields.prior.random import random_normal_vector
 
 warnings.simplefilter("ignore", QuadratureRepresentationDeprecationWarning)
 
@@ -90,11 +103,11 @@ class BiLaplacianPrior:
 
     def __init__(
         self,
-        mesh: dl.Mesh,
-        sigma: float | dl.Vector,
-        ell: float | dl.Vector,
-        mean: dl.Vector | None = None,
-        theta: dl.UserExpression | None = None,
+        mesh: Mesh,
+        sigma: float | Vector,
+        ell: float | Vector,
+        mean: Vector | None = None,
+        theta: UserExpression | None = None,
         seed: int | None = None,
     ) -> None:
         """Construct a bi-Laplacian prior.
@@ -121,7 +134,7 @@ class BiLaplacianPrior:
         """
         self._validate_inputs(sigma, ell)
 
-        self.Vh = dl.FunctionSpace(mesh, "CG", 1)
+        self.Vh = FunctionSpace(mesh, "CG", 1)
         trial, test = self._init_trial_test_functions(self.Vh)
 
         self.kappa, self.tau, self.beta = self._init_parameters(sigma, ell)
@@ -137,12 +150,12 @@ class BiLaplacianPrior:
 
         self.mean = mean
         if self.mean is None:
-            self.mean = dl.Vector(self.A.mpi_comm())
+            self.mean = Vector(self.A.mpi_comm())
             self.A.init_vector(self.mean, 0)
 
         self.prng = np.random.default_rng(seed=seed)
 
-    def sample(self) -> dl.Function:
+    def sample(self) -> Function:
         """Draw sample from bi-Laplacian prior.
 
         Returns
@@ -154,7 +167,7 @@ class BiLaplacianPrior:
         noise = random_normal_vector(dim=self.sqrtM.size(1), prng=self.prng)  # ~ N(0, I)
         return self._transform_standard_normal_noise_with_mean_and_covariance(noise)
 
-    def cost(self, m: dl.Vector) -> float:
+    def cost(self, m: Vector) -> float:
         """
         Compute cost functional
         :math:`0.5 * || m - mean ||_Q^2 = 0.5 * (m - mean)'Q(m - mean)`,
@@ -178,7 +191,7 @@ class BiLaplacianPrior:
 
         return 0.5 * Qd.inner(d)
 
-    def grad(self, m: dl.Vector) -> dl.Vector:
+    def grad(self, m: Vector) -> Vector:
         """Compute gradient of discrete cost functional :math:`A M^{-1} A (m - mean)`.
 
         Parameters
@@ -198,7 +211,7 @@ class BiLaplacianPrior:
 
         return Qd
 
-    def compute_hessian_vector_product(self, d: dl.Vector) -> dl.Vector:
+    def compute_hessian_vector_product(self, d: Vector) -> Vector:
         """Multiply hessian to given direction vector.
 
         Parameters
@@ -221,7 +234,7 @@ class BiLaplacianPrior:
         if not (isinstance(ell, float) or hasattr(ell, "get_local")):
             raise TypeError(f"Got ell of type {type(ell)}, expected float or dl.Vector.")
 
-    def _init_parameters(self, sigma: float | dl.Vector, ell: float | dl.Vector):
+    def _init_parameters(self, sigma: float | Vector, ell: float | Vector):
         if not isinstance(sigma, float):
             sigma = vector_to_numpy(sigma)
         if not isinstance(ell, float):
@@ -241,7 +254,7 @@ class BiLaplacianPrior:
 
     @staticmethod
     def _init_solver(
-        solver, operator: dl.cpp.la.Matrix, max_iter: int = 1000, rel_tol: float = 1e-12
+        solver, operator: Matrix, max_iter: int = 1000, rel_tol: float = 1e-12
     ):
         solver.set_operator(operator)
         solver.parameters["maximum_iterations"] = max_iter
@@ -250,10 +263,8 @@ class BiLaplacianPrior:
         solver.parameters["nonzero_initial_guess"] = False
 
     @staticmethod
-    def _init_trial_test_functions(
-        Vh,
-    ) -> tuple[dl.function.argument.Argument, dl.function.argument.Argument]:
-        return dl.TrialFunction(Vh), dl.TestFunction(Vh)
+    def _init_trial_test_functions(Vh) -> tuple[Argument, Argument]:
+        return TrialFunction(Vh), TestFunction(Vh)
 
     def _init_variational_forms(self, trial, test) -> tuple[Form, Form]:
         """Initialize variational forms of the operators M & A."""
@@ -272,8 +283,8 @@ class BiLaplacianPrior:
 
     def _init_operator(self, varf, preconditioner):
         """Assemble variational form of an operator, initialize corresponding solver."""
-        mat = dl.assemble(varf)
-        solver = dl.PETScKrylovSolver("cg", preconditioner)
+        mat = assemble(varf)
+        solver = PETScKrylovSolver("cg", preconditioner)
         self._init_solver(solver, mat)
         return mat, solver
 
@@ -282,14 +293,14 @@ class BiLaplacianPrior:
         element = FiniteElement(
             "Quadrature", self.Vh.mesh().ufl_cell(), qdegree, quad_scheme="default"
         )
-        return dl.FunctionSpace(self.Vh.mesh(), element)
+        return FunctionSpace(self.Vh.mesh(), element)
 
-    def _init_sqrtm(self, test: dl.function.argument.Argument):
+    def _init_sqrtm(self, test: Argument):
         """Compute matrix that behaves like :math:`\\srqt{M}`."""
-        old_qdegree = dl.parameters["form_compiler"]["quadrature_degree"]
-        representation_old = dl.parameters["form_compiler"]["representation"]
-        dl.parameters["form_compiler"]["quadrature_degree"] = -1
-        dl.parameters["form_compiler"]["representation"] = "quadrature"
+        old_qdegree = parameters["form_compiler"]["quadrature_degree"]
+        representation_old = parameters["form_compiler"]["representation"]
+        parameters["form_compiler"]["quadrature_degree"] = -1
+        parameters["form_compiler"]["representation"] = "quadrature"
         metadata = {"quadrature_degree": 2}
 
         Qh = self._init_quadrature_space(qdegree=metadata["quadrature_degree"])
@@ -298,7 +309,7 @@ class BiLaplacianPrior:
         # points. They are zero everywhere but at the corresponding quadrature point,
         # i.e., non-overlapping.
 
-        M_Qh = dl.assemble(inner(ph, qh) * dx(metadata=metadata))  # diagonal matrix
+        M_Qh = assemble(inner(ph, qh) * dx(metadata=metadata))  # diagonal matrix
 
         # make M_Qh diagonal to easily invert it and compute the sqrt
         diag_M_Qh = np.diag(matrix_to_numpy(M_Qh))
@@ -306,18 +317,18 @@ class BiLaplacianPrior:
         M_Qh.set_diagonal(numpy_to_vector(1 / np.sqrt(diag_M_Qh)))
 
         # projects the elements from Qh to Vh
-        M_mixed = dl.assemble(inner(ph, test) * dx(metadata=metadata))
+        M_mixed = assemble(inner(ph, test) * dx(metadata=metadata))
 
         # not actually the square root,
         # but behaves similarly in further computations and is computationally efficient
         self.sqrtM = multiply_matrices(M_mixed, M_Qh)
 
-        dl.parameters["form_compiler"]["quadrature_degree"] = old_qdegree
-        dl.parameters["form_compiler"]["representation"] = representation_old
+        parameters["form_compiler"]["quadrature_degree"] = old_qdegree
+        parameters["form_compiler"]["representation"] = representation_old
 
     def _transform_standard_normal_noise_with_mean_and_covariance(
-        self, noise: dl.Vector
-    ) -> dl.Function:
+        self, noise: Vector
+    ) -> Function:
         """
         Transform standard normal noise into coefficient vector with precision matrix
         :math:`(M^{-1}A)^2`  and mean `m`.
@@ -327,19 +338,19 @@ class BiLaplacianPrior:
         noise : dl.Vector
             Vector of length Qh.dim() with standard normal noise
         """
-        s = dl.Vector(self.A.mpi_comm())
+        s = Vector(self.A.mpi_comm())
         self.A.init_vector(s, 0)
         rhs = self.sqrtM * noise
         self.Asolver.solve(s, rhs)
 
         s.axpy(1.0, self.mean)
 
-        f = dl.Function(self.Vh)
+        f = Function(self.Vh)
         f.vector().axpy(1.0, s)
 
         return f
 
-    def _multiply_with_precision(self, d: dl.Vector) -> dl.Vector:
+    def _multiply_with_precision(self, d: Vector) -> Vector:
         """Multiply vector with precision matrix :math:`Q = C^{-1} = A M^{-1} A`.
 
         Parameters
@@ -352,15 +363,15 @@ class BiLaplacianPrior:
         dl.Vector
             :math:`Qd = C^{-1}d = A M^{-1} A d`
         """
-        Ad = dl.Vector(self.A.mpi_comm())
+        Ad = Vector(self.A.mpi_comm())
         self.A.init_vector(Ad, 0)
         self.A.mult(d, Ad)
 
-        MinvAd = dl.Vector(self.A.mpi_comm())
+        MinvAd = Vector(self.A.mpi_comm())
         self.A.init_vector(MinvAd, 1)
         self.Msolver.solve(MinvAd, Ad)
 
-        Qd = dl.Vector(self.A.mpi_comm())
+        Qd = Vector(self.A.mpi_comm())
         self.A.init_vector(Qd, 0)
         self.A.mult(MinvAd, Qd)
 
@@ -383,7 +394,7 @@ class BiLaplacianPriorNumpyWrapper:
     V : ArrayNx3
         Vertices of the mesh on which the finite element space is defined
     F : ArrayNx3
-        Indices of vertices in V that are connected into facets.
+        Indices of vertices in V that are connected into faces.
     sigma : float | Array1d
         Marginal standard deviation.
         Constant in stationary case. Use Array1d to model non-stationarity.
@@ -412,7 +423,7 @@ class BiLaplacianPriorNumpyWrapper:
         V : ArrayNx3
             Vertices of the mesh on which the finite element space is defined
         F : ArrayNx3
-            Indices of vertices in V that are connected into facets.
+            Indices of vertices in V that are connected into faces.
         sigma : float | Array1d
             Marginal standard deviation.
             Constant in stationary case. Use Array1d to model non-stationarity.
@@ -513,7 +524,7 @@ class BiLaplacianPriorNumpyWrapper:
             raise TypeError(f"Got ell of type {type(ell)}, expected float or Array1d.")
 
 
-class AnisotropicTensor2d(dl.UserExpression):
+class AnisotropicTensor2d(UserExpression):
     """User expression to model anisotropy in :math:`\\mathbb{R}^2`.
 
     Represents an anisotropic tensor of the form
@@ -552,7 +563,7 @@ class AnisotropicTensor2d(dl.UserExpression):
         return (2, 2)
 
 
-class AnisotropicTensor3d(dl.UserExpression):
+class AnisotropicTensor3d(UserExpression):
     """User expression to model anisotropy in :math:`\\mathbb{R}^3`."""
 
     def __init__(self, **kwargs):

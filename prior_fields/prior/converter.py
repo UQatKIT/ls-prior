@@ -1,8 +1,3 @@
-from pathlib import Path
-from typing import Literal
-
-import meshio
-import numpy as np
 from dolfin import (
     Expression,
     Function,
@@ -17,7 +12,7 @@ from dolfin import (
 )
 from petsc4py.PETSc import Mat  # type: ignore
 
-from prior_fields.dtypes import Array1d, Array2d, ArrayNx2, ArrayNx3
+from prior_fields.prior.dtypes import Array1d, Array2d, ArrayNx2, ArrayNx3
 
 
 ####################################
@@ -104,50 +99,3 @@ def create_triangle_mesh_from_coordinates(V: ArrayNx2 | ArrayNx3, F: ArrayNx3) -
     editor.close()
 
     return mesh
-
-
-######################
-# Convert mesh files #
-######################
-def convert_mesh_files(
-    filename: str,
-    input_type: Literal[".vtk", ".ply"],
-    output_type: Literal[".vtk", ".ply", ".xdmf"],
-    path: Path = Path("data/"),
-) -> None:
-    """Convert mesh file to different file type using meshio.
-
-    Notes
-    -----
-    This can be used to obtain a mesh with an ordering as required in
-    `potpourri3d.MeshVectorHeatSolver()`. Meshio takes care of an appropriate ordering
-    when saving a mesh in the .ply format.
-
-    Also `potpourri3d.read_mesh()` supports .ply files, but doesn't support .vtk and
-    .xdmf files.
-
-    Parameters
-    ----------
-    filename : str
-        Name of mesh file (input and output)
-    input_type : str
-        Path extension defining the input file type.
-    output_type : str
-        Path extension defining the output file type.
-    path : Path
-        Location of input and output file. Defaults to `PosixPath('data')`.
-    """
-    mesh = meshio.read(path / (filename + input_type))
-
-    for key in mesh.cell_data:
-        mesh.cell_data[key][0] = mesh.cell_data[key][0].astype(np.float32)
-
-    cell_type = mesh.cells[0].type
-    cells = mesh.get_cells_type(cell_type)
-    out_mesh = meshio.Mesh(
-        points=mesh.points.astype(np.float32),
-        cells={cell_type: cells},
-        cell_data={key: data for key, data in mesh.cell_data.items()},
-    )
-
-    meshio.write(path / (filename + output_type), out_mesh)

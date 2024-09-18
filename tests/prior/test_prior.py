@@ -3,15 +3,15 @@ import pytest
 from dolfin import BoundaryMesh, Expression, FunctionSpace, Mesh, UnitSquareMesh
 from potpourri3d import read_mesh
 
-from prior_fields.converter import (
+from prior_fields.prior.converter import (
     expression_to_vector,
     function_to_numpy,
     numpy_to_vector,
     str_to_vector,
     vector_to_numpy,
 )
-from prior_fields.prior import BiLaplacianPrior, BiLaplacianPriorNumpyWrapper
-from prior_fields.utils import len_vector
+from prior_fields.prior.linalg import len_vector
+from prior_fields.prior.prior import BiLaplacianPrior, BiLaplacianPriorNumpyWrapper
 
 
 @pytest.fixture

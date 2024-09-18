@@ -2,9 +2,13 @@
 import numpy as np
 from dolfin import Expression, FunctionSpace, UnitSquareMesh
 
-from prior_fields.converter import expression_to_vector, str_to_function, str_to_vector
-from prior_fields.plots import plot_function
-from prior_fields.prior import AnisotropicTensor2d, BiLaplacianPrior
+from prior_fields.prior.converter import (
+    expression_to_vector,
+    str_to_function,
+    str_to_vector,
+)
+from prior_fields.prior.plots import plot_function
+from prior_fields.prior.prior import AnisotropicTensor2d, BiLaplacianPrior
 
 # %%
 # Minimal working example:
