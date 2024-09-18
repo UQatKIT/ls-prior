@@ -3,14 +3,15 @@ import matplotlib.pyplot as plt
 import numpy as np
 from dolfin import BoundaryMesh, Mesh
 
-from prior_fields.converter import function_to_numpy
-from prior_fields.plots import add_3d_vectors_to_plot, plot_function
-from prior_fields.prior import BiLaplacianPrior
-from prior_fields.utils import (
+from prior_fields.prior.converter import function_to_numpy
+from prior_fields.prior.plots import plot_function
+from prior_fields.prior.prior import BiLaplacianPrior
+from prior_fields.tensor.plots import add_3d_vectors_to_plot
+from prior_fields.tensor.transformer import (
     angles_to_3d_vector,
-    get_reference_coordinates,
-    transform_sample_to_alpha,
+    sample_to_alpha,
 )
+from prior_fields.tensor.vector_heat_method import get_reference_coordinates
 
 # %%
 sigma = 0.1
@@ -31,7 +32,7 @@ plot_function(sample, title="BiLaplacianPrior sample")
 # Gaussian field as angles of vector field #
 ############################################
 # %%
-alphas = transform_sample_to_alpha(function_to_numpy(sample))
+alphas = sample_to_alpha(function_to_numpy(sample))
 
 V = sphere_mesh.coordinates()
 F = sphere_mesh.cells()
