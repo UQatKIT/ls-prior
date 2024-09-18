@@ -5,7 +5,9 @@ from scipy.spatial import cKDTree
 from prior_fields.prior.dtypes import Array1d, ArrayNx3, ArrayNx4
 
 
-def read_endocardial_mesh_from_bilayer_model(i: int) -> tuple[ArrayNx3, ArrayNx3]:
+def read_endocardial_mesh_from_bilayer_model(
+    i: int,
+) -> tuple[ArrayNx3, ArrayNx3, ArrayNx3]:
     """Read endocardial vertices and faces from bilayer shape model file.
 
     Parameters
@@ -15,20 +17,29 @@ def read_endocardial_mesh_from_bilayer_model(i: int) -> tuple[ArrayNx3, ArrayNx3
 
     Returns
     -------
-    (ArrayNx3, ArrayNx3)
-        Vertices and faces of triangle mesh of atrial endocardium.
+    (ArrayNx3, ArrayNx3, ArrayNx3)
+        Vertices and faces of triangle mesh of atrial endocardium,
+        and the solution to Laplace's equation.
     """
     mesh_volume = meshio.read(f"data/cn617_g{i:03}/cn617_g{i:03}_LA_laplace.vtk")
     V_volume = mesh_volume.points
     F_volume = mesh_volume.get_cells_type(mesh_volume.cells[0].type)
+
+    # coordinates on endo-/epocardial axis
     phie_phi = mesh_volume.point_data["phie_phi"]
 
-    return _extract_endocardium_from_volume_mesh(V_volume, F_volume, phie_phi)
+    # solution to Laplace's equation
+    psi_ab = mesh_volume.point_data["phie_ab"]
+    psi_r = mesh_volume.point_data["phie_r"]
+    psi_v = mesh_volume.point_data["phie_v"]
+    psi = np.column_stack([psi_ab, psi_r, psi_v])
+
+    return _extract_endocardium_from_volume_mesh(V_volume, F_volume, phie_phi, psi)
 
 
 def _extract_endocardium_from_volume_mesh(
-    V: ArrayNx3, F: ArrayNx4, phie_phi: Array1d
-) -> tuple[ArrayNx3, ArrayNx3]:
+    V: ArrayNx3, F: ArrayNx4, phie_phi: Array1d, psi: ArrayNx3
+) -> tuple[ArrayNx3, ArrayNx3, ArrayNx3]:
     """Extract endocardial vertices and faces from tetrahedal mesh of atrium.
 
     Note
@@ -44,16 +55,20 @@ def _extract_endocardium_from_volume_mesh(
         Array of vertex indices that form the faces of the tessellation.
     phie_phi : Array1d
         Coordinates of vertices on the endo-/epicardial axis (endocardium = 0)
+    psi : ArrayNx3
+        Solution to Laplace's equation.
 
     Returns
     -------
-    (ArrayNx3, ArrayNx3)
-        Vertices and faces of triangle mesh of atrial endocardium.
+    (ArrayNx3, ArrayNx3, ArrayNx3)
+        Vertices and faces of triangle mesh of atrial endocardium,
+        and the solution to Laplace's equation.
     """
     # Identify endocardial points
     idx_endo_points = phie_phi == 0  # boolean array
     idx_endo = np.flatnonzero(idx_endo_points)  # int array for index mapping
     V_endo = V[idx_endo_points]
+    psi_endo = psi[idx_endo_points]
 
     # Extract tetrahedral cells with all vertices in endocardium
     idx_endo_cells = np.isin(F, idx_endo).sum(axis=1) == 3  # boolean array
@@ -68,6 +83,7 @@ def _extract_endocardium_from_volume_mesh(
     # Identify and remove unreferenced vertices
     referenced_indices = np.unique(F_endo)
     V_endo = V_endo[referenced_indices]
+    psi_endo = psi_endo[referenced_indices]
 
     # Reindex F_endo to ensure correct references after removing vertices
     reindex_map = -1 * np.ones(idx_endo.shape[0], dtype=int)
@@ -75,7 +91,7 @@ def _extract_endocardium_from_volume_mesh(
     F_endo = reindex_map[F_endo]
     F_endo = np.unique(np.sort(F_endo, axis=1), axis=0)
 
-    return V_endo, F_endo
+    return V_endo, F_endo, psi_endo
 
 
 ###############################

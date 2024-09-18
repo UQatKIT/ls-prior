@@ -47,7 +47,7 @@ from prior_fields.tensor.vector_heat_method import get_reference_coordinates
 ##################
 # %%
 i = 1  # choose geometry (indices of files in https://zenodo.org/records/5571925)
-V, F = read_endocardial_mesh_from_bilayer_model(i)
+V, F, psi = read_endocardial_mesh_from_bilayer_model(i)
 
 # %%
 F = reorder_edges_of_faces(F)
