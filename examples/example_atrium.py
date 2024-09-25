@@ -15,7 +15,7 @@ from prior_fields.tensor.vector_heat_method import get_reference_coordinates
 # Read mesh data #
 ##################
 # %%
-i = 1  # choose preprocessed geometry (data/LA_with_fibers_{i}.vtk)
+i = 1  # choose preprocessed geometry (data/shape_model/LA_with_fibers_{i}.vtk)
 V, F, fibers = read_endocardial_mesh_with_fibers(i)
 
 ##################

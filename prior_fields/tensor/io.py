@@ -21,7 +21,9 @@ def read_endocardial_mesh_from_bilayer_model(
         Vertices and faces of triangle mesh of atrial endocardium,
         and the solution to Laplace's equation.
     """
-    mesh_volume = meshio.read(f"data/cn617_g{i:03}/cn617_g{i:03}_LA_laplace.vtk")
+    mesh_volume = meshio.read(
+        f"data/shape_model/cn617_g{i:03}/cn617_g{i:03}_LA_laplace.vtk"
+    )
     V_volume = mesh_volume.points
     F_volume = mesh_volume.get_cells_type(mesh_volume.cells[0].type)
 
@@ -113,7 +115,7 @@ def get_fiber_orientation_at_vertices(i: int, V_endo: ArrayNx3) -> ArrayNx3:
     ArrayNx3
         3d vectors of fiber orientations at endocardial vertices.
     """
-    mesh = meshio.read(f"data/cn617_g{i:03}/cn617_g{i:03}_heart_fine.vtk")
+    mesh = meshio.read(f"data/shape_model/cn617_g{i:03}/cn617_g{i:03}_heart_fine.vtk")
     V_atria = mesh.points
     F_atria = mesh.get_cells_type(mesh.cells[0].type)
     fibers_atria = mesh.cell_data["fiber"][0]

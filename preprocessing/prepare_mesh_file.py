@@ -1,7 +1,7 @@
 """
 This file can be used to preprocess the bi-atrial shape models from
 https://zenodo.org/records/5571925. To do so, download a .zip file f'cn617_g{i:03}.zip',
-extract the files and move the .vtk files into f'data/cn617_g{i:03}/'.
+extract the files and move the .vtk files into f'data/shape_model/cn617_g{i:03}/'.
 
 The preprocessing steps are:
 1. Read endocardial vertices and faces from the mesh file f'cn617_g{i:03}_LA_laplace.vtk'
@@ -72,6 +72,6 @@ while not done:
 
 # %%
 out_mesh = Mesh(points=V, cells={"triangle": F}, point_data={"fiber": fibers})
-write(f"data/LA_with_fibers_{i}.vtk", out_mesh)
+write(f"data/shape_model/LA_with_fibers_{i}.vtk", out_mesh)
 
 # %%

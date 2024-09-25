@@ -9,14 +9,14 @@ def read_endocardial_mesh_with_fibers(i: int) -> tuple[ArrayNx3, ArrayNx3, Array
     Parameters
     ----------
     i : int
-        Index of mesh file (data/LA_with_fibers_{i}.vtk).
+        Index of mesh file (data/shape_model/LA_with_fibers_{i}.vtk).
 
     Returns
     -------
     (ArrayNx3, ArrayNx3, ArrayNx3)
         Arrays with vertex coordinates, faces, and fiber directions at vertices.
     """
-    mesh_data = meshio.read(f"data/LA_with_fibers_{i}.vtk")
+    mesh_data = meshio.read(f"data/shape_model/LA_with_fibers_{i}.vtk")
     V = mesh_data.points
     F = mesh_data.get_cells_type("triangle")
     fibers = mesh_data.point_data["fiber"]

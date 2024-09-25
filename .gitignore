@@ -8,7 +8,7 @@
 *.pts
 
 # raw mesh files
-data/cn617_*
+data/shape_model/cn617_*
 
 # figures
 figures/*
