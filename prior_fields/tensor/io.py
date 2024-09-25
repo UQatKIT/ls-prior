@@ -5,6 +5,7 @@ import numpy as np
 from scipy.spatial import cKDTree
 
 from prior_fields.prior.dtypes import Array1d, ArrayNx2, ArrayNx3, ArrayNx4
+from prior_fields.tensor.mapper import map_vectors_from_faces_to_vertices
 
 
 def read_meshes_from_lge_mri_data() -> tuple[
@@ -18,7 +19,8 @@ def read_meshes_from_lge_mri_data() -> tuple[
     Returns
     -------
     (dict[int, ArrayNx3], dict[int, ArrayNx3], dict[int, ArrayNx2], dict[int, ArrayNx3])
-        Vertices, faces, UACs of vertices, fiber orientations within faces.
+        Vertices, faces, and UAC and fiber orientation at the vertices
+        for the 7 geometries and the atlas (geometry 6 with mean fiber orientation).
     """
     V: dict[int, ArrayNx3] = dict()
     F: dict[int, ArrayNx3] = dict()
@@ -27,20 +29,45 @@ def read_meshes_from_lge_mri_data() -> tuple[
 
     for p in Path("data/LGE-MRI-based").iterdir():
         idx = str(p)[-1]
-        mesh = meshio.read(p / f"LA_Endo_{idx}.vtk")
-        i = int(idx) if idx.isnumeric() else 0
+        i = int(idx) if idx.isnumeric() else (0 if idx == "A" else None)
 
-        # vertices and faces
-        V[i] = mesh.points
-        F[i] = mesh.get_cells_type(mesh.cells[0].type)
+        if i:
+            V[i], F[i], uac[i], fibers[i] = (
+                get_mesh_and_point_data_from_lge_mri_based_data(p)
+            )
 
-        # universal atrial coordinates
-        alpha = mesh.point_data["alpha"]
-        beta = mesh.point_data["beta"]
-        uac[i] = np.column_stack([alpha, beta])
+    return V, F, uac, fibers
 
-        # fibers
-        fibers[i] = mesh.cell_data["fibers"][0]
+
+def get_mesh_and_point_data_from_lge_mri_based_data(
+    path: Path,
+) -> tuple[ArrayNx3, ArrayNx3, ArrayNx2, ArrayNx3]:
+    """Extract vertices, faces, uac and fibers from mesh file and map fibers to vertices.
+
+    Parameters
+    ----------
+    path : Path
+        Path to the files corresponding to a single geometry downloaded from
+        https://zenodo.org/records/3764917.
+
+    Returns
+    -------
+    (ArrayNx3, ArrayNx3, ArrayNx2, ArrayNx3)
+        Vertices, faces, and UAC and fiber orientation at the vertices.
+    """
+    mesh = meshio.read(path / f"LA_Endo_{str(path)[-1]}.vtk")
+
+    # vertices and faces
+    V = mesh.points
+    F = mesh.get_cells_type(mesh.cells[0].type)
+
+    # universal atrial coordinates
+    alpha = mesh.point_data["alpha"]
+    beta = mesh.point_data["beta"]
+    uac = np.column_stack([alpha, beta])
+
+    # fibers
+    fibers = map_vectors_from_faces_to_vertices(vecs=mesh.cell_data["fibers"][0], F=F)
 
     return V, F, uac, fibers
 
