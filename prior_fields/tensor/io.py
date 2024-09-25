@@ -1,8 +1,48 @@
+from pathlib import Path
+
 import meshio
 import numpy as np
 from scipy.spatial import cKDTree
 
-from prior_fields.prior.dtypes import Array1d, ArrayNx3, ArrayNx4
+from prior_fields.prior.dtypes import Array1d, ArrayNx2, ArrayNx3, ArrayNx4
+
+
+def read_meshes_from_lge_mri_data() -> tuple[
+    dict[int, ArrayNx3],
+    dict[int, ArrayNx3],
+    dict[int, ArrayNx2],
+    dict[int, ArrayNx3],
+]:
+    """Read meshes extracted from real data (https://zenodo.org/records/3764917).
+
+    Returns
+    -------
+    (dict[int, ArrayNx3], dict[int, ArrayNx3], dict[int, ArrayNx2], dict[int, ArrayNx3])
+        Vertices, faces, UACs of vertices, fiber orientations within faces.
+    """
+    V: dict[int, ArrayNx3] = dict()
+    F: dict[int, ArrayNx3] = dict()
+    uac: dict[int, ArrayNx2] = dict()
+    fibers: dict[int, ArrayNx3] = dict()
+
+    for p in Path("data/LGE-MRI-based").iterdir():
+        idx = str(p)[-1]
+        mesh = meshio.read(p / f"LA_Endo_{idx}.vtk")
+        i = int(idx) if idx.isnumeric() else 0
+
+        # vertices and faces
+        V[i] = mesh.points
+        F[i] = mesh.get_cells_type(mesh.cells[0].type)
+
+        # universal atrial coordinates
+        alpha = mesh.point_data["alpha"]
+        beta = mesh.point_data["beta"]
+        uac[i] = np.column_stack([alpha, beta])
+
+        # fibers
+        fibers[i] = mesh.cell_data["fibers"][0]
+
+    return V, F, uac, fibers
 
 
 def read_endocardial_mesh_from_bilayer_model(
