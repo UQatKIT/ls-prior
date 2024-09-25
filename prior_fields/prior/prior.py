@@ -2,7 +2,6 @@ import warnings
 
 import numpy as np
 from dolfin import (
-    Argument,
     Function,
     FunctionSpace,
     Matrix,
@@ -15,6 +14,7 @@ from dolfin import (
     assemble,
     parameters,
 )
+from dolfin.function.argument import Argument
 from ffc.quadrature.deprecation import QuadratureRepresentationDeprecationWarning
 from ufl import FiniteElement, Form, ds, dx, grad, inner
 
