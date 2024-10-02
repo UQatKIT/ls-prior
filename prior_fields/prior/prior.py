@@ -80,7 +80,7 @@ class BiLaplacianPrior:
     tau : float | dl.Function
         Controls marginal variance
     beta : dl.Constant
-        Coefficient in Robin boundary condition (empircally optimal)
+        Coefficient in Robin boundary condition (empirically optimal)
     mean : dl.Vector
         Prior mean. Defaults to zero.
     theta : dl.UserExpression
