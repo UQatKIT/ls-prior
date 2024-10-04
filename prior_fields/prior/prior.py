@@ -1,5 +1,3 @@
-import warnings
-
 import numpy as np
 from dolfin import (
     Function,
@@ -12,29 +10,28 @@ from dolfin import (
     UserExpression,
     Vector,
     assemble,
-    parameters,
+    assemble_local,
+    cells,
 )
 from dolfin.function.argument import Argument
-from ffc.quadrature.deprecation import QuadratureRepresentationDeprecationWarning
-from ufl import FiniteElement, Form, ds, dx, grad, inner
+from scipy.linalg import cholesky
+from scipy.sparse import block_diag, coo_array
+from ufl import Form, ds, dx, grad, inner
 
 from prior_fields.prior.converter import (
     create_triangle_mesh_from_coordinates,
     function_to_numpy,
-    matrix_to_numpy,
     numpy_to_function,
+    numpy_to_matrix_sparse,
     numpy_to_vector,
     vector_to_numpy,
 )
 from prior_fields.prior.dtypes import Array1d, ArrayNx3
-from prior_fields.prior.linalg import multiply_matrices
 from prior_fields.prior.parameterization import (
     get_kappa_from_ell,
     get_tau_from_sigma_and_ell,
 )
 from prior_fields.prior.random import random_normal_vector
-
-warnings.simplefilter("ignore", QuadratureRepresentationDeprecationWarning)
 
 
 class BiLaplacianPrior:
@@ -96,7 +93,7 @@ class BiLaplacianPrior:
     Asolver : dl.PETScKrylovSolver
         Solver to efficiently solve :math:`Ax = y` using `Asolver.solve(x, y)`
     sqrtM : dl.Matrix
-        Quadrature implementation that behaves like :math:`M^{1/2}`.
+        Diagonal approximation of :math:`M^{1/2}`.
     prng : np.random.default_rng
         Pseudo random random generator used for sampling.
     """
@@ -146,7 +143,7 @@ class BiLaplacianPrior:
         self.M, self.Msolver = self._init_operator(varfM, preconditioner="jacobi")
         self.A, self.Asolver = self._init_operator(varfA, preconditioner="petsc_amg")
 
-        self._init_sqrtm(test)
+        self._init_sqrtm(varfM)
 
         self.mean = mean
         if self.mean is None:
@@ -288,43 +285,32 @@ class BiLaplacianPrior:
         self._init_solver(solver, mat)
         return mat, solver
 
-    def _init_quadrature_space(self, qdegree):
-        """Initialize quadrature space for efficient computation of :math:`\\srqt{M}`."""
-        element = FiniteElement(
-            "Quadrature", self.Vh.mesh().ufl_cell(), qdegree, quad_scheme="default"
+    def _init_sqrtm(self, varfM):
+        """Approximation of :math:`\\srqt{M}`.
+
+        1. Apply mass lumping to M -> diagonal matrix approximating M
+        2. Compute square root of diagnal elements -> approximately sqrtM.
+        """
+        H_e_list = []
+        idx = []
+
+        for i, cell in enumerate(cells(self.Vh.mesh())):
+            M_e = assemble_local(varfM, cell)
+            H_e = cholesky(M_e)
+            H_e_list.append(H_e)
+            idx.append(self.Vh.dofmap().cell_dofs(i))
+
+        H_block_diag = block_diag(H_e_list)
+        n_cells = self.Vh.mesh().num_cells()
+        L_transposed = coo_array(
+            (
+                np.ones(3 * n_cells, dtype=np.int32),
+                (np.hstack(idx), np.arange(3 * n_cells, dtype=np.int32)),
+            ),
+            dtype=np.int32,
         )
-        return FunctionSpace(self.Vh.mesh(), element)
 
-    def _init_sqrtm(self, test: Argument):
-        """Compute matrix that behaves like :math:`\\srqt{M}`."""
-        old_qdegree = parameters["form_compiler"]["quadrature_degree"]
-        representation_old = parameters["form_compiler"]["representation"]
-        parameters["form_compiler"]["quadrature_degree"] = -1
-        parameters["form_compiler"]["representation"] = "quadrature"
-        metadata = {"quadrature_degree": 2}
-
-        Qh = self._init_quadrature_space(qdegree=metadata["quadrature_degree"])
-        ph, qh = self._init_trial_test_functions(Qh)
-        # In Qh, the trial and test functions are function evaluations at the quadrature
-        # points. They are zero everywhere but at the corresponding quadrature point,
-        # i.e., non-overlapping.
-
-        M_Qh = assemble(inner(ph, qh) * dx(metadata=metadata))  # diagonal matrix
-
-        # make M_Qh diagonal to easily invert it and compute the sqrt
-        diag_M_Qh = np.diag(matrix_to_numpy(M_Qh))
-        M_Qh.zero()
-        M_Qh.set_diagonal(numpy_to_vector(1 / np.sqrt(diag_M_Qh)))
-
-        # projects the elements from Qh to Vh
-        M_mixed = assemble(inner(ph, test) * dx(metadata=metadata))
-
-        # not actually the square root,
-        # but behaves similarly in further computations and is computationally efficient
-        self.sqrtM = multiply_matrices(M_mixed, M_Qh)
-
-        parameters["form_compiler"]["quadrature_degree"] = old_qdegree
-        parameters["form_compiler"]["representation"] = representation_old
+        self.sqrtM = numpy_to_matrix_sparse(L_transposed @ H_block_diag)
 
     def _transform_standard_normal_noise_with_mean_and_covariance(
         self, noise: Vector
