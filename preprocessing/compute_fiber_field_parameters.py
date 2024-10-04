@@ -37,3 +37,14 @@ add_3d_vectors_to_plot(
 plt.show()
 
 # %%
+critical_value = 0.8
+count_almost_parallel = 0
+for i in range(V[0].shape[0]):
+    if abs(directions_constant_beta[i] @ directions_constant_alpha[i]) > critical_value:
+        count_almost_parallel += 1
+print(
+    f"{100 * count_almost_parallel / V[0].shape[0]:.2f}% of the bases vectors are "
+    f"almost parallel (scalar product > {critical_value})."
+)
+
+# %%
