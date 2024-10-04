@@ -31,7 +31,7 @@ def read_meshes_from_lge_mri_data() -> tuple[
         idx = str(p)[-1]
         i = int(idx) if idx.isnumeric() else (0 if idx == "A" else None)
 
-        if i:
+        if i is not None:
             V[i], F[i], uac[i], fibers[i] = (
                 get_mesh_and_point_data_from_lge_mri_based_data(p)
             )
