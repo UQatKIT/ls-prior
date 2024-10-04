@@ -28,7 +28,12 @@ ax = plt.gca()
 ax.set_aspect("equal")
 
 add_3d_vectors_to_plot(
-    V[s : (s + 20)], directions_constant_alpha[s : (s + 20)], ax, length=100, lw=1
+    V[s : (s + 20)],
+    directions_constant_alpha[s : (s + 20)],
+    ax,
+    length=100,
+    lw=1,
+    label="constant alpha",
 )
 add_3d_vectors_to_plot(
     V[s : (s + 20)],
@@ -36,9 +41,20 @@ add_3d_vectors_to_plot(
     ax,
     length=100,
     lw=1,
+    color="tab:green",
+    label="constant beta",
+)
+add_3d_vectors_to_plot(
+    V[s : (s + 20)],
+    fibers[s : (s + 20)],
+    ax,
+    length=100,
+    lw=1,
     color="tab:orange",
+    label="fibers",
 )
 
+plt.legend()
 plt.show()
 
 # %%
