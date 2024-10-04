@@ -39,7 +39,7 @@ def add_3d_vectors_to_plot(
     )
 
 
-def plot_vector_field(vecs: ArrayNx3, pos: ArrayNx3) -> None:
+def plot_vector_field(vecs: ArrayNx3, pos: ArrayNx3, length: float = 1.0) -> None:
     """Plot vector field in 3d space.
 
     Parameters
@@ -54,6 +54,6 @@ def plot_vector_field(vecs: ArrayNx3, pos: ArrayNx3) -> None:
     ax = plt.gca()
     ax.set_aspect("equal")
 
-    add_3d_vectors_to_plot(pos, vecs, ax, length=1, lw=0.5)
+    add_3d_vectors_to_plot(pos, vecs, ax, length=length, lw=0.5)
 
     plt.show()

@@ -11,6 +11,7 @@ from dolfin import (
     interpolate,
 )
 from petsc4py.PETSc import Mat  # type: ignore
+from scipy.sparse import csr_array
 
 from prior_fields.prior.dtypes import Array1d, Array2d, ArrayNx2, ArrayNx3
 
@@ -57,6 +58,13 @@ def numpy_to_vector(a: Array1d) -> Vector:
     v.init(len(a))
     v.set_local(a)
     return v
+
+
+def numpy_to_matrix_sparse(M: csr_array) -> Matrix:
+    petMat = Mat()
+    petMat.createAIJ(size=M.shape, csr=(M.indptr, M.indices, M.data))
+    petMat.setUp()
+    return petsc_to_matrix(petMat)
 
 
 def str_to_vector(s: str, mesh: Mesh) -> Vector:
