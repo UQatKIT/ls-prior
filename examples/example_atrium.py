@@ -31,7 +31,7 @@ print("Get parameters...")
 sigma = 0.2
 ell = 10.0
 
-x_axes, y_axes = get_reference_coordinates(V, F)
+x_axes, y_axes, _ = get_reference_coordinates(V, F)
 mean = alpha_to_sample(
     vectors_3d_to_angles(directions=fibers, x_axes=x_axes, y_axes=y_axes)
 )

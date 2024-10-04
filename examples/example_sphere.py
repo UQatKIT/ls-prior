@@ -37,7 +37,7 @@ alphas = sample_to_alpha(function_to_numpy(sample))
 V = sphere_mesh.coordinates()
 F = sphere_mesh.cells()
 
-x_axes, y_axes = get_reference_coordinates(V, F)
+x_axes, y_axes, _ = get_reference_coordinates(V, F)
 vector_field = angles_to_3d_vector(alphas=alphas, x_axes=x_axes, y_axes=y_axes)
 
 fig = plt.figure(figsize=(8, 8))

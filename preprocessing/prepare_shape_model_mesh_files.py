@@ -58,7 +58,7 @@ fibers = get_fiber_orientation_at_vertices(i, V)
 done = False
 while not done:
     try:
-        _, _ = get_reference_coordinates(V, F)
+        _, _, _ = get_reference_coordinates(V, F)
         done = True
     except RuntimeError as e:
         match = re.search(r"vertex (\d+) appears", repr(e))
