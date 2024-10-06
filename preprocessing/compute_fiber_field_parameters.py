@@ -20,41 +20,49 @@ V, F, uac, fibers = get_mesh_and_point_data_from_lge_mri_based_data(
 directions_constant_alpha, directions_constant_beta = get_uac_basis_vectors(V, F, uac)
 
 # %%
-s = np.random.randint(0, V.shape[0] - 20)
+fig = plt.figure(figsize=(8, 8))
 
-fig = plt.figure(figsize=(10, 10))
-ax = fig.add_subplot(projection="3d")
-ax = plt.gca()
-ax.set_aspect("equal")
+for i in range(4):
+    s = np.random.randint(0, V.shape[0])
+    V_plot = V[s].reshape(1, -1)
 
-add_3d_vectors_to_plot(
-    V[s : (s + 20)],
-    directions_constant_alpha[s : (s + 20)],
-    ax,
-    length=100,
-    lw=1,
-    label="constant alpha",
-)
-add_3d_vectors_to_plot(
-    V[s : (s + 20)],
-    directions_constant_beta[s : (s + 20)],
-    ax,
-    length=100,
-    lw=1,
-    color="tab:green",
-    label="constant beta",
-)
-add_3d_vectors_to_plot(
-    V[s : (s + 20)],
-    fibers[s : (s + 20)],
-    ax,
-    length=100,
-    lw=1,
-    color="tab:orange",
-    label="fibers",
-)
+    ax = fig.add_subplot(2, 2, i + 1, projection="3d")
+    ax = plt.gca()
+    ax.set_title(f"Vertex {s}")
+    ax.set_xlim(V_plot[:, 0] - 120, V_plot[:, 0] + 120)
+    ax.set_ylim(V_plot[:, 1] - 120, V_plot[:, 1] + 120)
+    ax.set_zlim(V_plot[:, 2] - 120, V_plot[:, 2] + 120)
 
-plt.legend()
+    add_3d_vectors_to_plot(
+        V_plot,
+        directions_constant_alpha[s].reshape(1, -1),
+        ax,
+        length=100,
+        lw=1,
+        label="constant alpha",
+    )
+    add_3d_vectors_to_plot(
+        V_plot,
+        directions_constant_beta[s].reshape(1, -1),
+        ax,
+        length=100,
+        lw=1,
+        color="tab:green",
+        label="constant beta",
+    )
+    add_3d_vectors_to_plot(
+        V_plot,
+        fibers[s].reshape(1, -1),
+        ax,
+        length=100,
+        lw=1,
+        color="tab:orange",
+        label="fiber",
+    )
+
+handles, labels = ax.get_legend_handles_labels()
+fig.legend(handles[:3], labels[:3], loc="lower center")
+fig.suptitle("UAC based tangent space coordinates and fibers")
 plt.show()
 
 # %%
