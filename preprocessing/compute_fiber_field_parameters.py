@@ -7,6 +7,9 @@ import numpy as np
 from prior_fields.tensor.io import (
     get_mesh_and_point_data_from_lge_mri_based_data,
 )
+from prior_fields.tensor.mapper import (
+    map_fibers_to_tangent_space,
+)
 from prior_fields.tensor.plots import add_3d_vectors_to_plot
 from prior_fields.tensor.vector_heat_method import get_uac_basis_vectors
 
@@ -18,6 +21,11 @@ V, F, uac, fibers = get_mesh_and_point_data_from_lge_mri_based_data(
 # %%
 # This takes about 15 - 20 seconds (not fully vectorized)
 directions_constant_alpha, directions_constant_beta = get_uac_basis_vectors(V, F, uac)
+
+# %%
+fibers_in_tangent_space = map_fibers_to_tangent_space(
+    fibers, directions_constant_alpha, directions_constant_beta
+)
 
 # %%
 fig = plt.figure(figsize=(8, 8))
@@ -59,9 +67,18 @@ for i in range(4):
         color="tab:orange",
         label="fiber",
     )
+    add_3d_vectors_to_plot(
+        V_plot,
+        fibers_in_tangent_space[s].reshape(1, -1),
+        ax,
+        length=100,
+        lw=1,
+        color="tab:red",
+        label="fiber mapped to tangent space",
+    )
 
 handles, labels = ax.get_legend_handles_labels()
-fig.legend(handles[:3], labels[:3], loc="lower center")
+fig.legend(handles[:4], labels[:4], loc="lower center")
 fig.suptitle("UAC based tangent space coordinates and fibers")
 plt.show()
 
