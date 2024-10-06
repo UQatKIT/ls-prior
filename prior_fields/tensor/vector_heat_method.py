@@ -51,17 +51,17 @@ def get_uac_basis_vectors(
 
     vertex_to_faces_map = _get_vertex_to_face_map(F)
 
-    print("Get coordinate of no change in alpha...")
-    directions_constant_alpha = _get_directions_with_no_change_in_one_uac_coordinate(
-        uac[:, 0], vertex_to_faces_map, V, F, basis_n, basis_x
-    )
-
     print("Get coordinate of no change in beta...")
     directions_constant_beta = _get_directions_with_no_change_in_one_uac_coordinate(
         uac[:, 1], vertex_to_faces_map, V, F, basis_n, basis_x
     )
 
-    return directions_constant_alpha, directions_constant_beta
+    print("Get coordinate of no change in alpha...")
+    directions_constant_alpha = _get_directions_with_no_change_in_one_uac_coordinate(
+        uac[:, 0], vertex_to_faces_map, V, F, basis_n, basis_x
+    )
+
+    return directions_constant_beta, directions_constant_alpha
 
 
 def _get_vertex_to_face_map(F):

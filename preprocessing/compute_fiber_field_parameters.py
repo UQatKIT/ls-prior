@@ -8,6 +8,7 @@ from prior_fields.tensor.io import (
     get_mesh_and_point_data_from_lge_mri_based_data,
 )
 from prior_fields.tensor.mapper import (
+    get_coefficients,
     map_fibers_to_tangent_space,
 )
 from prior_fields.tensor.plots import add_3d_vectors_to_plot
@@ -20,11 +21,11 @@ V, F, uac, fibers = get_mesh_and_point_data_from_lge_mri_based_data(
 
 # %%
 # This takes about 15 - 20 seconds (not fully vectorized)
-directions_constant_alpha, directions_constant_beta = get_uac_basis_vectors(V, F, uac)
+directions_constant_beta, directions_constant_alpha = get_uac_basis_vectors(V, F, uac)
 
 # %%
 fibers_in_tangent_space = map_fibers_to_tangent_space(
-    fibers, directions_constant_alpha, directions_constant_beta
+    fibers, directions_constant_beta, directions_constant_alpha
 )
 
 # %%
@@ -43,20 +44,20 @@ for i in range(4):
 
     add_3d_vectors_to_plot(
         V_plot,
-        directions_constant_alpha[s].reshape(1, -1),
-        ax,
-        length=100,
-        lw=1,
-        label="constant alpha",
-    )
-    add_3d_vectors_to_plot(
-        V_plot,
         directions_constant_beta[s].reshape(1, -1),
         ax,
         length=100,
         lw=1,
-        color="tab:green",
         label="constant beta",
+    )
+    add_3d_vectors_to_plot(
+        V_plot,
+        directions_constant_alpha[s].reshape(1, -1),
+        ax,
+        length=100,
+        lw=1,
+        color="tab:green",
+        label="constant alpha",
     )
     add_3d_vectors_to_plot(
         V_plot,
@@ -94,3 +95,33 @@ print(
 )
 
 # %%
+fiber_coeffs_x1, fiber_coeffs_x2 = get_coefficients(
+    fibers, directions_constant_beta, directions_constant_alpha
+)
+
+fig, ax = plt.subplots(1, 1, figsize=(8, 8))
+ax.set_aspect("equal")
+c = ax.scatter(uac[:, 0], uac[:, 1], c=fiber_coeffs_x1, s=0.5)
+fig.colorbar(c)
+plt.show()
+
+fig, ax = plt.subplots(1, 1, figsize=(8, 8))
+ax.set_aspect("equal")
+c = ax.scatter(uac[:, 0], uac[:, 1], c=fiber_coeffs_x2, s=0.5)
+fig.colorbar(c)
+plt.show()
+
+fig, ax = plt.subplots(1, 1, figsize=(8, 8))
+ax.set_aspect("equal")
+ax.quiver(
+    uac[:, 0],
+    uac[:, 1],
+    fiber_coeffs_x1,
+    fiber_coeffs_x2,
+    angles="xy",
+    scale_units="xy",
+    scale=80,
+    width=0.001,
+)
+plt.savefig("figures/uac_fibers.svg")
+plt.show()
