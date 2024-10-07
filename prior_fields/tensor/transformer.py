@@ -58,6 +58,36 @@ def vectors_3d_to_angles(
     return alphas
 
 
+def vector_coefficients_2d_to_angles(coeff_x1, coeff_x2):
+    angles = np.zeros_like(coeff_x1)
+
+    # arctan(opposite / adjacent)
+    mask = coeff_x1 > 0
+    angles[mask] = np.arctan(coeff_x2[mask] / coeff_x1[mask])
+
+    # pi + arctan(opposite / adjacent)
+    mask = (coeff_x1 < 0) & (coeff_x2 >= 0)
+    angles[mask] = np.pi + np.arctan(coeff_x2[mask] / coeff_x1[mask])
+
+    # -pi + arctan(opposite / adjacent)
+    mask = (coeff_x1 < 0) & (coeff_x2 < 0)
+    angles[mask] = -np.pi + np.arctan(coeff_x2[mask] / coeff_x1[mask])
+
+    # pi/2
+    mask = (coeff_x1 == 0) & (coeff_x2 > 0)
+    angles[mask] = np.pi / 2
+
+    # -pi/2
+    mask = (coeff_x1 == 0) & (coeff_x2 < 0)
+    angles[mask] = -np.pi / 2
+
+    # No fiber orientation known
+    mask = (coeff_x1 == 0) & (coeff_x2 == 0)
+    angles[mask] = np.nan
+
+    return angles
+
+
 def alpha_to_sample(alpha: np.ndarray) -> np.ndarray:
     """Inverse of the sigmoid-like transformation from (-pi, pi) to (-infty, infty)."""
     z = alpha / np.pi
