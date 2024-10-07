@@ -13,13 +13,15 @@ from prior_fields.tensor.mapper import (
 )
 
 
-def read_meshes_from_lge_mri_data() -> tuple[
-    dict[int, ArrayNx3],
-    dict[int, ArrayNx3],
-    dict[int, ArrayNx2],
-    dict[int, ArrayNx3],
-    dict[int, Array1d],
-]:
+def read_meshes_from_lge_mri_data() -> (
+    tuple[
+        dict[int, ArrayNx3],
+        dict[int, ArrayNx3],
+        dict[int, ArrayNx2],
+        dict[int, ArrayNx3],
+        dict[int, Array1d],
+    ]
+):
     """Read meshes extracted from real data (https://zenodo.org/records/3764917).
 
     Returns

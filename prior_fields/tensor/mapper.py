@@ -128,7 +128,7 @@ class FiberGrid:
         Angle within (-pi, pi] representing the fiber orientation. 0 represents a fiber
         in the direction of no change in beta.
     anatomical_structure_tags : Array1d
-        Tag for anatomical structure assigment.
+        Tag for anatomical structure assignment.
     max_depth : int
         Maximum number of splits per cell.
     point_threshold : int
@@ -172,7 +172,7 @@ class FiberGrid:
             Angle within (-pi, pi] representing the fiber orientation. 0 represents a fiber
             in the direction of no change in beta.
         anatomical_structure_tags : Array1d
-            Tag for anatomical structure assigment.
+            Tag for anatomical structure assignment.
         max_depth : int, optional
             Maximum number of splits per cell, defaults to 5.
         point_threshold : int, optional
@@ -252,7 +252,9 @@ class FiberGrid:
                 else (
                     self.phi_circmean
                     if c == "mean"
-                    else self.phi_circstd if c == "std" else None
+                    else self.phi_circstd
+                    if c == "std"
+                    else None
                 )
             ),
             s=[
