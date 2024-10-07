@@ -47,6 +47,29 @@ def get_reference_coordinates(
 def get_uac_basis_vectors(
     V: ArrayNx3, F: ArrayNx3, uac: ArrayNx2
 ) -> tuple[ArrayNx3, ArrayNx3]:
+    """Get vectors in tangent space in the direction with constant alpha/beta.
+
+    Note
+    ----
+    At each vertex, this method defines two vectors that span the tangent space, but are
+    in general not orthogonal. This is since the UAC system consists of two coordinates
+    that are as close to orthogonal as possible. Note that at some vertices, these two
+    are even almost parallel.
+
+    Parameters
+    ----------
+    V : ArrayNx3
+        Array of vertex coordinates.
+    F : ArrayNx3
+        Array of vertex indices that form the faces of the tessellation.
+    uac : ArrayNx2
+        Array of UAC (alpha, beta) at each vertex.
+
+    Returns
+    -------
+    (ArrayNx3, ArrayNx3)
+        UAC-based basis vectors of the tangent spaces at each vertex
+    """
     basis_x, _, basis_n = get_reference_coordinates(V, F)
 
     vertex_to_faces_map = _get_vertex_to_face_map(F)
