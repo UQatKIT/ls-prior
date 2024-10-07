@@ -1,6 +1,7 @@
 import numpy as np
+from scipy.stats import mode
 
-from prior_fields.prior.dtypes import ArrayNx3
+from prior_fields.prior.dtypes import Array1d, ArrayNx3
 
 
 def map_vectors_from_faces_to_vertices(vecs: ArrayNx3, F: ArrayNx3) -> ArrayNx3:
@@ -28,6 +29,32 @@ def map_vectors_from_faces_to_vertices(vecs: ArrayNx3, F: ArrayNx3) -> ArrayNx3:
             adjacent_faces[vertex_id].append(face_index)
 
     return np.array([vecs[i].mean(axis=0) for i in adjacent_faces.values()])
+
+
+def map_categories_from_faces_to_vertices(categories: Array1d, F: ArrayNx3) -> Array1d:
+    """Map categories defined on face-level to vertices.
+
+    For each vertex, the resulting tag is the mode over the tags of the adjacent faces.
+
+    Parameters
+    ----------
+    categories : Array1d
+        Categories on face-level.
+    F : ArrayNx3
+        Array of vertex indices adjacent to each face.
+
+    Returns
+    -------
+    Array1d
+        Categories mapped to vertex-level.
+    """
+    adjacent_faces: dict[int, list[int]] = {i: [] for i in range(F.max() + 1)}
+
+    for face_index, face_vertices in enumerate(F):
+        for vertex_id in face_vertices:
+            adjacent_faces[vertex_id].append(face_index)
+
+    return np.array([mode(categories[i]).mode for i in adjacent_faces.values()])
 
 
 def map_fibers_to_tangent_space(

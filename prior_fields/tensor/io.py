@@ -1,3 +1,4 @@
+import re
 from pathlib import Path
 
 import meshio
@@ -5,7 +6,10 @@ import numpy as np
 from scipy.spatial import cKDTree
 
 from prior_fields.prior.dtypes import Array1d, ArrayNx2, ArrayNx3, ArrayNx4
-from prior_fields.tensor.mapper import map_vectors_from_faces_to_vertices
+from prior_fields.tensor.mapper import (
+    map_categories_from_faces_to_vertices,
+    map_vectors_from_faces_to_vertices,
+)
 
 
 def read_meshes_from_lge_mri_data() -> tuple[
@@ -13,35 +17,44 @@ def read_meshes_from_lge_mri_data() -> tuple[
     dict[int, ArrayNx3],
     dict[int, ArrayNx2],
     dict[int, ArrayNx3],
+    dict[int, Array1d],
 ]:
     """Read meshes extracted from real data (https://zenodo.org/records/3764917).
 
     Returns
     -------
-    (dict[int, ArrayNx3], dict[int, ArrayNx3], dict[int, ArrayNx2], dict[int, ArrayNx3])
-        Vertices, faces, and UAC and fiber orientation at the vertices
-        for the 7 geometries and the atlas (geometry 6 with mean fiber orientation).
+    (
+        dict[int, ArrayNx3],
+        dict[int, ArrayNx3],
+        dict[int, ArrayNx2],
+        dict[int, ArrayNx3],
+        dict[int, ArrayNx3],
+    )
+        Vertices and faces, and UAC, fiber orientation and tags for anatomical structure
+        at the vertices for the 7 geometries and the atlas (geometry 6 with mean fiber
+        orientation).
     """
     V: dict[int, ArrayNx3] = dict()
     F: dict[int, ArrayNx3] = dict()
     uac: dict[int, ArrayNx2] = dict()
     fibers: dict[int, ArrayNx3] = dict()
+    tags: dict[int, Array1d] = dict()
 
     for p in Path("data/LGE-MRI-based").iterdir():
         idx = str(p)[-1]
         i = int(idx) if idx.isnumeric() else (0 if idx == "A" else None)
 
         if i is not None:
-            V[i], F[i], uac[i], fibers[i] = (
+            V[i], F[i], uac[i], fibers[i], tags[i] = (
                 get_mesh_and_point_data_from_lge_mri_based_data(p)
             )
 
-    return V, F, uac, fibers
+    return V, F, uac, fibers, tags
 
 
 def get_mesh_and_point_data_from_lge_mri_based_data(
     path: Path,
-) -> tuple[ArrayNx3, ArrayNx3, ArrayNx2, ArrayNx3]:
+) -> tuple[ArrayNx3, ArrayNx3, ArrayNx2, ArrayNx3, Array1d]:
     """Extract vertices, faces, uac and fibers from mesh file and map fibers to vertices.
 
     Parameters
@@ -69,7 +82,43 @@ def get_mesh_and_point_data_from_lge_mri_based_data(
     # fibers
     fibers = map_vectors_from_faces_to_vertices(vecs=mesh.cell_data["fibers"][0], F=F)
 
-    return V, F, uac, fibers
+    # tag for anatomical structure assignment
+    tag = map_categories_from_faces_to_vertices(
+        categories=extract_element_tags_from_file(str(path)[-1]), F=F
+    )
+
+    return V, F, uac, fibers, tag
+
+
+def extract_element_tags_from_file(geometry: str | int) -> Array1d:
+    """Read anatomical structure tags at faces of geometry from .elem file.
+
+    Parameters
+    ----------
+    geometry : str | int
+        Index of geometry.
+
+    Returns
+    -------
+    Array1d
+        Array of tags at faces.
+    """
+
+    pattern = re.compile(rf"Labelled_{geometry}_.*\.elem$")
+    elem_file = next(
+        f for f in Path("data/LGE-MRI-based/A/").iterdir() if pattern.match(f.name)
+    )
+
+    with open(elem_file) as f:
+        # First line contains the number of faces
+        num_faces = int(f.readline().strip())
+
+        element_tags = np.zeros(num_faces, dtype=int)
+        for i, line in enumerate(f):
+            # Last component in each line is the element tag
+            element_tags[i] = int(line.split()[-1])
+
+    return element_tags
 
 
 def read_endocardial_mesh_from_bilayer_model(
