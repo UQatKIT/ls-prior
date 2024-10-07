@@ -51,7 +51,7 @@ plt.show()
 ##################
 # %%
 print("Reading mesh...")
-V_raw, F, uac, fibers = get_mesh_and_point_data_from_lge_mri_based_data(
+V_raw, F, uac, fibers, tags = get_mesh_and_point_data_from_lge_mri_based_data(
     Path("data/LGE-MRI-based/2")
 )
 Vmin = V_raw.min()
