@@ -12,7 +12,7 @@ from prior_fields.tensor.transformer import vector_coefficients_2d_to_angles
 from prior_fields.tensor.vector_heat_method import get_uac_basis_vectors
 
 # %%
-V, F, uac, fibers, tag = get_mesh_and_point_data_from_lge_mri_based_data(
+V, F, uac, fibers, tags = get_mesh_and_point_data_from_lge_mri_based_data(
     Path("data/LGE-MRI-based/A")
 )
 
@@ -153,7 +153,7 @@ for i in range(len(grid) - 1):
         fiber_coeff_mean_x2[j, i] = fiber_coeffs_x2[mask].mean()
         phi_circmean[j, i] = circmean(phi[mask])
         phi_circstd[j, i] = circstd(phi[mask])
-        tag_mode[j, i] = mode(tag[mask]).mode
+        tag_mode[j, i] = mode(tags[mask]).mode
 
 fig, ax = plt.subplots(1, 1, figsize=(8, 8))
 ax.set_aspect("equal")
