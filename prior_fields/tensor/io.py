@@ -42,7 +42,7 @@ def read_meshes_from_lge_mri_data() -> tuple[
 
     for p in Path("data/LGE-MRI-based").iterdir():
         idx = str(p)[-1]
-        i = int(idx) if idx.isnumeric() else (0 if idx == "A" else None)
+        i = int(idx) if idx.isnumeric() else None
 
         if i is not None:
             V[i], F[i], uac[i], fibers[i], tags[i] = (
@@ -106,7 +106,9 @@ def extract_element_tags_from_file(geometry: str | int) -> Array1d:
 
     pattern = re.compile(rf"Labelled_{geometry}_.*\.elem$")
     elem_file = next(
-        f for f in Path("data/LGE-MRI-based/A/").iterdir() if pattern.match(f.name)
+        f
+        for f in Path(f"data/LGE-MRI-based/{geometry}/").iterdir()
+        if pattern.match(f.name)
     )
 
     with open(elem_file) as f:
