@@ -3,7 +3,6 @@
 *.xdmf
 *.gz
 *.ply
-*.elem
 *.lon
 *.pts
 
