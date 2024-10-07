@@ -7,6 +7,7 @@ from scipy.spatial import cKDTree
 
 from prior_fields.prior.dtypes import Array1d, ArrayNx2, ArrayNx3, ArrayNx4
 from prior_fields.tensor.mapper import (
+    get_dict_with_adjacent_faces_for_each_vertex,
     map_categories_from_faces_to_vertices,
     map_vectors_from_faces_to_vertices,
 )
@@ -79,12 +80,18 @@ def get_mesh_and_point_data_from_lge_mri_based_data(
     beta = mesh.point_data["beta"]
     uac = np.column_stack([alpha, beta])
 
+    # Construct mapping of vertex indices to vertex indices of its adjacent faces
+    adjacent_faces = get_dict_with_adjacent_faces_for_each_vertex(F)
+
     # fibers
-    fibers = map_vectors_from_faces_to_vertices(vecs=mesh.cell_data["fibers"][0], F=F)
+    fibers = map_vectors_from_faces_to_vertices(
+        vecs=mesh.cell_data["fibers"][0], adjacent_faces=adjacent_faces
+    )
 
     # tag for anatomical structure assignment
     tag = map_categories_from_faces_to_vertices(
-        categories=extract_element_tags_from_file(str(path)[-1]), F=F
+        categories=extract_element_tags_from_file(str(path)[-1]),
+        adjacent_faces=adjacent_faces,
     )
 
     return V, F, uac, fibers, tag
