@@ -93,7 +93,7 @@ class BiLaplacianPrior:
     Asolver : dl.PETScKrylovSolver
         Solver to efficiently solve :math:`Ax = y` using `Asolver.solve(x, y)`
     sqrtM : dl.Matrix
-        Diagonal approximation of :math:`M^{1/2}`.
+        Sparse decomposition :math:`M = sqrtM sqrtM^\\top`.
     prng : np.random.default_rng
         Pseudo random random generator used for sampling.
     """
@@ -286,11 +286,7 @@ class BiLaplacianPrior:
         return mat, solver
 
     def _init_sqrtm(self, varfM):
-        """Approximation of :math:`\\srqt{M}`.
-
-        1. Apply mass lumping to M -> diagonal matrix approximating M
-        2. Compute square root of diagnal elements -> approximately sqrtM.
-        """
+        """Sparse decomposition :math:`M = sqrtM sqrtM^\\top`."""
         H_e_list = []
         idx = []
 
