@@ -1,6 +1,10 @@
 # %%
 from pathlib import Path
 
+import numpy as np
+from matplotlib import pyplot as plt
+from vedo.dolfin import plot as vedo_plot
+
 from prior_fields.prior.converter import numpy_to_function
 from prior_fields.prior.plots import plot_function
 from prior_fields.prior.prior import BiLaplacianPriorNumpyWrapper
@@ -25,8 +29,22 @@ V, F, _ = read_endocardial_mesh_from_bilayer_model(1)
 
 prior = BiLaplacianPriorNumpyWrapper(V, F, sigma=10.0, ell=10.0)
 sample = prior.sample()
-plot_function(numpy_to_function(sample, prior._prior.Vh))
 
+fig = plt.figure()
+ax = fig.add_subplot(1, 1, 1)
+im = vedo_plot(
+    numpy_to_function(sample, prior._prior.Vh),
+    lw=False,
+    style=1,
+    axes=0,
+    zoom=2,
+    size=(475, 400),
+    viewup=[1, 1, -1],
+)
+ax.set_axis_off()
+ax.imshow(np.asarray(im))
+plt.savefig("figures/sample_atrium.svg")
+plt.show()
 
 ##################
 # Read mesh data #
