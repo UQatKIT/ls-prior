@@ -17,8 +17,8 @@ V, F, uac, fibers, tags = read_meshes_from_lge_mri_data()
 
 # %%
 fibers_in_tangent_space: dict[int, ArrayNx3] = dict()
-fiber_coeffs_x1: dict[int, ArrayNx3] = dict()
-fiber_coeffs_x2: dict[int, ArrayNx3] = dict()
+fiber_coeffs_x: dict[int, ArrayNx3] = dict()
+fiber_coeffs_y: dict[int, ArrayNx3] = dict()
 fiber_angles: dict[int, ArrayNx3] = dict()
 
 # This takes about 75 - 90 seconds
@@ -33,20 +33,20 @@ for i in V.keys():
         fibers[i], directions_constant_beta, directions_constant_alpha
     )
     print("Get coefficients of fibers in tangent space coordinates.")
-    fiber_coeffs_x1[i], fiber_coeffs_x2[i] = get_coefficients(
+    fiber_coeffs_x[i], fiber_coeffs_y[i] = get_coefficients(
         fibers[i], directions_constant_beta, directions_constant_alpha
     )
     print("Get fiber angle within (-pi, pi] in UAC system.")
     fiber_angles[i] = vector_coefficients_2d_to_angles(
-        fiber_coeffs_x1[i], fiber_coeffs_x2[i]
+        fiber_coeffs_x[i], fiber_coeffs_y[i]
     )
     print()
 
 # %%
 # Collect data from different geometries in single array for mean computation
 uac_array = np.vstack([uac[i] for i in np.arange(1, 8)])
-fiber_coeffs_x1_array = np.hstack([fiber_coeffs_x1[i] for i in np.arange(1, 8)])
-fiber_coeffs_x2_array = np.hstack([fiber_coeffs_x2[i] for i in np.arange(1, 8)])
+fiber_coeffs_x_array = np.hstack([fiber_coeffs_x[i] for i in np.arange(1, 8)])
+fiber_coeffs_y_array = np.hstack([fiber_coeffs_y[i] for i in np.arange(1, 8)])
 fiber_angles_array = np.hstack([fiber_angles[i] for i in np.arange(1, 8)])
 tags_array = np.hstack([tags[i] for i in np.arange(1, 8)])
 
@@ -55,8 +55,8 @@ tags_array = np.hstack([tags[i] for i in np.arange(1, 8)])
 # Takes about 20-30 seconds
 FiberGridComputer(
     uac=uac_array,
-    fiber_coeffs_x=fiber_coeffs_x1_array,
-    fiber_coeffs_y=fiber_coeffs_x2_array,
+    fiber_coeffs_x=fiber_coeffs_x_array,
+    fiber_coeffs_y=fiber_coeffs_y_array,
     fiber_angles=fiber_angles_array,
     anatomical_structure_tags=tags_array,
     max_depth=7,
