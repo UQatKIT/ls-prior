@@ -110,25 +110,14 @@ def get_coefficients(
 
 class FiberGrid:
     """
-    Split UAC unit square into adaptive grid with width depending on the data density and
-    for each component compute
-    - mean coefficients of fibers in UAC basis,
-    - circular mean and standard deviation of the fiber angle, and
-    - mode of anatomical structure tag.
+    Adpative grid of the UAC unit square with cell size depending on the data density.
+    Each cell has the following attributes:
+    - Mean coefficients of fibers in UAC basis
+    - Circular mean and standard deviation of the fiber angle
+    - Mode of anatomical structure tag
 
     Attributes
     ----------
-    uac : ArrayNx2
-        UACs at vertices.
-    fiber_coeffs_x : Array1d
-        Fiber coefficient for first UAC-based tangent space coordinate.
-    fiber_coeffs_y : Array1d
-        Fiber coefficient for second UAC-based tangent space coordinate.
-    fiber_angles : Array1d
-        Angle within (-pi, pi] representing the fiber orientation. 0 represents a fiber
-        in the direction of no change in beta.
-    anatomical_structure_tags : Array1d
-        Tag for anatomical structure assignment.
     max_depth : int
         Maximum number of splits per cell.
     point_threshold : int
@@ -142,7 +131,7 @@ class FiberGrid:
     fiber_coeff_mean_y : list[float]
         Mean second fiber coefficients for each cell.
     phi_circmean : list[float]
-        Circular mean of fiber angles for each cell.
+        Circular mean of fiber angles in (-pi, pi] for each cell.
     phi_circstd : list[float]
         Circular standard deviation of fiber angles for each cell.
     tag_mode : list[int]
@@ -158,7 +147,7 @@ class FiberGrid:
         anatomical_structure_tags: Array1d,
         max_depth: int = 5,
         point_threshold: int = 100,
-    ):
+    ) -> None:
         """
         Parameters
         ----------
@@ -169,8 +158,9 @@ class FiberGrid:
         fiber_coeffs_y : Array1d
             Fiber coefficient for second UAC-based tangent space coordinate.
         fiber_angles : Array1d
-            Angle within (-pi, pi] representing the fiber orientation. 0 represents a fiber
-            in the direction of no change in beta.
+            Angle within (-pi, pi] representing the fiber orientation.0 represents a
+            fiber in the direction of no change in beta which is parallel to the alpha-
+            axis in the UAC system.
         anatomical_structure_tags : Array1d
             Tag for anatomical structure assignment.
         max_depth : int, optional
@@ -178,11 +168,12 @@ class FiberGrid:
         point_threshold : int, optional
             Minimum number of points per cell, defaults to 100.
         """
-        self.uac = uac
-        self.fiber_coeffs_x = fiber_coeffs_x
-        self.fiber_coeffs_y = fiber_coeffs_y
-        self.fiber_angles = fiber_angles
-        self.anatomical_structure_tags = anatomical_structure_tags
+        self._uac = uac
+        self._fiber_coeffs_x = fiber_coeffs_x
+        self._fiber_coeffs_y = fiber_coeffs_y
+        self._fiber_angles = fiber_angles
+        self._anatomical_structure_tags = anatomical_structure_tags
+
         self.max_depth = max_depth
         self.point_threshold = point_threshold
 
@@ -195,66 +186,46 @@ class FiberGrid:
         self.phi_circstd: list[float] = []
         self.tag_mode: list[int] = []
 
-    def _subdivide(self, x_min, x_max, y_min, y_max, depth=0):
-        if depth > self.max_depth:
-            return
+        self.compute_grid()
 
-        # Select data points within this region
-        mask = (
-            (self.uac[:, 0] >= x_min)
-            & (self.uac[:, 0] < x_max)
-            & (self.uac[:, 1] >= y_min)
-            & (self.uac[:, 1] < y_max)
-        )
-        data_count = mask.sum()
+    def compute_grid(self) -> None:
+        """Split unit square into adaptive grid and compute fiber properties and
+        anatomical tag for each cell.
 
-        if data_count < self.point_threshold or depth == self.max_depth:
-            self.grid_x.append([x_min, x_max])
-            self.grid_y.append([y_min, y_max])
+        Starting with the full unit square, this subdivides the cells of the current grid
+        in four quadrants until the number of points in each cell is smaller than the
+        `point_threshold` or until `max_depth` is reached.
 
-            # Compute properties in this region
-            self.fiber_coeff_mean_x.append(self.fiber_coeffs_x[mask].mean())
-            self.fiber_coeff_mean_y.append(self.fiber_coeffs_y[mask].mean())
-            self.phi_circmean.append(
-                circmean(self.fiber_angles[mask], high=np.pi, low=-np.pi)
-            )
-            self.phi_circstd.append(
-                circstd(self.fiber_angles[mask], high=np.pi, low=-np.pi)
-            )
-            self.tag_mode.append(mode(self.anatomical_structure_tags[mask]).mode)
-        else:
-            # Subdivide into four quadrants
-            x_mid = (x_min + x_max) / 2
-            y_mid = (y_min + y_max) / 2
-
-            self._subdivide(x_min, x_mid, y_min, y_mid, depth + 1)  # Bottom-left
-            self._subdivide(x_mid, x_max, y_min, y_mid, depth + 1)  # Bottom-right
-            self._subdivide(x_min, x_mid, y_mid, y_max, depth + 1)  # Top-left
-            self._subdivide(x_mid, x_max, y_mid, y_max, depth + 1)  # Top-right
-
-    def compute(self):
-        # Start with the full unit square (0, 1) x (0, 1)
+        The resulting grid is saved in `self.grid_x` and `self.grid_y`.
+        """
         self._subdivide(0, 1, 0, 1)
 
-    def plot_results(self, c: Literal["tag", "mean", "std"]):
+    def plot(self, color: Literal["tag", "mean", "std"]) -> None:
+        """
+        Plot the adaptive grid with mean fiber vector in each cell. The cells are colored
+        according to the fiber porperties or anatomical region.
+
+        Parameters
+        ----------
+        color : 'tag' | 'mean' | 'std'
+            Property used to color the grid cells.
+        """
         _, ax = plt.subplots(1, 1, figsize=(8, 8))
         ax.set_aspect("equal")
 
         grid_centers_x = [(x[0] + x[1]) / 2 for x in self.grid_x]
         grid_centers_y = [(y[0] + y[1]) / 2 for y in self.grid_y]
 
-        cb = ax.scatter(
+        c = ax.scatter(
             grid_centers_x,
             grid_centers_y,
             c=(
                 self.tag_mode
-                if c == "tag"
+                if color == "tag"
                 else (
                     self.phi_circmean
-                    if c == "mean"
-                    else self.phi_circstd
-                    if c == "std"
-                    else None
+                    if color == "mean"
+                    else self.phi_circstd if color == "std" else None
                 )
             ),
             s=[
@@ -276,15 +247,56 @@ class FiberGrid:
             width=0.001,
         )
 
-        plt.colorbar(cb)
+        plt.colorbar(c)
 
-        if c == "tag":
+        if color == "tag":
             plt.title(
                 "Mean of fibers in UAC over 7 geometries with anatomical structures"
             )
-        elif c == "mean":
+        elif color == "mean":
             plt.title("Circular mean of fiber angle")
-        elif c == "std":
+        elif color == "std":
             plt.title("Circular standard deviation of fiber angle")
 
         plt.show()
+
+    def _subdivide(
+        self, x_min: float, x_max: float, y_min: float, y_max: float, depth: int = 0
+    ) -> None:
+        """Recursively, split cell (x_min, x_max) x (y_min, y_max) in four quadrants."""
+        if depth > self.max_depth:
+            return
+
+        # Select data points within the current cell
+        mask = (
+            (self._uac[:, 0] >= x_min)
+            & (self._uac[:, 0] < x_max)
+            & (self._uac[:, 1] >= y_min)
+            & (self._uac[:, 1] < y_max)
+        )
+        data_count = mask.sum()
+
+        if data_count < self.point_threshold or depth == self.max_depth:
+            # Don't further split the current cell
+            self.grid_x.append([x_min, x_max])
+            self.grid_y.append([y_min, y_max])
+
+            # Compute properties in the cell
+            self.fiber_coeff_mean_x.append(self._fiber_coeffs_x[mask].mean())
+            self.fiber_coeff_mean_y.append(self._fiber_coeffs_y[mask].mean())
+            self.phi_circmean.append(
+                circmean(self._fiber_angles[mask], high=np.pi, low=-np.pi)
+            )
+            self.phi_circstd.append(
+                circstd(self._fiber_angles[mask], high=np.pi, low=-np.pi)
+            )
+            self.tag_mode.append(mode(self._anatomical_structure_tags[mask]).mode)
+        else:
+            # Subdivide into four quadrants
+            x_mid = (x_min + x_max) / 2
+            y_mid = (y_min + y_max) / 2
+
+            self._subdivide(x_min, x_mid, y_min, y_mid, depth + 1)  # Bottom-left
+            self._subdivide(x_mid, x_max, y_min, y_mid, depth + 1)  # Bottom-right
+            self._subdivide(x_min, x_mid, y_mid, y_max, depth + 1)  # Top-left
+            self._subdivide(x_mid, x_max, y_mid, y_max, depth + 1)  # Top-right

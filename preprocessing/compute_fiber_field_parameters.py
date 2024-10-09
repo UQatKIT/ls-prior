@@ -62,9 +62,8 @@ fiber_grid = FiberGrid(
     max_depth=7,
     point_threshold=100,
 )
-fiber_grid.compute()
-fiber_grid.plot_results("tag")
-fiber_grid.plot_results("mean")
-fiber_grid.plot_results("std")
+fiber_grid.plot("tag")
+fiber_grid.plot("mean")
+fiber_grid.plot("std")
 
 # %%
