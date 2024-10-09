@@ -119,19 +119,19 @@ class FiberGrid:
 
     Attributes
     ----------
-    grid_x : list[list[float]]
-        List of lower and upper boundaries of the cells in x-direction.
-    grid_y : list[list[float]]
-        List of lower and upper boundaries of the cells in y-direction.
-    fiber_coeff_x_mean : list[float]
+    grid_x : Array1d
+        Array of lower and upper boundaries of the cells in x-direction.
+    grid_y : Array1d
+        Array of lower and upper boundaries of the cells in y-direction.
+    fiber_coeff_x_mean : Array1d
         Mean first fiber coefficients for each cell.
-    fiber_coeff_y_mean : list[float]
+    fiber_coeff_y_mean : Array1d
         Mean second fiber coefficients for each cell.
-    fiber_angle_circmean : list[float]
+    fiber_angle_circmean : Array1d
         Circular mean of fiber angles in (-pi, pi] for each cell.
-    fiber_angle_circstd : list[float]
+    fiber_angle_circstd : Array1d
         Circular standard deviation of fiber angles for each cell.
-    anatomical_tag_mode : list[int]
+    anatomical_tag_mode : Array1d
         Mode of anatomical structure tag for each cell.
     max_depth : int
         Maximum number of splits per cell, defaults to 5.
@@ -141,13 +141,13 @@ class FiberGrid:
 
     def __init__(
         self,
-        grid_x: list[list[float]],
-        grid_y: list[list[float]],
-        fiber_coeff_x_mean: list[float],
-        fiber_coeff_y_mean: list[float],
-        fiber_angle_circmean: list[float],
-        fiber_angle_circstd: list[float],
-        anatomical_tag_mode: list[int],
+        grid_x: ArrayNx2,
+        grid_y: ArrayNx2,
+        fiber_coeff_x_mean: Array1d,
+        fiber_coeff_y_mean: Array1d,
+        fiber_angle_circmean: Array1d,
+        fiber_angle_circstd: Array1d,
+        anatomical_tag_mode: Array1d,
         max_depth: int = 5,
         point_threshold: int = 100,
     ) -> None:
@@ -165,14 +165,6 @@ class FiberGrid:
     def read_from_binary_file(cls, path: str):
         grid = np.load(path)
 
-        grid_x: list[list[float]] = grid[:, 0:2].tolist()
-        grid_y: list[list[float]] = grid[:, 2:4].tolist()
-        fiber_coeff_x_mean: list[float] = grid[:, 4].tolist()
-        fiber_coeff_y_mean: list[float] = grid[:, 5].tolist()
-        fiber_angle_circmean: list[float] = grid[:, 6].tolist()
-        fiber_angle_circstd: list[float] = grid[:, 7].tolist()
-        anatomical_tag_mode: list[int] = grid[:, 8].tolist()
-
         match_max_depth = re.search(r"max_depth(\d+)_", path)
         max_depth = int(match_max_depth.group(1)) if match_max_depth is not None else 5
         match_point_threshold = re.search(r"point_threshold(\d+).npy", path)
@@ -183,13 +175,13 @@ class FiberGrid:
         )
 
         return FiberGrid(
-            grid_x=grid_x,
-            grid_y=grid_y,
-            fiber_coeff_x_mean=fiber_coeff_x_mean,
-            fiber_coeff_y_mean=fiber_coeff_y_mean,
-            fiber_angle_circmean=fiber_angle_circmean,
-            fiber_angle_circstd=fiber_angle_circstd,
-            anatomical_tag_mode=anatomical_tag_mode,
+            grid_x=grid[:, 0:2],
+            grid_y=grid[:, 2:4],
+            fiber_coeff_x_mean=grid[:, 4],
+            fiber_coeff_y_mean=grid[:, 5],
+            fiber_angle_circmean=grid[:, 6],
+            fiber_angle_circstd=grid[:, 7],
+            anatomical_tag_mode=grid[:, 8],
             max_depth=max_depth,
             point_threshold=point_threshold,
         )
@@ -197,7 +189,7 @@ class FiberGrid:
     def plot(self, color: Literal["tag", "mean", "std"]) -> None:
         """
         Plot the adaptive grid with mean fiber vector in each cell. The cells are colored
-        according to the fiber porperties or anatomical region.
+        according to the fiber properties or anatomical region.
 
         Parameters
         ----------
@@ -219,7 +211,9 @@ class FiberGrid:
                 else (
                     self.fiber_angle_circmean
                     if color == "mean"
-                    else self.fiber_angle_circstd if color == "std" else None
+                    else self.fiber_angle_circstd
+                    if color == "std"
+                    else None
                 )
             ),
             s=[
@@ -344,13 +338,13 @@ class FiberGridComputer:
 
     def get_fiber_grid(self) -> FiberGrid:
         return FiberGrid(
-            grid_x=self.grid_x,
-            grid_y=self.grid_y,
-            fiber_coeff_x_mean=self.fiber_coeff_x_mean,
-            fiber_coeff_y_mean=self.fiber_coeff_y_mean,
-            fiber_angle_circmean=self.fiber_angle_circmean,
-            fiber_angle_circstd=self.fiber_angle_circstd,
-            anatomical_tag_mode=self.anatomical_tag_mode,
+            grid_x=np.array(self.grid_x),
+            grid_y=np.array(self.grid_y),
+            fiber_coeff_x_mean=np.array(self.fiber_coeff_x_mean),
+            fiber_coeff_y_mean=np.array(self.fiber_coeff_y_mean),
+            fiber_angle_circmean=np.array(self.fiber_angle_circmean),
+            fiber_angle_circstd=np.array(self.fiber_angle_circstd),
+            anatomical_tag_mode=np.array(self.anatomical_tag_mode),
             max_depth=self.max_depth,
             point_threshold=self.point_threshold,
         )
