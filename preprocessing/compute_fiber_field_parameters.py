@@ -1,11 +1,11 @@
 # %%
-
 import numpy as np
 
 from prior_fields.prior.dtypes import ArrayNx3
 from prior_fields.tensor.io import read_meshes_from_lge_mri_data
 from prior_fields.tensor.mapper import (
     FiberGrid,
+    FiberGridComputer,
     get_coefficients,
     map_fibers_to_tangent_space,
 )
@@ -53,7 +53,7 @@ tags_array = np.hstack([tags[i] for i in np.arange(1, 8)])
 
 # %%
 # Takes about 20-30 seconds
-fiber_grid = FiberGrid(
+FiberGridComputer(
     uac=uac_array,
     fiber_coeffs_x=fiber_coeffs_x1_array,
     fiber_coeffs_y=fiber_coeffs_x2_array,
@@ -61,9 +61,14 @@ fiber_grid = FiberGrid(
     anatomical_structure_tags=tags_array,
     max_depth=7,
     point_threshold=100,
+).get_fiber_grid().save()
+
+fiber_grid = FiberGrid.read_from_binary_file(
+    "data/LGE-MRI-based/fiber_grid_max_depth7_point_threshold100.npy"
 )
 fiber_grid.plot("tag")
 fiber_grid.plot("mean")
 fiber_grid.plot("std")
+fiber_grid.save()
 
 # %%

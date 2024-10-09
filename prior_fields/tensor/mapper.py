@@ -1,5 +1,5 @@
 import re
-from typing import Literal, overload
+from typing import Literal
 
 import numpy as np
 from matplotlib import pyplot as plt
@@ -119,10 +119,6 @@ class FiberGrid:
 
     Attributes
     ----------
-    max_depth : int
-        Maximum number of splits per cell.
-    point_threshold : int
-        Minimum number of points per cell.
     grid_x : list[list[float]]
         List of lower and upper boundaries of the cells in x-direction.
     grid_y : list[list[float]]
@@ -137,35 +133,14 @@ class FiberGrid:
         Circular standard deviation of fiber angles for each cell.
     anatomical_tag_mode : list[int]
         Mode of anatomical structure tag for each cell.
+    max_depth : int
+        Maximum number of splits per cell, defaults to 5.
+    point_threshold : int
+        Minimum number of points per cell, defaults to 100.
     """
 
-    @overload
     def __init__(
         self,
-        uac: ArrayNx2,
-        fiber_coeffs_x: Array1d,
-        fiber_coeffs_y: Array1d,
-        fiber_angles: Array1d,
-        anatomical_structure_tags: Array1d,
-        grid_x: None,
-        grid_y: None,
-        fiber_coeff_x_mean: None,
-        fiber_coeff_y_mean: None,
-        fiber_angle_circmean: None,
-        fiber_angle_circstd: None,
-        anatomical_tag_mode: None,
-        max_depth: int = 5,
-        point_threshold: int = 100,
-    ) -> None: ...
-
-    @overload
-    def __init__(
-        self,
-        uac: None,
-        fiber_coeffs_x: None,
-        fiber_coeffs_y: None,
-        fiber_angles: None,
-        anatomical_structure_tags: None,
         grid_x: list[list[float]],
         grid_y: list[list[float]],
         fiber_coeff_x_mean: list[float],
@@ -173,81 +148,23 @@ class FiberGrid:
         fiber_angle_circmean: list[float],
         fiber_angle_circstd: list[float],
         anatomical_tag_mode: list[int],
-        max_depth: int,
-        point_threshold: int,
-    ) -> None: ...
-
-    def __init__(
-        self,
-        uac: ArrayNx2 | None = None,
-        fiber_coeffs_x: Array1d | None = None,
-        fiber_coeffs_y: Array1d | None = None,
-        fiber_angles: Array1d | None = None,
-        anatomical_structure_tags: Array1d | None = None,
-        grid_x: list[list[float]] | None = None,
-        grid_y: list[list[float]] | None = None,
-        fiber_coeff_x_mean: list[float] | None = None,
-        fiber_coeff_y_mean: list[float] | None = None,
-        fiber_angle_circmean: list[float] | None = None,
-        fiber_angle_circstd: list[float] | None = None,
-        anatomical_tag_mode: list[int] | None = None,
         max_depth: int = 5,
         point_threshold: int = 100,
     ) -> None:
-        """
-        Parameters
-        ----------
-        uac : ArrayNx2
-            UACs at vertices.
-        fiber_coeffs_x : Array1d
-            Fiber coefficient for first UAC-based tangent space coordinate.
-        fiber_coeffs_y : Array1d
-            Fiber coefficient for second UAC-based tangent space coordinate.
-        fiber_angles : Array1d
-            Angle within (-pi, pi] representing the fiber orientation.0 represents a
-            fiber in the direction of no change in beta which is parallel to the alpha-
-            axis in the UAC system.
-        anatomical_structure_tags : Array1d
-            Tag for anatomical structure assignment.
-        max_depth : int, optional
-            Maximum number of splits per cell, defaults to 5.
-        point_threshold : int, optional
-            Minimum number of points per cell, defaults to 100.
-        """
+        self.grid_x = grid_x
+        self.grid_y = grid_y
+        self.fiber_coeff_x_mean = fiber_coeff_x_mean
+        self.fiber_coeff_y_mean = fiber_coeff_y_mean
+        self.fiber_angle_circmean = fiber_angle_circmean
+        self.fiber_angle_circstd = fiber_angle_circstd
+        self.anatomical_tag_mode = anatomical_tag_mode
         self.max_depth = max_depth
         self.point_threshold = point_threshold
 
-        if grid_x is None:
-            self.grid_x: list[list[float]] = []
-            self.grid_y: list[list[float]] = []
-
-            self.fiber_coeff_x_mean: list[float] = []
-            self.fiber_coeff_y_mean: list[float] = []
-            self.fiber_angle_circmean: list[float] = []
-            self.fiber_angle_circstd: list[float] = []
-            self.anatomical_tag_mode: list[int] = []
-
-            self._uac = uac
-            self._fiber_coeffs_x = fiber_coeffs_x
-            self._fiber_coeffs_y = fiber_coeffs_y
-            self._fiber_angles = fiber_angles
-            self._anatomical_structure_tags = anatomical_structure_tags
-
-            self._subdivide(0, 1, 0, 1)  # Start with full unit square
-
-        elif uac is None:
-            self.grid_x = grid_x
-            self.grid_y = grid_y
-            self.fiber_coeff_x_mean = fiber_coeff_x_mean
-            self.fiber_coeff_y_mean = fiber_coeff_y_mean
-            self.fiber_angle_circmean = fiber_angle_circmean
-            self.fiber_angle_circstd = fiber_angle_circstd
-            self.anatomical_tag_mode = anatomical_tag_mode
-
     @classmethod
-    def from_binary_file(cls, path: str):
-
+    def read_from_binary_file(cls, path: str):
         grid = np.load(path)
+
         grid_x: list[list[float]] = grid[:, 0:2].tolist()
         grid_y: list[list[float]] = grid[:, 2:4].tolist()
         fiber_coeff_x_mean: list[float] = grid[:, 4].tolist()
@@ -266,11 +183,6 @@ class FiberGrid:
         )
 
         return FiberGrid(
-            uac=None,
-            fiber_coeffs_x=None,
-            fiber_coeffs_y=None,
-            fiber_angles=None,
-            anatomical_structure_tags=None,
             grid_x=grid_x,
             grid_y=grid_y,
             fiber_coeff_x_mean=fiber_coeff_x_mean,
@@ -342,8 +254,16 @@ class FiberGrid:
 
         plt.show()
 
-    def save(self, filename_prefix: str = "fiber_grid"):
-        """Write grid to binary file."""
+    def save(self, filename_prefix: str = "fiber_grid") -> None:
+        """Write fiber grid to binary file.
+
+        Parameters
+        ----------
+        filename_prefix : str, optional
+            Prefix of the filename, defaults to 'fiber_grid'.
+            The suffix is fixed to contain max_depth and point_threshold which are used to
+            initialize a FiberGrid from the file.
+        """
         np.save(
             f"data/LGE-MRI-based/{filename_prefix}"
             f"_max_depth{self.max_depth}"
@@ -363,6 +283,76 @@ class FiberGrid:
                     ).T,
                 ]
             ),
+        )
+
+
+class FiberGridComputer:
+    """
+    Computes a fiber grid and the fiber properties/anatomical tags for each cell from the
+    UAC coordinates and fiber/tag data for the vertices of left atrial meshes.
+    """
+
+    def __init__(
+        self,
+        uac: ArrayNx2,
+        fiber_coeffs_x: Array1d,
+        fiber_coeffs_y: Array1d,
+        fiber_angles: Array1d,
+        anatomical_structure_tags: Array1d,
+        max_depth: int = 5,
+        point_threshold: int = 100,
+    ) -> None:
+        """
+        Parameters
+        ----------
+        uac : ArrayNx2
+            UACs at vertices.
+        fiber_coeffs_x : Array1d
+            Fiber coefficient for first UAC-based tangent space coordinate.
+        fiber_coeffs_y : Array1d
+            Fiber coefficient for second UAC-based tangent space coordinate.
+        fiber_angles : Array1d
+            Angle within (-pi, pi] representing the fiber orientation.0 represents a
+            fiber in the direction of no change in beta which is parallel to the alpha-
+            axis in the UAC system.
+        anatomical_structure_tags : Array1d
+            Tag for anatomical structure assignment.
+        max_depth : int, optional
+            Maximum number of splits per cell, defaults to 5.
+        point_threshold : int, optional
+            Minimum number of points per cell, defaults to 100.
+        """
+        self.max_depth = max_depth
+        self.point_threshold = point_threshold
+
+        self.grid_x: list[list[float]] = []
+        self.grid_y: list[list[float]] = []
+
+        self.fiber_coeff_x_mean: list[float] = []
+        self.fiber_coeff_y_mean: list[float] = []
+        self.fiber_angle_circmean: list[float] = []
+        self.fiber_angle_circstd: list[float] = []
+        self.anatomical_tag_mode: list[int] = []
+
+        self._uac = uac
+        self._fiber_coeffs_x = fiber_coeffs_x
+        self._fiber_coeffs_y = fiber_coeffs_y
+        self._fiber_angles = fiber_angles
+        self._anatomical_structure_tags = anatomical_structure_tags
+
+        self._subdivide(0, 1, 0, 1)  # Start with full unit square
+
+    def get_fiber_grid(self) -> FiberGrid:
+        return FiberGrid(
+            grid_x=self.grid_x,
+            grid_y=self.grid_y,
+            fiber_coeff_x_mean=self.fiber_coeff_x_mean,
+            fiber_coeff_y_mean=self.fiber_coeff_y_mean,
+            fiber_angle_circmean=self.fiber_angle_circmean,
+            fiber_angle_circstd=self.fiber_angle_circstd,
+            anatomical_tag_mode=self.anatomical_tag_mode,
+            max_depth=self.max_depth,
+            point_threshold=self.point_threshold,
         )
 
     def _subdivide(
