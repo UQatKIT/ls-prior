@@ -5,6 +5,7 @@
 *.ply
 *.lon
 *.pts
+*.npy
 
 # raw mesh files
 data/shape_model/cn617_*
