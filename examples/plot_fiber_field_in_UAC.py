@@ -33,7 +33,6 @@ for i in range(4):
     V_plot = V[s].reshape(1, -1)
 
     ax = fig.add_subplot(2, 2, i + 1, projection="3d")
-    ax = plt.gca()
     ax.set_title(f"Vertex {s}")
     ax.set_xlim(V_plot[:, 0] - 120, V_plot[:, 0] + 120)
     ax.set_ylim(V_plot[:, 1] - 120, V_plot[:, 1] + 120)

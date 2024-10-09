@@ -58,7 +58,6 @@ def plot_vertex_values_on_surface(values: Array1d, pos: ArrayNx3) -> None:
     """
     fig = plt.figure(figsize=(8, 8))
     ax = fig.add_subplot(projection="3d")
-    ax = plt.gca()
     ax.set_aspect("equal")
 
     c = ax.scatter(*[pos[:, i] for i in range(3)], c=values, s=1)  # type: ignore

@@ -50,7 +50,6 @@ fiber_coeffs_y_array = np.hstack([fiber_coeffs_y[i] for i in np.arange(1, 8)])
 fiber_angles_array = np.hstack([fiber_angles[i] for i in np.arange(1, 8)])
 tags_array = np.hstack([tags[i] for i in np.arange(1, 8)])
 
-
 # %%
 # Takes about 20-30 seconds
 FiberGridComputer(
@@ -69,6 +68,5 @@ fiber_grid = FiberGrid.read_from_binary_file(
 fiber_grid.plot("tag")
 fiber_grid.plot("mean")
 fiber_grid.plot("std")
-fiber_grid.save()
 
 # %%

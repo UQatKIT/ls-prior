@@ -51,7 +51,6 @@ def plot_vector_field(vecs: ArrayNx3, pos: ArrayNx3, length: float = 1.0) -> Non
     """
     fig = plt.figure(figsize=(10, 10))
     ax = fig.add_subplot(projection="3d")
-    ax = plt.gca()
     ax.set_aspect("equal")
 
     add_3d_vectors_to_plot(pos, vecs, ax, length=length, lw=0.5)
