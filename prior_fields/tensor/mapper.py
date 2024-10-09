@@ -211,9 +211,7 @@ class FiberGrid:
                 else (
                     self.fiber_angle_circmean
                     if color == "mean"
-                    else self.fiber_angle_circstd
-                    if color == "std"
-                    else None
+                    else self.fiber_angle_circstd if color == "std" else None
                 )
             ),
             s=[
@@ -241,10 +239,16 @@ class FiberGrid:
             plt.title(
                 "Mean of fibers in UAC over 7 geometries with anatomical structures"
             )
+            plt.tight_layout()
+            plt.savefig("figures/uac_fibers_with_tag.svg")
         elif color == "mean":
             plt.title("Circular mean of fiber angle")
+            plt.tight_layout()
+            plt.savefig("figures/uac_fibers_with_circmean.svg")
         elif color == "std":
             plt.title("Circular standard deviation of fiber angle")
+            plt.tight_layout()
+            plt.savefig("figures/uac_fibers_with_circstd.svg")
 
         plt.show()
 
