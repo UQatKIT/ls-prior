@@ -6,6 +6,7 @@ from matplotlib import pyplot as plt
 from scipy.stats import circmean, circstd, mode
 
 from prior_fields.prior.dtypes import Array1d, ArrayNx2, ArrayNx3
+from prior_fields.tensor.transformer import normalize
 
 
 def get_dict_with_adjacent_faces_for_each_vertex(F: ArrayNx3) -> dict[int, list[int]]:
@@ -82,12 +83,11 @@ def map_fibers_to_tangent_space(fibers: ArrayNx3, x: ArrayNx3, y: ArrayNx3) -> A
     ArrayNx3
         Fibers mapped to the tangent spaces.
     """
-    fibers_x, fibers_y = get_coefficients(fibers, x, y)
+    fibers_x, fibers_y = get_coefficients(normalize(fibers), x, y)
 
     fibers_mapped = fibers_x[:, np.newaxis] * x + fibers_y[:, np.newaxis] * y
-    fiber_length = np.linalg.norm(fibers_mapped, axis=1)
 
-    return np.divide(fibers_mapped.T, fiber_length, where=fiber_length != 0).T
+    return normalize(fibers_mapped)
 
 
 def get_coefficients(

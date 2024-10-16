@@ -1,6 +1,5 @@
 import numpy as np
 from potpourri3d import MeshVectorHeatSolver
-from scipy.linalg import norm
 
 from prior_fields.prior.dtypes import Array1d, ArrayNx2, ArrayNx3
 
@@ -156,7 +155,9 @@ def _get_directions_with_no_change_in_one_uac(
                 - (direction_no_change @ basis_n[v_idx]) * basis_n[v_idx]
             )
             # normalize
-            direction_no_change = direction_no_change / norm(direction_no_change)
+            direction_no_change = direction_no_change / np.linalg.norm(
+                direction_no_change
+            )
 
             # Choose direction with positive change in other UAC
             change_other_uac = (

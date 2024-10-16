@@ -1,6 +1,12 @@
 import numpy as np
 
-from prior_fields.prior.dtypes import Array1d, ArrayNx3
+from prior_fields.prior.dtypes import Array1d, ArrayNx2, ArrayNx3
+
+
+def normalize(vecs: ArrayNx3 | ArrayNx2) -> ArrayNx3 | ArrayNx2:
+    """Normalize vectors to length 1."""
+    length = np.linalg.norm(vecs, axis=1)
+    return np.divide(vecs.T, length, where=length != 0).T
 
 
 def angles_to_3d_vector(alphas: Array1d, x_axes: ArrayNx3, y_axes: ArrayNx3) -> ArrayNx3:
@@ -25,9 +31,7 @@ def angles_to_3d_vector(alphas: Array1d, x_axes: ArrayNx3, y_axes: ArrayNx3) -> 
 
 
 def _angles_between_vectors(a, b):
-    return np.arccos(
-        np.sum(a * b, axis=1) / (np.linalg.norm(a, axis=1) * np.linalg.norm(b, axis=1))
-    )
+    return np.arccos(np.sum(normalize(a) * normalize(b), axis=1))
 
 
 def vectors_3d_to_angles(
