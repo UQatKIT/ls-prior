@@ -1,6 +1,7 @@
 # %%
 from pathlib import Path
 
+import imageio.v2 as iio
 import numpy as np
 from ipywidgets import IntSlider, interact
 from matplotlib import pyplot as plt
@@ -169,3 +170,59 @@ def plot_mean_angle(azim):
 
 
 # %%
+# Record plot wit subsamble of mapped fibers as video
+def plot_mean_fiber_field_frame(azim, frame_number):
+    fig = plt.figure(figsize=(10, 10))
+    ax = fig.add_subplot(projection="3d")
+    ax.set_aspect("equal")
+    ax.view_init(elev=20, azim=azim)
+
+    add_3d_vectors_to_plot(V[idx], fiber_mean[idx], ax, length=0.03, lw=0.5)
+
+    plt.title("Mean fiber field (subsampled)")
+
+    filename = f"figures/frames/frame_{frame_number:02d}.png"
+    plt.savefig(filename)
+    plt.close()
+
+
+azim_values = np.arange(-180, 185, 5)  # Steps from -180 to 180
+
+for i, azim in enumerate(azim_values):
+    plot_mean_fiber_field_frame(azim, i)
+
+w = iio.get_writer("figures/mean_fiber_field_animated.mp4", fps=10)
+for i in range(len(azim_values)):
+    image = iio.imread(f"figures/frames/frame_{i:02d}.png")
+    w.append_data(image)
+w.close()
+
+
+# %%
+# Record mean fiber angle plot as video
+def plot_mean_angle_frame(azim, frame_number):
+    fig = plt.figure(figsize=(10, 10))
+    ax = fig.add_subplot(projection="3d")
+    ax.set_aspect("equal")
+    ax.view_init(elev=20, azim=azim)
+
+    c = ax.scatter(*[V[:, i] for i in range(3)], c=mean_angle, s=0.1, cmap="twilight")
+
+    plt.colorbar(c)
+    plt.title("Mean fiber angle")
+
+    filename = f"figures/frames/frame_{frame_number:02d}.png"
+    plt.savefig(filename)
+    plt.close()
+
+
+azim_values = np.arange(-180, 185, 5)  # Steps from -180 to 180
+
+for i, azim in enumerate(azim_values):
+    plot_mean_angle_frame(azim, i)
+
+w = iio.get_writer("figures/mean_angle_animated.mp4", fps=10)
+for i in range(len(azim_values)):
+    image = iio.imread(f"figures/frames/frame_{i:02d}.png")
+    w.append_data(image)
+w.close()

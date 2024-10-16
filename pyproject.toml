@@ -81,12 +81,18 @@ potpourri3d = ">=1.1.0"
 [tool.pixi.feature.test.dependencies]
 pytest = ">=8.3.2,<8.4"
 
+# ------------------------------------- PLOTTING -------------------------------------- #
+
+[tool.pixi.feature.plotting.dependencies]
+imageio = ">=2.36.0,<2.37"
+imageio-ffmpeg = ">=0.5.1,<0.6"
+
 # ------------------------------------------------------------------------------------- #
 #                                   PIXI ENVIRONMENTS                                   #
 # ------------------------------------------------------------------------------------- #
 
 [tool.pixi.environments]
-default = { features = ["dev", "lint", "prior", "tensor", "test"], solve-group = "default" }
+default = { features = ["dev", "lint", "prior", "tensor", "test", "plotting"], solve-group = "default" }
 prior = { features = ["prior"], solve-group = "default" }
 tensor = { features = ["tensor"], solve-group = "default" }
 
