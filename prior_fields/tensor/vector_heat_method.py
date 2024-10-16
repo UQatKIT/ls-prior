@@ -123,7 +123,7 @@ def _get_directions_with_no_change_in_one_uac(
     basis_n: ArrayNx3,
 ) -> ArrayNx3:
     vertices_to_uac_change_map = {
-        k: {f_idx: current_uac[k] - current_uac[F[f_idx]] for f_idx in faces}
+        k: {f_idx: 100 * (current_uac[k] - current_uac[F[f_idx]]) for f_idx in faces}
         for k, faces in vertex_to_faces_map.items()
     }
 
@@ -144,9 +144,18 @@ def _get_directions_with_no_change_in_one_uac(
         if len(vertex_to_face_with_no_uac_change_map[v_idx].keys()) > 0:
             f_idx = list(vertex_to_face_with_no_uac_change_map[v_idx].keys())[0]
             uac_changes = list(vertex_to_face_with_no_uac_change_map[v_idx].values())[0]
+            edge_lengths = np.linalg.norm(V[F[f_idx]] - V[v_idx], axis=1) / 1000
+            uac_changes_per_distance = np.divide(
+                uac_changes, edge_lengths, where=edge_lengths != 0
+            )
 
             # compute direction in which uac coordinate does not change
-            weights_no_change = abs(np.divide(1, uac_changes, where=uac_changes != 0))
+            weights_no_change = abs(
+                np.divide(
+                    1, uac_changes_per_distance, where=uac_changes_per_distance != 0
+                )
+            )
+            weights_no_change = weights_no_change / np.linalg.norm(weights_no_change)
             direction_no_change = (weights_no_change * (V[F[f_idx]] - V[v_idx]).T).T.sum(
                 axis=0
             )
