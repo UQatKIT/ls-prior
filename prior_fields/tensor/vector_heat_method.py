@@ -2,6 +2,7 @@ import numpy as np
 from potpourri3d import MeshVectorHeatSolver
 
 from prior_fields.prior.dtypes import Array1d, ArrayNx2, ArrayNx3
+from prior_fields.tensor.transformer import normalize
 
 
 def get_reference_coordinates(
@@ -46,7 +47,7 @@ def get_reference_coordinates(
 def get_uac_basis_vectors(
     V: ArrayNx3, F: ArrayNx3, uac: ArrayNx2
 ) -> tuple[ArrayNx3, ArrayNx3]:
-    """Get vectors in tangent space in the direction with constant alpha/beta.
+    """Get normalized vectors in tangent space in the direction with constant alpha/beta.
 
     Note
     ----
@@ -83,7 +84,7 @@ def get_uac_basis_vectors(
         uac[:, 0], uac[:, 1], vertex_to_faces_map, V, F, basis_n
     )
 
-    return directions_constant_beta, directions_constant_alpha
+    return normalize(directions_constant_beta), normalize(directions_constant_alpha)
 
 
 def _get_vertex_to_face_map(F):
@@ -153,10 +154,6 @@ def _get_directions_with_no_change_in_one_uac(
             direction_no_change = (
                 direction_no_change
                 - (direction_no_change @ basis_n[v_idx]) * basis_n[v_idx]
-            )
-            # normalize
-            direction_no_change = direction_no_change / np.linalg.norm(
-                direction_no_change
             )
 
             # Choose direction with positive change in other UAC

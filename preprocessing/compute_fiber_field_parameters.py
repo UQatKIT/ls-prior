@@ -37,7 +37,7 @@ for i in sorted(V.keys()):
     fiber_coeffs_x[i], fiber_coeffs_y[i] = get_coefficients(
         fibers_in_tangent_space[i], directions_constant_beta, directions_constant_alpha
     )
-    print("Get fiber angle within (-pi, pi] in UAC system.")
+    print("Get fiber angle within (-pi/2, pi/2] in UAC system.")
     fiber_angles[i] = vector_coefficients_2d_to_angles(
         fiber_coeffs_x[i], fiber_coeffs_y[i]
     )

@@ -30,7 +30,7 @@ def angles_to_3d_vector(alphas: Array1d, x_axes: ArrayNx3, y_axes: ArrayNx3) -> 
     return (np.cos(alphas) * x_axes.T).T + (np.sin(alphas) * y_axes.T).T
 
 
-def _angles_between_vectors(a, b):
+def angles_between_vectors(a, b):
     return np.arccos(np.sum(normalize(a) * normalize(b), axis=1))
 
 
@@ -54,8 +54,8 @@ def vectors_3d_to_angles(
     Array1D
          Angles between :math:`-\\pi` and :math:`\\pi`
     """
-    alphas_x = _angles_between_vectors(x_axes, directions)
-    alphas_y = _angles_between_vectors(y_axes, directions)
+    alphas_x = angles_between_vectors(x_axes, directions)
+    alphas_y = angles_between_vectors(y_axes, directions)
     alphas = np.array(
         [ax if ay <= np.pi / 2 else -ax for ax, ay in zip(alphas_x, alphas_y)]
     )

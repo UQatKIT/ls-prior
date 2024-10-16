@@ -67,7 +67,7 @@ def map_categories_from_faces_to_vertices(
 
 
 def map_fibers_to_tangent_space(fibers: ArrayNx3, x: ArrayNx3, y: ArrayNx3) -> ArrayNx3:
-    """Map fibers to tangent spaces spanned by x and y.
+    """Get normalized fibers in tangent spaces spanned by x and y.
 
     Parameters
     ----------
@@ -131,7 +131,7 @@ class FiberGrid:
     fiber_coeff_y_mean : Array1d
         Mean second fiber coefficients for each cell.
     fiber_angle_circmean : Array1d
-        Circular mean of fiber angles in (-pi, pi] for each cell.
+        Circular mean of fiber angles in (-pi/2, pi/2] for each cell.
     fiber_angle_circstd : Array1d
         Circular standard deviation of fiber angles for each cell.
     anatomical_tag_mode : Array1d
@@ -221,6 +221,7 @@ class FiberGrid:
                 12e4 * (x[1] - x[0]) * (y[1] - y[0])
                 for x, y in zip(self.grid_x, self.grid_y)
             ],
+            cmap="twilight" if color == "mean" else "viridis",
             marker="s",
             alpha=0.3,
         )
@@ -313,7 +314,7 @@ class FiberGridComputer:
         fiber_coeffs_y : Array1d
             Fiber coefficient for second UAC-based tangent space coordinate.
         fiber_angles : Array1d
-            Angle within (-pi, pi] representing the fiber orientation.0 represents a
+            Angle within (-pi/2, pi/2] representing the fiber orientation. 0 represents a
             fiber in the direction of no change in beta which is parallel to the alpha-
             axis in the UAC system.
         anatomical_structure_tags : Array1d

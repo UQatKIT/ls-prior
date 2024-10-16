@@ -126,7 +126,7 @@ plt.savefig("figures/uac_fibers.svg")
 plt.show()
 
 # %%
-# Get fiber angle within (-pi, pi] in UAC system
+# Get fiber angle within (-pi/2, pi/2] in UAC system
 phi = vector_coefficients_2d_to_angles(fiber_coeffs_x1, fiber_coeffs_x2)
 
 # %%

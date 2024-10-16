@@ -8,9 +8,16 @@ from scipy.spatial import KDTree
 from scipy.stats import circmean, circstd
 
 from prior_fields.tensor.io import get_mesh_and_point_data_from_lge_mri_based_data
-from prior_fields.tensor.mapper import FiberGrid, map_fibers_to_tangent_space
+from prior_fields.tensor.mapper import (
+    FiberGrid,
+    get_coefficients,
+    map_fibers_to_tangent_space,
+)
 from prior_fields.tensor.plots import add_3d_vectors_to_plot
-from prior_fields.tensor.transformer import _angles_between_vectors, vectors_3d_to_angles
+from prior_fields.tensor.transformer import (
+    angles_between_vectors,
+    vector_coefficients_2d_to_angles,
+)
 from prior_fields.tensor.vector_heat_method import get_uac_basis_vectors
 
 # %%
@@ -60,7 +67,7 @@ print(
 # %%
 print("Comparison of fibers from atlas data and mean fibers mapped to atlas geometry:")
 idx_non_zero = (fiber_mean.mean(axis=1) != 0) & (fibers.mean(axis=1) != 0)
-angles_between_atlas_and_mean_fiber = _angles_between_vectors(
+angles_between_atlas_and_mean_fiber = angles_between_vectors(
     fibers[idx_non_zero], fiber_mean[idx_non_zero]
 )
 angles_between_atlas_and_mean_fiber = angles_between_atlas_and_mean_fiber[
@@ -142,7 +149,8 @@ def plot_mean_fiber_field(elev, azim):
 
 # %%
 # Interactive plot of mean angle of mapped fibers
-mean_angle = vectors_3d_to_angles(fiber_mean, basis_x, basis_y)
+coeff_x, coeff_y = get_coefficients(fiber_mean, basis_x, basis_y)
+mean_angle = vector_coefficients_2d_to_angles(coeff_x, coeff_y)
 
 
 @interact(azim=IntSlider(value=80, min=-180, max=180, step=5, description="azim"))
@@ -152,7 +160,7 @@ def plot_mean_angle(azim):
     ax.set_aspect("equal")
     ax.view_init(elev=20, azim=azim)
 
-    c = ax.scatter(*[V[:, i] for i in range(3)], c=mean_angle, s=0.1)
+    c = ax.scatter(*[V[:, i] for i in range(3)], c=mean_angle, s=0.1, cmap="twilight")
 
     plt.colorbar(c)
     plt.title("Mean fiber angle")
