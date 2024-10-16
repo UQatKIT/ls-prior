@@ -13,6 +13,7 @@ from prior_fields.tensor.transformer import vector_coefficients_2d_to_angles
 from prior_fields.tensor.vector_heat_method import get_uac_basis_vectors
 
 # %%
+# takes about 70 seconds
 V, F, uac, fibers, tags = read_meshes_from_lge_mri_data()
 
 # %%
@@ -21,8 +22,8 @@ fiber_coeffs_x: dict[int, ArrayNx3] = dict()
 fiber_coeffs_y: dict[int, ArrayNx3] = dict()
 fiber_angles: dict[int, ArrayNx3] = dict()
 
-# This takes about 75 - 90 seconds
-for i in V.keys():
+# This takes about 75 seconds
+for i in sorted(V.keys()):
     print(f"Geometry {i}:")
     print("Get UAC-based tangent space coordinates.")
     directions_constant_beta, directions_constant_alpha = get_uac_basis_vectors(
@@ -34,7 +35,7 @@ for i in V.keys():
     )
     print("Get coefficients of fibers in tangent space coordinates.")
     fiber_coeffs_x[i], fiber_coeffs_y[i] = get_coefficients(
-        fibers[i], directions_constant_beta, directions_constant_alpha
+        fibers_in_tangent_space[i], directions_constant_beta, directions_constant_alpha
     )
     print("Get fiber angle within (-pi, pi] in UAC system.")
     fiber_angles[i] = vector_coefficients_2d_to_angles(
@@ -51,7 +52,7 @@ fiber_angles_array = np.hstack([fiber_angles[i] for i in np.arange(1, 8)])
 tags_array = np.hstack([tags[i] for i in np.arange(1, 8)])
 
 # %%
-# Takes about 20-30 seconds
+# Takes about 25 seconds
 FiberGridComputer(
     uac=uac_array,
     fiber_coeffs_x=fiber_coeffs_x_array,
