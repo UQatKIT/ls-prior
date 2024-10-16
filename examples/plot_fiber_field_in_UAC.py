@@ -150,8 +150,8 @@ for i in range(len(grid) - 1):
         )
         fiber_coeff_mean_x1[j, i] = fiber_coeffs_x1[mask].mean()
         fiber_coeff_mean_x2[j, i] = fiber_coeffs_x2[mask].mean()
-        phi_circmean[j, i] = circmean(phi[mask])
-        phi_circstd[j, i] = circstd(phi[mask])
+        phi_circmean[j, i] = circmean(phi[mask], low=-np.pi / 2, high=np.pi / 2)
+        phi_circstd[j, i] = circstd(phi[mask], low=-np.pi / 2, high=np.pi / 2)
         tag_mode[j, i] = mode(tags[mask]).mode
 
 fig, ax = plt.subplots(1, 1, figsize=(8, 8))

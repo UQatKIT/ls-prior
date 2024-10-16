@@ -59,27 +59,21 @@ def vectors_3d_to_angles(
 
 
 def vector_coefficients_2d_to_angles(coeff_x, coeff_y):
+    """
+    Interpret vector coefficients as opposite and adjacent in the triangle determining
+    the angle between x-axis and vector. This is more robust than just computing the
+    angle between the x-axis and the vector for the given case, that the basis is not
+    orthogonal.
+    """
     angles = np.zeros_like(coeff_x)
 
     # arctan(opposite / adjacent)
-    mask = coeff_x > 0
+    mask = coeff_x != 0
     angles[mask] = np.arctan(coeff_y[mask] / coeff_x[mask])
 
-    # pi + arctan(opposite / adjacent)
-    mask = (coeff_x < 0) & (coeff_y >= 0)
-    angles[mask] = np.pi + np.arctan(coeff_y[mask] / coeff_x[mask])
-
-    # -pi + arctan(opposite / adjacent)
-    mask = (coeff_x < 0) & (coeff_y < 0)
-    angles[mask] = -np.pi + np.arctan(coeff_y[mask] / coeff_x[mask])
-
     # pi/2
-    mask = (coeff_x == 0) & (coeff_y > 0)
+    mask = (coeff_x == 0) & (coeff_y != 0)
     angles[mask] = np.pi / 2
-
-    # -pi/2
-    mask = (coeff_x == 0) & (coeff_y < 0)
-    angles[mask] = -np.pi / 2
 
     # No fiber orientation known
     mask = (coeff_x == 0) & (coeff_y == 0)

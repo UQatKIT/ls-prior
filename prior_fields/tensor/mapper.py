@@ -386,10 +386,10 @@ class FiberGridComputer:
             self.fiber_coeff_x_mean.append(self._fiber_coeffs_x[mask].mean())
             self.fiber_coeff_y_mean.append(self._fiber_coeffs_y[mask].mean())
             self.fiber_angle_circmean.append(
-                circmean(self._fiber_angles[mask], high=np.pi, low=-np.pi)
+                circmean(self._fiber_angles[mask], low=-np.pi / 2, high=np.pi / 2)
             )
             self.fiber_angle_circstd.append(
-                circstd(self._fiber_angles[mask], high=np.pi, low=-np.pi)
+                circstd(self._fiber_angles[mask], low=-np.pi / 2, high=np.pi / 2)
             )
             self.anatomical_tag_mode.append(
                 mode(self._anatomical_structure_tags[mask]).mode

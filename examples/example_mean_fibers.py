@@ -70,8 +70,14 @@ print(
     f"Range:\t\t({angles_between_atlas_and_mean_fiber.min():.4f}, "
     f"{angles_between_atlas_and_mean_fiber.max():.4f})"
 )
-print(f"Circular mean:\t{circmean(angles_between_atlas_and_mean_fiber):.4f}")
-print(f"Circular std:\t{circstd(angles_between_atlas_and_mean_fiber):.4f}")
+circular_mean = circmean(
+    angles_between_atlas_and_mean_fiber, low=-np.pi / 2, high=np.pi / 2
+)
+print(f"Circular mean:\t{circular_mean:.4f}")
+circular_std = circstd(
+    angles_between_atlas_and_mean_fiber, low=-np.pi / 2, high=np.pi / 2
+)
+print(f"Circular std:\t{circular_std:.4f}")
 
 fig = plt.figure(figsize=(10, 10))
 
