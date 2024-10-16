@@ -69,6 +69,11 @@ def map_categories_from_faces_to_vertices(
 def map_fibers_to_tangent_space(fibers: ArrayNx3, x: ArrayNx3, y: ArrayNx3) -> ArrayNx3:
     """Get normalized fibers in tangent spaces spanned by x and y.
 
+    Note
+    ----
+    Analogous to the angle restriction to (-pi/2, pi/2], the fibers in the tangent spaces
+    are transformed so that they form an acute angle with the x-axis.
+
     Parameters
     ----------
     fibers : ArrayNx3
@@ -83,9 +88,12 @@ def map_fibers_to_tangent_space(fibers: ArrayNx3, x: ArrayNx3, y: ArrayNx3) -> A
     ArrayNx3
         Fibers mapped to the tangent spaces.
     """
-    fibers_x, fibers_y = get_coefficients(normalize(fibers), x, y)
+    fiber_coeff_x, fiber_coeff_y = get_coefficients(normalize(fibers), x, y)
 
-    fibers_mapped = fibers_x[:, np.newaxis] * x + fibers_y[:, np.newaxis] * y
+    fibers_mapped = fiber_coeff_x[:, np.newaxis] * x + fiber_coeff_y[:, np.newaxis] * y
+
+    mask_reverse = fiber_coeff_x < 0
+    fibers_mapped[mask_reverse] *= -1
 
     return normalize(fibers_mapped)
 
