@@ -75,13 +75,13 @@ def get_uac_basis_vectors(
     vertex_to_faces_map = _get_vertex_to_face_map(F)
 
     print("Get coordinate of no change in beta...")
-    directions_constant_beta = _get_directions_with_no_change_in_one_uac_coordinate(
-        uac[:, 1], vertex_to_faces_map, V, F, basis_n, basis_x
+    directions_constant_beta = _get_directions_with_no_change_in_one_uac(
+        uac[:, 1], uac[:, 0], vertex_to_faces_map, V, F, basis_n
     )
 
     print("Get coordinate of no change in alpha...")
-    directions_constant_alpha = _get_directions_with_no_change_in_one_uac_coordinate(
-        uac[:, 0], vertex_to_faces_map, V, F, basis_n, basis_x
+    directions_constant_alpha = _get_directions_with_no_change_in_one_uac(
+        uac[:, 0], uac[:, 1], vertex_to_faces_map, V, F, basis_n
     )
 
     return directions_constant_beta, directions_constant_alpha
@@ -114,16 +114,16 @@ def _get_vertex_to_face_map(F):
     return {i: v for i, v in enumerate(vertex_to_faces_map)}
 
 
-def _get_directions_with_no_change_in_one_uac_coordinate(
-    uac_coordinate: Array1d,
+def _get_directions_with_no_change_in_one_uac(
+    current_uac: Array1d,
+    other_uac: Array1d,
     vertex_to_faces_map: dict,
     V: ArrayNx3,
     F: ArrayNx3,
     basis_n: ArrayNx3,
-    basis_x: ArrayNx3,
 ) -> ArrayNx3:
     vertices_to_uac_change_map = {
-        k: {f_idx: uac_coordinate[k] - uac_coordinate[F[f_idx]] for f_idx in faces}
+        k: {f_idx: current_uac[k] - current_uac[F[f_idx]] for f_idx in faces}
         for k, faces in vertex_to_faces_map.items()
     }
 
@@ -144,13 +144,12 @@ def _get_directions_with_no_change_in_one_uac_coordinate(
         if len(vertex_to_face_with_no_uac_change_map[v_idx].keys()) > 0:
             f_idx = list(vertex_to_face_with_no_uac_change_map[v_idx].keys())[0]
             uac_changes = list(vertex_to_face_with_no_uac_change_map[v_idx].values())[0]
-            vertex_indices_in_face = F[f_idx]
 
             # compute direction in which uac coordinate does not change
             weights_no_change = abs(np.divide(1, uac_changes, where=uac_changes != 0))
-            direction_no_change = (
-                weights_no_change * (V[vertex_indices_in_face] - V[v_idx]).T
-            ).T.sum(axis=0)
+            direction_no_change = (weights_no_change * (V[F[f_idx]] - V[v_idx]).T).T.sum(
+                axis=0
+            )
             # map direction to tangent space
             direction_no_change = (
                 direction_no_change
@@ -158,10 +157,12 @@ def _get_directions_with_no_change_in_one_uac_coordinate(
             )
             # normalize
             direction_no_change = direction_no_change / norm(direction_no_change)
-            # Choose direction with acute angle to the VHM x-axis
-            direction_no_change = (
-                np.sign(direction_no_change @ basis_x[v_idx]) * direction_no_change
-            )
+
+            # Choose direction with positive change in other UAC
+            change_other_uac = (
+                weights_no_change * (other_uac[F[f_idx]] - other_uac[v_idx])
+            ).sum()
+            direction_no_change = np.sign(change_other_uac) * direction_no_change
 
             basis_uac.append(direction_no_change)
 
