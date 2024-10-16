@@ -84,7 +84,10 @@ def map_fibers_to_tangent_space(fibers: ArrayNx3, x: ArrayNx3, y: ArrayNx3) -> A
     """
     fibers_x, fibers_y = get_coefficients(fibers, x, y)
 
-    return fibers_x[:, np.newaxis] * x + fibers_y[:, np.newaxis] * y
+    fibers_mapped = fibers_x[:, np.newaxis] * x + fibers_y[:, np.newaxis] * y
+    fiber_length = np.linalg.norm(fibers_mapped, axis=1)
+
+    return np.divide(fibers_mapped.T, fiber_length, where=fiber_length != 0).T
 
 
 def get_coefficients(
