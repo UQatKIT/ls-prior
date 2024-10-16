@@ -34,7 +34,7 @@ fibers = map_fibers_to_tangent_space(fibers_atlas, basis_x, basis_y)
 
 print("\nRead mean fiber grid...\n")
 fiber_grid = FiberGrid.read_from_binary_file(
-    "data/LGE-MRI-based/fiber_grid_normalized_max_depth7_point_threshold100.npy"
+    "data/LGE-MRI-based/fiber_grid_max_depth7_point_threshold100.npy"
 )
 
 # %%
@@ -67,6 +67,7 @@ print(
 # %%
 print("Comparison of fibers from atlas data and mean fibers mapped to atlas geometry:")
 idx_non_zero = (fiber_mean.mean(axis=1) != 0) & (fibers.mean(axis=1) != 0)
+# TODO: Doesn't make sense as fibers are all mapped into positive x-direction half circle
 angles_between_atlas_and_mean_fiber = angles_between_vectors(
     fibers[idx_non_zero], fiber_mean[idx_non_zero]
 )
@@ -123,7 +124,7 @@ plt.show()
 
 # %%
 # Interactive plot of subsamble of mapped fibers
-axis = np.linspace(0, 1, 50, endpoint=True)
+axis = np.linspace(0, 1, 30, endpoint=True)
 x, y = np.meshgrid(axis.tolist(), axis.tolist())
 grid = np.c_[x.ravel(), y.ravel()]
 
