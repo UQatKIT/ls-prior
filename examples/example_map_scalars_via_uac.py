@@ -2,7 +2,7 @@
 from pathlib import Path
 
 import numpy as np
-import pyvista as pv
+from pyvista import Plotter, PolyData
 from scipy.spatial import KDTree
 
 from prior_fields.prior.prior import BiLaplacianPriorNumpyWrapper
@@ -33,13 +33,13 @@ _, idx_neighbors = tree.query(uac1, k=1)
 sample1 = sample[idx_neighbors]
 
 # %%
-mesh = pv.PolyData(V, np.hstack([np.full((F.shape[0], 1), 3), F]))
+mesh = PolyData(V, np.hstack([np.full((F.shape[0], 1), 3), F]))
 mesh["sample"] = sample
 
-mesh1 = pv.PolyData(V1, np.hstack([np.full((F1.shape[0], 1), 3), F1]))
+mesh1 = PolyData(V1, np.hstack([np.full((F1.shape[0], 1), 3), F1]))
 mesh1["sample"] = sample1
 
-plotter = pv.Plotter(shape=(1, 2))
+plotter = Plotter(shape=(1, 2))
 
 plotter.subplot(0, 0)
 plotter.add_text("Sample on atlas geometry")

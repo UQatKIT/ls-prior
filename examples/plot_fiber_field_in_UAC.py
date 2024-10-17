@@ -3,11 +3,11 @@ from pathlib import Path
 
 import matplotlib.pyplot as plt
 import numpy as np
+from pyvista import Plotter, PolyData
 from scipy.stats import circmean, circstd, mode
 
 from prior_fields.tensor.io import get_mesh_and_point_data_from_lge_mri_based_data
 from prior_fields.tensor.mapper import get_coefficients, map_fibers_to_tangent_space
-from prior_fields.tensor.plots import add_3d_vectors_to_plot
 from prior_fields.tensor.transformer import vector_coefficients_2d_to_angles
 from prior_fields.tensor.vector_heat_method import get_uac_basis_vectors
 
@@ -16,68 +16,37 @@ V, F, uac, fibers, tags = get_mesh_and_point_data_from_lge_mri_based_data(
     Path("data/LGE-MRI-based/A")
 )
 
-# %%
-# This takes about 15 - 20 seconds (not fully vectorized)
 directions_constant_beta, directions_constant_alpha = get_uac_basis_vectors(V, F, uac)
-
-# %%
 fibers_in_tangent_space = map_fibers_to_tangent_space(
     fibers, directions_constant_beta, directions_constant_alpha
 )
 
 # %%
-fig = plt.figure(figsize=(8, 8))
+# Sanity check
+plotter = Plotter()
+plotter.add_text("Original fibers vs. fibers mapped to tangent space")
 
-for i in range(4):
-    s = np.random.randint(0, V.shape[0])
-    V_plot = V[s].reshape(1, -1)
+mesh = PolyData(V, np.hstack((np.full((F.shape[0], 1), 3), F)))
+plotter.add_mesh(mesh, color="lightgrey", opacity=0.9)
 
-    ax = fig.add_subplot(2, 2, i + 1, projection="3d")
-    ax.set_title(f"Vertex {s}")
-    ax.set_xlim(V_plot[:, 0] - 120, V_plot[:, 0] + 120)
-    ax.set_ylim(V_plot[:, 1] - 120, V_plot[:, 1] + 120)
-    ax.set_zlim(V_plot[:, 2] - 120, V_plot[:, 2] + 120)
+length = 200
+plotter.add_arrows(
+    V, directions_constant_beta, mag=length, color="tab:blue", label="d_alpha"
+)
+plotter.add_arrows(
+    V, directions_constant_alpha, mag=length, color="tab:green", label="d_beta"
+)
+plotter.add_arrows(V, fibers, mag=length, color="tab:orange", label="fibers")
+plotter.add_arrows(
+    V,
+    fibers_in_tangent_space,
+    mag=length,
+    color="tab:red",
+    label="fibers mapped to tangent space",
+)
 
-    add_3d_vectors_to_plot(
-        V_plot,
-        directions_constant_beta[s].reshape(1, -1),
-        ax,
-        length=100,
-        lw=1,
-        label="constant beta",
-    )
-    add_3d_vectors_to_plot(
-        V_plot,
-        directions_constant_alpha[s].reshape(1, -1),
-        ax,
-        length=100,
-        lw=1,
-        color="tab:green",
-        label="constant alpha",
-    )
-    add_3d_vectors_to_plot(
-        V_plot,
-        fibers[s].reshape(1, -1),
-        ax,
-        length=100,
-        lw=1,
-        color="tab:orange",
-        label="fiber",
-    )
-    add_3d_vectors_to_plot(
-        V_plot,
-        fibers_in_tangent_space[s].reshape(1, -1),
-        ax,
-        length=100,
-        lw=1,
-        color="tab:red",
-        label="fiber mapped to tangent space",
-    )
-
-handles, labels = ax.get_legend_handles_labels()
-fig.legend(handles[:4], labels[:4], loc="lower center")
-fig.suptitle("UAC based tangent space coordinates and fibers")
-plt.show()
+plotter.add_legend(size=(0.5, 0.2), loc="lower left")
+plotter.show(window_size=(800, 500))
 
 # %%
 critical_value = 0.8

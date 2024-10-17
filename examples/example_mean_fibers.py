@@ -2,8 +2,8 @@
 from pathlib import Path
 
 import numpy as np
-import pyvista as pv
 from matplotlib import pyplot as plt
+from pyvista import Plotter, PolyData
 from scipy.spatial import KDTree
 from scipy.stats import circmean, circstd
 
@@ -107,9 +107,9 @@ _, idx = tree.query(grid, k=1)
 
 # %%
 # Interactive plot of fiber fields
-plotter = pv.Plotter()
+plotter = Plotter()
 plotter.add_text("Comparsion of fiber fields (subsampled)")
-mesh = pv.PolyData(V, np.hstack((np.full((F.shape[0], 1), 3), F)))
+mesh = PolyData(V, np.hstack((np.full((F.shape[0], 1), 3), F)))
 plotter.add_mesh(
     mesh,
     scalars=fiber_std,
@@ -129,9 +129,9 @@ plotter.show(window_size=(700, 700))
 coeff_x, coeff_y = get_coefficients(fiber_mean, basis_x, basis_y)
 mean_angle = vector_coefficients_2d_to_angles(coeff_x, coeff_y)
 
-plotter = pv.Plotter()
+plotter = Plotter()
 plotter.add_text("Mean fiber angle")
-mesh = pv.PolyData(V, np.hstack((np.full((F.shape[0], 1), 3), F)))
+mesh = PolyData(V, np.hstack((np.full((F.shape[0], 1), 3), F)))
 plotter.add_mesh(
     mesh, scalars=mean_angle, scalar_bar_args=dict(title="Mean angle"), cmap="twilight"
 )
