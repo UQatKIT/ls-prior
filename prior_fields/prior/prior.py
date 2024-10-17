@@ -20,7 +20,6 @@ from ufl import Form, ds, dx, grad, inner
 
 from prior_fields.prior.converter import (
     create_triangle_mesh_from_coordinates,
-    function_to_numpy,
     numpy_to_function,
     numpy_to_matrix_sparse,
     numpy_to_vector,
@@ -445,7 +444,7 @@ class BiLaplacianPriorNumpyWrapper:
         Array1d
             1d-array with sample values at each vertex in V.
         """
-        return function_to_numpy(self._prior.sample())
+        return self._prior.sample().compute_vertex_values(self._prior.Vh.mesh())
 
     def cost(self, m: Array1d) -> float:
         """Compute cost functional of the prior field for given values at each vertex.
