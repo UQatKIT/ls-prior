@@ -31,7 +31,9 @@ def angles_to_3d_vector(alphas: Array1d, x_axes: ArrayNx3, y_axes: ArrayNx3) -> 
 
 
 def angles_between_vectors(a, b):
-    return np.arccos(np.sum(normalize(a) * normalize(b), axis=1))
+    dot_product = np.einsum("ij,ij->i", normalize(a), normalize(b))
+    dot_product = np.clip(dot_product, -1.0, 1.0)  # handle floating point issues
+    return np.arccos(dot_product)
 
 
 def vectors_3d_to_angles(
