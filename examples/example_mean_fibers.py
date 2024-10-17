@@ -1,9 +1,8 @@
 # %%
 from pathlib import Path
 
-import imageio.v2 as iio
 import numpy as np
-from ipywidgets import IntSlider, interact
+import pyvista as pv
 from matplotlib import pyplot as plt
 from scipy.spatial import KDTree
 from scipy.stats import circmean, circstd
@@ -14,9 +13,9 @@ from prior_fields.tensor.mapper import (
     get_coefficients,
     map_fibers_to_tangent_space,
 )
-from prior_fields.tensor.plots import add_3d_vectors_to_plot
 from prior_fields.tensor.transformer import (
     angles_between_vectors,
+    normalize,
     vector_coefficients_2d_to_angles,
 )
 from prior_fields.tensor.vector_heat_method import get_uac_basis_vectors
@@ -41,9 +40,10 @@ fiber_grid = FiberGrid.read_from_binary_file(
 # %%
 print("Map mean fibers to vertices...\n")
 fiber_mean = np.zeros_like(fibers)
+fiber_std = np.zeros(fibers.shape[0])
 unmatched_vertices = []
 
-for i in range(fibers.shape[0]):
+for i in range(fiber_mean.shape[0]):
     j = np.where(
         (uac[i, 0] >= fiber_grid.grid_x[:, 0])
         & (uac[i, 0] < fiber_grid.grid_x[:, 1])
@@ -55,76 +55,49 @@ for i in range(fibers.shape[0]):
             fiber_grid.fiber_coeff_x_mean[j[0]] * basis_x[i]
             + fiber_grid.fiber_coeff_y_mean[j[0]] * basis_y[i]
         )
+        fiber_std[i] = fiber_grid.fiber_angle_circstd[j[0]]
     except IndexError:
+        fiber_std[i] = np.nan
         unmatched_vertices.append(i)
 
+fiber_mean = normalize(fiber_mean)
+
 print(
-    f"The UACs of the following vertices {len(unmatched_vertices)} "
+    f"The UACs of the following vertices {len(unmatched_vertices)} / {V.shape[0]} "
     "are not covered by the fiber grid:\n",
     unmatched_vertices,
-    "\nSetting their fiber mean to zero.\n",
+    "\nSetting their fiber mean to zero and the pointwise variance to nan.\n",
 )
 
 # %%
 print("Comparison of fibers from atlas data and mean fibers mapped to atlas geometry:")
-idx_non_zero = (fiber_mean.mean(axis=1) != 0) & (fibers.mean(axis=1) != 0)
-# TODO: Doesn't make sense as fibers are all mapped into positive x-direction half circle
-angles_between_atlas_and_mean_fiber = angles_between_vectors(
-    fibers[idx_non_zero], fiber_mean[idx_non_zero]
+idx_notnan = (
+    (np.linalg.norm(fiber_mean, axis=1) != 0)
+    & (np.linalg.norm(fibers, axis=1) != 0)
+    & ~np.isnan(fiber_mean).any(axis=1)
+    & ~np.isnan(fibers).any(axis=1)
 )
-angles_between_atlas_and_mean_fiber = angles_between_atlas_and_mean_fiber[
-    ~np.isnan(angles_between_atlas_and_mean_fiber)
-]
-print(
-    f"Range:\t\t({angles_between_atlas_and_mean_fiber.min():.4f}, "
-    f"{angles_between_atlas_and_mean_fiber.max():.4f})"
-)
+angles_between_atlas_and_mean_fiber = angles_between_vectors(fibers, fiber_mean)
+min_angle = angles_between_atlas_and_mean_fiber[idx_notnan].min()
+max_angle = angles_between_atlas_and_mean_fiber[idx_notnan].max()
 circular_mean = circmean(
-    angles_between_atlas_and_mean_fiber, low=-np.pi / 2, high=np.pi / 2
+    angles_between_atlas_and_mean_fiber[idx_notnan], low=0, high=np.pi
 )
-print(f"Circular mean:\t{circular_mean:.4f}")
 circular_std = circstd(
-    angles_between_atlas_and_mean_fiber, low=-np.pi / 2, high=np.pi / 2
+    angles_between_atlas_and_mean_fiber[idx_notnan], low=0, high=np.pi
 )
+
+print(f"Range:\t\t({min_angle:.4f}, {max_angle:.4f})")
+print(f"Circular mean:\t{circular_mean:.4f}")
 print(f"Circular std:\t{circular_std:.4f}")
 
-fig = plt.figure(figsize=(10, 10))
-
-for i in range(9):
-    s = np.random.randint(0, V.shape[0])
-    V_plot = V[s].reshape(1, -1)
-
-    ax = fig.add_subplot(3, 3, i + 1, projection="3d")
-    ax.set_title(f"Vertex {s}")
-    ax.set_xlim(V_plot[:, 0] - 120, V_plot[:, 0] + 120)
-    ax.set_ylim(V_plot[:, 1] - 120, V_plot[:, 1] + 120)
-    ax.set_zlim(V_plot[:, 2] - 120, V_plot[:, 2] + 120)
-
-    add_3d_vectors_to_plot(
-        V_plot,
-        fibers[s].reshape(1, -1),
-        ax,
-        length=100,
-        lw=1,
-        label="Atlas fiber",
-    )
-    add_3d_vectors_to_plot(
-        V_plot,
-        fiber_mean[s].reshape(1, -1),
-        ax,
-        length=100,
-        lw=1,
-        color="tab:orange",
-        label="Mean fiber",
-    )
-
-handles, labels = ax.get_legend_handles_labels()
-fig.legend(handles[:2], labels[:2], loc="upper right")
-fig.suptitle("Fiber from atlas vs. UAC-based fiber mean over 7 geometries")
+plt.figure(figsize=(6, 4))
+plt.hist(angles_between_atlas_and_mean_fiber[idx_notnan], bins=25)
+plt.title("Histogram of angles between atlas fibers and mean fibers")
 plt.show()
 
 # %%
-# Interactive plot of subsamble of mapped fibers
+# Subsample vectors for plotting
 axis = np.linspace(0, 1, 30, endpoint=True)
 x, y = np.meshgrid(axis.tolist(), axis.tolist())
 grid = np.c_[x.ravel(), y.ravel()]
@@ -132,97 +105,37 @@ grid = np.c_[x.ravel(), y.ravel()]
 tree = KDTree(uac)
 _, idx = tree.query(grid, k=1)
 
-
-@interact(
-    elev=IntSlider(value=20, min=-180, max=180, step=1, description="elev"),
-    azim=IntSlider(value=-60, min=-180, max=180, step=1, description="azim"),
+# %%
+# Interactive plot of fiber fields
+plotter = pv.Plotter()
+plotter.add_text("Comparsion of fiber fields (subsampled)")
+mesh = pv.PolyData(V, np.hstack((np.full((F.shape[0], 1), 3), F)))
+plotter.add_mesh(
+    mesh,
+    scalars=fiber_std,
+    scalar_bar_args=dict(title="Pointwise standard deviation"),
+    cmap="Blues",
 )
-def plot_mean_fiber_field(elev, azim):
-    fig = plt.figure(figsize=(10, 10))
-    ax = fig.add_subplot(projection="3d")
-    ax.set_aspect("equal")
-    ax.view_init(elev=elev, azim=azim)
+plotter.add_arrows(
+    V[idx], fiber_mean[idx], mag=0.04, color="yellow", label="Mean fibers"
+)
+plotter.add_arrows(V[idx], fibers[idx], mag=0.04, color="orange", label="Atlas fibers")
 
-    add_3d_vectors_to_plot(V[idx], fiber_mean[idx], ax, length=0.05, lw=0.5)
-
-    plt.title("Mean fiber field (subsampled)")
-    plt.show()
-
+plotter.add_legend(size=(0.3, 0.1), loc="upper left")
+plotter.show(window_size=(700, 700))
 
 # %%
 # Interactive plot of mean angle of mapped fibers
 coeff_x, coeff_y = get_coefficients(fiber_mean, basis_x, basis_y)
 mean_angle = vector_coefficients_2d_to_angles(coeff_x, coeff_y)
 
+plotter = pv.Plotter()
+plotter.add_text("Mean fiber angle")
+mesh = pv.PolyData(V, np.hstack((np.full((F.shape[0], 1), 3), F)))
+plotter.add_mesh(
+    mesh, scalars=mean_angle, scalar_bar_args=dict(title="Mean angle"), cmap="twilight"
+)
 
-@interact(azim=IntSlider(value=80, min=-180, max=180, step=5, description="azim"))
-def plot_mean_angle(azim):
-    fig = plt.figure(figsize=(10, 10))
-    ax = fig.add_subplot(projection="3d")
-    ax.set_aspect("equal")
-    ax.view_init(elev=20, azim=azim)
-
-    c = ax.scatter(*[V[:, i] for i in range(3)], c=mean_angle, s=0.1, cmap="twilight")
-
-    plt.colorbar(c)
-    plt.title("Mean fiber angle")
-    plt.show()
-
+plotter.show(window_size=(700, 700))
 
 # %%
-# Record plot wit subsamble of mapped fibers as video
-def plot_mean_fiber_field_frame(azim, frame_number):
-    fig = plt.figure(figsize=(10, 10))
-    ax = fig.add_subplot(projection="3d")
-    ax.set_aspect("equal")
-    ax.view_init(elev=20, azim=azim)
-
-    add_3d_vectors_to_plot(V[idx], fiber_mean[idx], ax, length=0.03, lw=0.5)
-
-    plt.title("Mean fiber field (subsampled)")
-
-    filename = f"figures/frames/frame_{frame_number:02d}.png"
-    plt.savefig(filename)
-    plt.close()
-
-
-azim_values = np.arange(-180, 185, 5)  # Steps from -180 to 180
-
-for i, azim in enumerate(azim_values):
-    plot_mean_fiber_field_frame(azim, i)
-
-w = iio.get_writer("figures/mean_fiber_field_animated.mp4", fps=10)
-for i in range(len(azim_values)):
-    image = iio.imread(f"figures/frames/frame_{i:02d}.png")
-    w.append_data(image)
-w.close()
-
-
-# %%
-# Record mean fiber angle plot as video
-def plot_mean_angle_frame(azim, frame_number):
-    fig = plt.figure(figsize=(10, 10))
-    ax = fig.add_subplot(projection="3d")
-    ax.set_aspect("equal")
-    ax.view_init(elev=20, azim=azim)
-
-    c = ax.scatter(*[V[:, i] for i in range(3)], c=mean_angle, s=0.1, cmap="twilight")
-
-    plt.colorbar(c)
-    plt.title("Mean fiber angle")
-
-    filename = f"figures/frames/frame_{frame_number:02d}.png"
-    plt.savefig(filename)
-    plt.close()
-
-
-azim_values = np.arange(-180, 185, 5)  # Steps from -180 to 180
-
-for i, azim in enumerate(azim_values):
-    plot_mean_angle_frame(azim, i)
-
-w = iio.get_writer("figures/mean_angle_animated.mp4", fps=10)
-for i in range(len(azim_values)):
-    image = iio.imread(f"figures/frames/frame_{i:02d}.png")
-    w.append_data(image)
-w.close()
