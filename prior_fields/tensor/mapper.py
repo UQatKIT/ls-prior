@@ -1,4 +1,5 @@
 import re
+from math import ceil
 from sys import stderr
 from typing import Literal
 from warnings import warn
@@ -161,6 +162,7 @@ def get_fiber_parameters(V, uac):
             f"\nCouldn't find grid cell for {100*len(unmatched_vertices)/V.shape[0]:.2f}"
             "% of the vertices"
         )
+        stderr.flush()
 
     return fiber_mean, fiber_std
 
@@ -441,7 +443,7 @@ class FiberGridComputer:
             self.grid_x.append([x_min, x_max])
             self.grid_y.append([y_min, y_max])
 
-            n_min = self.point_threshold // 8
+            n_min = ceil(self.point_threshold / 10)
             if data_count < n_min:
                 # Find nearest neighbors of cell to compute parameters
                 midpoint = ((x_min + x_max) / 2, (y_min + y_max) / 2)
