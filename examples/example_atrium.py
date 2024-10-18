@@ -95,4 +95,32 @@ plotter.add_mesh(
 plotter.add_arrows(V, vector_field, mag=0.01, color="tab:blue")
 plotter.show(window_size=(800, 500))
 
+###################
+# Compare samples #
+###################
+# %%
+plotter = Plotter()
+plotter.add_mesh(
+    PolyData(V, np.hstack((np.full((F.shape[0], 1), 3), F))),
+    color="lightgrey",
+    opacity=0.99,
+)
+plotter.add_arrows(
+    V,
+    angles_to_3d_vector(
+        alphas=sample_to_angles(prior.sample()), x_axes=x_axes, y_axes=y_axes
+    ),
+    mag=0.01,
+    color="tab:blue",
+)
+plotter.add_arrows(
+    V,
+    angles_to_3d_vector(
+        alphas=sample_to_angles(prior.sample()), x_axes=x_axes, y_axes=y_axes
+    ),
+    mag=0.01,
+    color="tab:orange",
+)
+plotter.show(window_size=(800, 500))
+
 # %%
