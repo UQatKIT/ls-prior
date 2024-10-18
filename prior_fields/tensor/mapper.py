@@ -100,6 +100,28 @@ def map_fibers_to_tangent_space(fibers: ArrayNx3, x: ArrayNx3, y: ArrayNx3) -> A
     return normalize(fibers_mapped)
 
 
+def get_coefficients(
+    fibers: ArrayNx3, x: ArrayNx3, y: ArrayNx3
+) -> tuple[ArrayNx3, ArrayNx3]:
+    """Get coefficients to write fibers in tangent space basis.
+
+    Parameters
+    ----------
+    fibers : ArrayNx3
+        (n, 3) array where each row is a fiber vector.
+    x : ArrayNx3
+        (n, 3) array where each row is a vector in the tangent space.
+    y : ArrayNx3
+        (n, 3) array where each row is another vector in the tangent space.
+
+    Returns
+    -------
+    (ArrayNx3, ArrayNx3)
+
+    """
+    return np.einsum("ij,ij->i", fibers, x), np.einsum("ij,ij->i", fibers, y)
+
+
 def get_fiber_parameters(V, uac):
     fiber_grid = FiberGrid.read_from_binary_file(
         "data/LGE-MRI-based/fiber_grid_max_depth7_point_threshold100.npy"
@@ -130,28 +152,6 @@ def get_fiber_parameters(V, uac):
         )
 
     return fiber_mean, fiber_std
-
-
-def get_coefficients(
-    fibers: ArrayNx3, x: ArrayNx3, y: ArrayNx3
-) -> tuple[ArrayNx3, ArrayNx3]:
-    """Get coefficients to write fibers in tangent space basis.
-
-    Parameters
-    ----------
-    fibers : ArrayNx3
-        (n, 3) array where each row is a fiber vector.
-    x : ArrayNx3
-        (n, 3) array where each row is a vector in the tangent space.
-    y : ArrayNx3
-        (n, 3) array where each row is another vector in the tangent space.
-
-    Returns
-    -------
-    (ArrayNx3, ArrayNx3)
-
-    """
-    return np.einsum("ij,ij->i", fibers, x), np.einsum("ij,ij->i", fibers, y)
 
 
 class FiberGrid:
