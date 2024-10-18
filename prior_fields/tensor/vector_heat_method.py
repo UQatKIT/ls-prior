@@ -1,3 +1,6 @@
+from sys import stderr
+from warnings import warn
+
 import numpy as np
 from potpourri3d import MeshVectorHeatSolver
 
@@ -127,53 +130,81 @@ def _get_directions_with_no_change_in_one_uac(
         for k, faces in vertex_to_faces_map.items()
     }
 
-    vertex_to_face_with_no_uac_change_map = {
-        k: {
-            f_idx: changes
-            for f_idx, changes in face_to_change_map.items()
-            if (changes.max() > 0) & (changes.min() < 0)
-        }
-        for k, face_to_change_map in vertices_to_uac_change_map.items()
-    }
-
     basis_uac = []
+    count_missing = 0
+
     for v_idx in range(V.shape[0]):
-        # NOTE: There is no such face for
-        # 2.1% of the no-alpha-changes and
-        # 3.9% of the no-beta-changes
-        if len(vertex_to_face_with_no_uac_change_map[v_idx].keys()) > 0:
-            f_idx = list(vertex_to_face_with_no_uac_change_map[v_idx].keys())[0]
-            uac_changes = list(vertex_to_face_with_no_uac_change_map[v_idx].values())[0]
-            edge_lengths = np.linalg.norm(V[F[f_idx]] - V[v_idx], axis=1) / 1000
-            uac_changes_per_distance = np.divide(
-                uac_changes, edge_lengths, where=edge_lengths != 0
-            )
 
-            # compute direction in which uac coordinate does not change
-            weights_no_change = abs(
-                np.divide(
-                    1, uac_changes_per_distance, where=uac_changes_per_distance != 0
+        found_direction = False
+
+        for f_idx, uac_changes in vertices_to_uac_change_map[v_idx].items():
+            # c is a list of length 3 (triangular face has three vertices)
+            # One entry is always zero (uac(current vertex) - uac(current vertex))
+            # The face contains the direction of interest, if
+            # 1. there is a second change = 0 (same uac at neighoring vertex), or
+            # 2. change is positive towards one and negative towards the other neighbor
+
+            v_indices_face = F[f_idx]
+
+            # 1.
+            if (uac_changes == 0).sum() > 1:
+                v_idx_neighbor_no_change = v_indices_face[
+                    (uac_changes == 0) & (v_indices_face != v_idx)
+                ][0]
+                direction_no_change = V[v_idx_neighbor_no_change] - V[v_idx]
+
+                found_direction = True
+
+            # 2.
+            elif (uac_changes.max() > 0) & (uac_changes.min() < 0):
+                edge_lengths = (
+                    np.linalg.norm(V[v_indices_face] - V[v_idx], axis=1) / 1000
                 )
-            )
-            weights_no_change = weights_no_change / np.linalg.norm(weights_no_change)
-            direction_no_change = (weights_no_change * (V[F[f_idx]] - V[v_idx]).T).T.sum(
-                axis=0
-            )
-            # map direction to tangent space
-            direction_no_change = (
-                direction_no_change
-                - (direction_no_change @ basis_n[v_idx]) * basis_n[v_idx]
-            )
+                uac_changes_per_distance = np.divide(
+                    uac_changes, edge_lengths, where=edge_lengths != 0
+                )
 
-            # Choose direction with positive change in other UAC
-            change_other_uac = (
-                weights_no_change * (other_uac[F[f_idx]] - other_uac[v_idx])
-            ).sum()
-            direction_no_change = np.sign(change_other_uac) * direction_no_change
+                # compute direction in which uac coordinate does not change
+                weights_no_change = abs(
+                    np.divide(
+                        1, uac_changes_per_distance, where=uac_changes_per_distance != 0
+                    )
+                )
+                weights_no_change = weights_no_change / np.linalg.norm(weights_no_change)
+                direction_no_change = (
+                    weights_no_change * (V[v_indices_face] - V[v_idx]).T
+                ).T.sum(axis=0)
 
+                found_direction = True
+
+            # post-processing of no-change direction
+            if found_direction:
+
+                # map direction to tangent space
+                direction_no_change = (
+                    direction_no_change
+                    - (direction_no_change @ basis_n[v_idx]) * basis_n[v_idx]
+                )
+
+                # Choose direction with positive change in other UAC
+                change_other_uac = (
+                    weights_no_change * (other_uac[v_indices_face] - other_uac[v_idx])
+                ).sum()
+                direction_no_change = np.sign(change_other_uac) * direction_no_change
+
+                break
+
+        if found_direction:
             basis_uac.append(direction_no_change)
-
         else:
+            count_missing += 1
             basis_uac.append(np.zeros(3))
+
+    if count_missing > 0:
+        warn(
+            "\nNo face with no-change found for "
+            f"{100 * count_missing / V.shape[0]:.3f}% of the vertices."
+        )
+        stderr.flush()
 
     return np.vstack(basis_uac)
