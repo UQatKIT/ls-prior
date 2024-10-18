@@ -108,7 +108,7 @@ _, idx = tree.query(grid, k=1)
 # %%
 # Interactive plot of fiber fields
 plotter = Plotter()
-plotter.add_text("Comparsion of fiber fields (subsampled)")
+plotter.add_text("Comparison of fiber fields (subsampled)")
 mesh = PolyData(V, np.hstack((np.full((F.shape[0], 1), 3), F)))
 plotter.add_mesh(
     mesh,
