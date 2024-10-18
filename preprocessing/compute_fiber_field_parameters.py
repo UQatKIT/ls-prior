@@ -55,14 +55,13 @@ fiber_angles = vector_coefficients_2d_to_angles(fiber_coeffs_x, fiber_coeffs_y)
 # takes about 30 seconds
 FiberGridComputer(
     uac=uac,
-    fiber_coeffs_x=fiber_coeffs_x,
-    fiber_coeffs_y=fiber_coeffs_y,
     fiber_angles=fiber_angles,
     anatomical_structure_tags=tags,
     max_depth=7,
     point_threshold=100,
 ).get_fiber_grid().save()
 
+# %%
 fiber_grid = FiberGrid.read_from_binary_file(
     "data/LGE-MRI-based/fiber_grid_max_depth7_point_threshold100.npy"
 )

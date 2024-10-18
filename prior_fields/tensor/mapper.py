@@ -10,7 +10,7 @@ from scipy.spatial import KDTree
 from scipy.stats import circmean, circstd, mode
 
 from prior_fields.prior.dtypes import Array1d, ArrayNx2, ArrayNx3
-from prior_fields.tensor.transformer import normalize
+from prior_fields.tensor.transformer import angles_to_2d_vector_coefficients, normalize
 
 
 def get_dict_with_adjacent_faces_for_each_vertex(F: ArrayNx3) -> dict[int, list[int]]:
@@ -171,7 +171,6 @@ class FiberGrid:
     """
     Adpative grid of the UAC unit square with cell size depending on the data density.
     Each cell has the following attributes:
-    - Mean coefficients of fibers in UAC basis
     - Circular mean and standard deviation of the fiber angle
     - Mode of anatomical structure tag
 
@@ -181,10 +180,6 @@ class FiberGrid:
         Array of lower and upper boundaries of the cells in x-direction.
     grid_y : Array1d
         Array of lower and upper boundaries of the cells in y-direction.
-    fiber_coeff_x_mean : Array1d
-        Mean first fiber coefficients for each cell.
-    fiber_coeff_y_mean : Array1d
-        Mean second fiber coefficients for each cell.
     fiber_angle_circmean : Array1d
         Circular mean of fiber angles in (-pi/2, pi/2] for each cell.
     fiber_angle_circstd : Array1d
@@ -201,8 +196,6 @@ class FiberGrid:
         self,
         grid_x: ArrayNx2,
         grid_y: ArrayNx2,
-        fiber_coeff_x_mean: Array1d,
-        fiber_coeff_y_mean: Array1d,
         fiber_angle_circmean: Array1d,
         fiber_angle_circstd: Array1d,
         anatomical_tag_mode: Array1d,
@@ -211,8 +204,6 @@ class FiberGrid:
     ) -> None:
         self.grid_x = grid_x
         self.grid_y = grid_y
-        self.fiber_coeff_x_mean = fiber_coeff_x_mean
-        self.fiber_coeff_y_mean = fiber_coeff_y_mean
         self.fiber_angle_circmean = fiber_angle_circmean
         self.fiber_angle_circstd = fiber_angle_circstd
         self.anatomical_tag_mode = anatomical_tag_mode
@@ -235,11 +226,9 @@ class FiberGrid:
         return FiberGrid(
             grid_x=grid[:, 0:2],
             grid_y=grid[:, 2:4],
-            fiber_coeff_x_mean=grid[:, 4],
-            fiber_coeff_y_mean=grid[:, 5],
-            fiber_angle_circmean=grid[:, 6],
-            fiber_angle_circstd=grid[:, 7],
-            anatomical_tag_mode=grid[:, 8],
+            fiber_angle_circmean=grid[:, 4],
+            fiber_angle_circstd=grid[:, 5],
+            anatomical_tag_mode=grid[:, 6],
             max_depth=max_depth,
             point_threshold=point_threshold,
         )
@@ -281,14 +270,18 @@ class FiberGrid:
             alpha=0.3,
         )
 
+        fiber_coeff_x, fiber_coeff_y = angles_to_2d_vector_coefficients(
+            self.fiber_angle_circmean
+        )
+
         ax.quiver(
             grid_centers_x,
             grid_centers_y,
-            self.fiber_coeff_x_mean,
-            self.fiber_coeff_y_mean,
+            fiber_coeff_x,
+            fiber_coeff_y,
             angles="xy",
             scale_units="xy",
-            scale=50,
+            scale=60,
             width=0.001,
         )
 
@@ -318,8 +311,8 @@ class FiberGrid:
         ----------
         filename_prefix : str, optional
             Prefix of the filename, defaults to 'fiber_grid'.
-            The suffix is fixed to contain max_depth and point_threshold which are used to
-            initialize a FiberGrid from the file.
+            The suffix is fixed to contain max_depth and point_threshold which are used
+            to initialize a FiberGrid from the file.
         """
         np.save(
             f"data/LGE-MRI-based/{filename_prefix}"
@@ -331,8 +324,6 @@ class FiberGrid:
                     self.grid_y,
                     np.vstack(
                         [
-                            self.fiber_coeff_x_mean,
-                            self.fiber_coeff_y_mean,
                             self.fiber_angle_circmean,
                             self.fiber_angle_circstd,
                             self.anatomical_tag_mode,
@@ -352,8 +343,6 @@ class FiberGridComputer:
     def __init__(
         self,
         uac: ArrayNx2,
-        fiber_coeffs_x: Array1d,
-        fiber_coeffs_y: Array1d,
         fiber_angles: Array1d,
         anatomical_structure_tags: Array1d,
         max_depth: int = 5,
@@ -364,10 +353,6 @@ class FiberGridComputer:
         ----------
         uac : ArrayNx2
             UACs at vertices.
-        fiber_coeffs_x : Array1d
-            Fiber coefficient for first UAC-based tangent space coordinate.
-        fiber_coeffs_y : Array1d
-            Fiber coefficient for second UAC-based tangent space coordinate.
         fiber_angles : Array1d
             Angle within (-pi/2, pi/2] representing the fiber orientation. 0 represents a
             fiber in the direction of no change in beta which is parallel to the alpha-
@@ -385,15 +370,11 @@ class FiberGridComputer:
         self.grid_x: list[list[float]] = []
         self.grid_y: list[list[float]] = []
 
-        self.fiber_coeff_x_mean: list[float] = []
-        self.fiber_coeff_y_mean: list[float] = []
         self.fiber_angle_circmean: list[float] = []
         self.fiber_angle_circstd: list[float] = []
         self.anatomical_tag_mode: list[int] = []
 
         self._uac = uac
-        self._fiber_coeffs_x = fiber_coeffs_x
-        self._fiber_coeffs_y = fiber_coeffs_y
         self._fiber_angles = fiber_angles
         self._anatomical_structure_tags = anatomical_structure_tags
 
@@ -405,8 +386,6 @@ class FiberGridComputer:
         return FiberGrid(
             grid_x=np.array(self.grid_x),
             grid_y=np.array(self.grid_y),
-            fiber_coeff_x_mean=np.array(self.fiber_coeff_x_mean),
-            fiber_coeff_y_mean=np.array(self.fiber_coeff_y_mean),
             fiber_angle_circmean=np.array(self.fiber_angle_circmean),
             fiber_angle_circstd=np.array(self.fiber_angle_circstd),
             anatomical_tag_mode=np.array(self.anatomical_tag_mode),
@@ -452,9 +431,6 @@ class FiberGridComputer:
                 mask[idx] = True
 
             # Compute properties in the cell
-            self.fiber_coeff_x_mean.append(self._fiber_coeffs_x[mask].mean())
-            self.fiber_coeff_y_mean.append(self._fiber_coeffs_y[mask].mean())
-
             circ_kwargs = dict(low=-np.pi / 2, high=np.pi / 2, nan_policy="omit")
             self.fiber_angle_circmean.append(
                 circmean(self._fiber_angles[mask], **circ_kwargs)

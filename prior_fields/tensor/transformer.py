@@ -88,6 +88,23 @@ def vector_coefficients_2d_to_angles(coeff_x, coeff_y):
     return angles
 
 
+def angles_to_2d_vector_coefficients(angles: Array1d) -> tuple[Array1d, Array1d]:
+    """Get coefficients of normalized vectors at given angle with the x-axis.
+
+    Note
+    ----
+    This is the inverse of `vector_coefficients_2d_to_angles()`.
+    """
+    coeff_x = np.ones_like(angles)
+    coeff_y = np.tan(angles)
+
+    coeff_sum = abs(coeff_x) + abs(coeff_y)
+    coeff_x = coeff_x / coeff_sum
+    coeff_y = coeff_y / coeff_sum
+
+    return coeff_x, coeff_y
+
+
 def angles_to_sample(angles: np.ndarray) -> np.ndarray:
     """Inverse of the sigmoid-like transformation from (-pi/2, pi/2) to (-inf, inf)."""
     epsilon = 1e-6
