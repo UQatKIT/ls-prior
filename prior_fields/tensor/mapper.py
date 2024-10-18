@@ -4,6 +4,7 @@ from warnings import warn
 
 import numpy as np
 from matplotlib import pyplot as plt
+from scipy.spatial import KDTree
 from scipy.stats import circmean, circstd, mode
 
 from prior_fields.prior.dtypes import Array1d, ArrayNx2, ArrayNx3
@@ -122,10 +123,11 @@ def get_fiber_parameters(V, uac):
             fiber_std[i] = np.nan
             unmatched_vertices.append(i)
 
-    warn(
-        f"\nCouldn't find grid cell for {100*len(unmatched_vertices)/V.shape[0]:.2f}"
-        "% of the vertices"
-    )
+    if len(unmatched_vertices) > 0:
+        warn(
+            f"\nCouldn't find grid cell for {100*len(unmatched_vertices)/V.shape[0]:.2f}"
+            "% of the vertices"
+        )
 
     return fiber_mean, fiber_std
 
@@ -382,7 +384,9 @@ class FiberGridComputer:
         self._fiber_angles = fiber_angles
         self._anatomical_structure_tags = anatomical_structure_tags
 
-        self._subdivide(0, 1, 0, 1)  # Start with full unit square
+        # Start with full unit square
+        # Extend upper boundaries (we use open intervals on the right)
+        self._subdivide(0, 1 + 1e-6, 0, 1 + 1e-6)
 
     def get_fiber_grid(self) -> FiberGrid:
         return FiberGrid(
@@ -426,14 +430,24 @@ class FiberGridComputer:
             self.grid_x.append([x_min, x_max])
             self.grid_y.append([y_min, y_max])
 
+            n_min = self.point_threshold // 8
+            if data_count < n_min:
+                # Find nearest neighbors of cell to compute parameters
+                midpoint = ((x_min + x_max) / 2, (y_min + y_max) / 2)
+                tree = KDTree(self._uac)
+                _, idx = tree.query(midpoint, k=n_min, p=np.infty)
+                mask[idx] = True
+
             # Compute properties in the cell
             self.fiber_coeff_x_mean.append(self._fiber_coeffs_x[mask].mean())
             self.fiber_coeff_y_mean.append(self._fiber_coeffs_y[mask].mean())
+
+            circ_kwargs = dict(low=-np.pi / 2, high=np.pi / 2, nan_policy="omit")
             self.fiber_angle_circmean.append(
-                circmean(self._fiber_angles[mask], low=-np.pi / 2, high=np.pi / 2)
+                circmean(self._fiber_angles[mask], **circ_kwargs)
             )
             self.fiber_angle_circstd.append(
-                circstd(self._fiber_angles[mask], low=-np.pi / 2, high=np.pi / 2)
+                circstd(self._fiber_angles[mask], **circ_kwargs)
             )
             self.anatomical_tag_mode.append(
                 mode(self._anatomical_structure_tags[mask]).mode

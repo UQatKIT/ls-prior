@@ -17,12 +17,12 @@ from prior_fields.tensor.vector_heat_method import get_uac_basis_vectors
 V, F, uac, fibers, tags = read_meshes_from_lge_mri_data()
 
 # %%
+# takes about 90 seconds
 fibers_in_tangent_space: dict[int, ArrayNx3] = dict()
 fiber_coeffs_x: dict[int, ArrayNx3] = dict()
 fiber_coeffs_y: dict[int, ArrayNx3] = dict()
 fiber_angles: dict[int, ArrayNx3] = dict()
 
-# This takes about 75 seconds
 for i in sorted(V.keys()):
     print(f"Geometry {i}:")
     print("Get UAC-based tangent space coordinates.")
@@ -52,7 +52,7 @@ fiber_angles_array = np.hstack([fiber_angles[i] for i in np.arange(1, 8)])
 tags_array = np.hstack([tags[i] for i in np.arange(1, 8)])
 
 # %%
-# Takes about 25 seconds
+# takes about 30 seconds
 FiberGridComputer(
     uac=uac_array,
     fiber_coeffs_x=fiber_coeffs_x_array,
