@@ -2,10 +2,10 @@ import numpy as np
 import pytest
 
 from prior_fields.tensor.transformer import (
-    alpha_to_sample,
     angles_to_3d_vector,
+    angles_to_sample,
     normalize,
-    sample_to_alpha,
+    sample_to_angles,
     vectors_3d_to_angles,
 )
 
@@ -57,9 +57,9 @@ def test_vectors_3d_to_angles_outputs_between_minus_pi_and_pi(x_axes, y_axes):
 
 def test_sigmoid_transformation_forward_reverse():
     x = np.random.standard_normal(1000)
-    assert np.allclose(x, alpha_to_sample(sample_to_alpha(x)))
+    assert np.allclose(x, angles_to_sample(sample_to_angles(x)))
 
 
 def test_sigmoid_transformation_reverse_forward():
     alphas = np.random.uniform(-np.pi, np.pi, 1000)
-    assert np.allclose(alphas, sample_to_alpha(alpha_to_sample(alphas)))
+    assert np.allclose(alphas, sample_to_angles(angles_to_sample(alphas)))
