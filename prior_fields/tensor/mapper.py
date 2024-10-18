@@ -1,5 +1,6 @@
 import re
 from typing import Literal
+from warnings import warn
 
 import numpy as np
 from matplotlib import pyplot as plt
@@ -96,6 +97,37 @@ def map_fibers_to_tangent_space(fibers: ArrayNx3, x: ArrayNx3, y: ArrayNx3) -> A
     fibers_mapped[mask_reverse] *= -1
 
     return normalize(fibers_mapped)
+
+
+def get_fiber_parameters(V, uac):
+    fiber_grid = FiberGrid.read_from_binary_file(
+        "data/LGE-MRI-based/fiber_grid_max_depth7_point_threshold100.npy"
+    )
+
+    fiber_mean = np.zeros(V.shape[0])
+    fiber_std = np.zeros(V.shape[0])
+    unmatched_vertices = []
+
+    for i in range(fiber_mean.shape[0]):
+        j = np.where(
+            (uac[i, 0] >= fiber_grid.grid_x[:, 0])
+            & (uac[i, 0] < fiber_grid.grid_x[:, 1])
+            & (uac[i, 1] >= fiber_grid.grid_y[:, 0])
+            & (uac[i, 1] < fiber_grid.grid_y[:, 1])
+        )[0]
+        try:
+            fiber_mean[i] = fiber_grid.fiber_angle_circmean[j[0]]
+            fiber_std[i] = fiber_grid.fiber_angle_circstd[j[0]]
+        except IndexError:
+            fiber_std[i] = np.nan
+            unmatched_vertices.append(i)
+
+    warn(
+        f"\nCouldn't find grid cell for {100*len(unmatched_vertices)/V.shape[0]:.2f}"
+        "% of the vertices"
+    )
+
+    return fiber_mean, fiber_std
 
 
 def get_coefficients(
