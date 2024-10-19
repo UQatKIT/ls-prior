@@ -2,13 +2,9 @@
 import numpy as np
 
 from prior_fields.prior.dtypes import ArrayNx3
+from prior_fields.tensor.fiber_grid import FiberGrid, FiberGridComputer
 from prior_fields.tensor.io import read_meshes_from_lge_mri_data
-from prior_fields.tensor.mapper import (
-    FiberGrid,
-    FiberGridComputer,
-    get_coefficients,
-    map_fibers_to_tangent_space,
-)
+from prior_fields.tensor.mapper import get_coefficients, map_fibers_to_tangent_space
 from prior_fields.tensor.tangent_space_coordinates import get_uac_basis_vectors
 from prior_fields.tensor.transformer import vector_coefficients_2d_to_angles
 

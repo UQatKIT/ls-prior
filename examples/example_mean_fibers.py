@@ -8,8 +8,9 @@ from scipy.spatial import KDTree
 from scipy.stats import circmean, circstd
 
 from prior_fields.prior.plots import get_poly_data
+from prior_fields.tensor.fiber_grid import FiberGrid
 from prior_fields.tensor.io import get_mesh_and_point_data_from_lge_mri_based_data
-from prior_fields.tensor.mapper import FiberGrid, map_fibers_to_tangent_space
+from prior_fields.tensor.mapper import map_fibers_to_tangent_space
 from prior_fields.tensor.tangent_space_coordinates import get_uac_basis_vectors
 from prior_fields.tensor.transformer import angles_between_vectors, angles_to_3d_vector
 
