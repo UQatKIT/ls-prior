@@ -7,12 +7,12 @@ from pyvista import Plotter, PolyData
 from prior_fields.prior.prior import BiLaplacianPriorNumpyWrapper
 from prior_fields.tensor.io import get_mesh_and_point_data_from_lge_mri_based_data
 from prior_fields.tensor.mapper import get_fiber_parameters
+from prior_fields.tensor.tangent_space_coordinates import get_reference_coordinates
 from prior_fields.tensor.transformer import (
     angles_to_3d_vector,
     angles_to_sample,
     sample_to_angles,
 )
-from prior_fields.tensor.vector_heat_method import get_reference_coordinates
 
 ##################
 # Read mesh data #

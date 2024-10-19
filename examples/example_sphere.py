@@ -6,8 +6,8 @@ from pyvista import Plotter, PolyData
 from prior_fields.prior.converter import function_to_numpy
 from prior_fields.prior.plots import plot_function
 from prior_fields.prior.prior import BiLaplacianPrior
+from prior_fields.tensor.tangent_space_coordinates import get_reference_coordinates
 from prior_fields.tensor.transformer import angles_to_3d_vector, sample_to_angles
-from prior_fields.tensor.vector_heat_method import get_reference_coordinates
 
 # %%
 sigma = 0.1

@@ -11,7 +11,7 @@ from prior_fields.tensor.transformer import normalize
 def get_reference_coordinates(
     V: ArrayNx3, F: ArrayNx3
 ) -> tuple[ArrayNx3, ArrayNx3, ArrayNx3]:
-    """Get reference coordinate systems at each vertex.
+    """Use vector heat method to get reference coordinate systems at each vertex.
 
     The basis vectors (1, 0) and (0, 1) in the tangent space associated with vertex 1 are
     transported to every other vertex in V using the vector heat method.
@@ -73,7 +73,7 @@ def get_uac_basis_vectors(
     (ArrayNx3, ArrayNx3)
         UAC-based basis vectors of the tangent spaces at each vertex
     """
-    basis_x, _, basis_n = get_reference_coordinates(V, F)
+    _, _, basis_n = get_reference_coordinates(V, F)
 
     vertex_to_faces_map = _get_vertex_to_face_map(F)
 

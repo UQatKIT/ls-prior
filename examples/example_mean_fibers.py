@@ -13,12 +13,12 @@ from prior_fields.tensor.mapper import (
     get_coefficients,
     map_fibers_to_tangent_space,
 )
+from prior_fields.tensor.tangent_space_coordinates import get_uac_basis_vectors
 from prior_fields.tensor.transformer import (
     angles_between_vectors,
     normalize,
     vector_coefficients_2d_to_angles,
 )
-from prior_fields.tensor.vector_heat_method import get_uac_basis_vectors
 
 # %%
 print("Read atlas mesh...\n")

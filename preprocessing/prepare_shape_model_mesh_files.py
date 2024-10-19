@@ -40,7 +40,7 @@ from prior_fields.tensor.io import (
     get_fiber_orientation_at_vertices,
     read_endocardial_mesh_from_bilayer_model,
 )
-from prior_fields.tensor.vector_heat_method import get_reference_coordinates
+from prior_fields.tensor.tangent_space_coordinates import get_reference_coordinates
 
 ##################
 # Read mesh data #
