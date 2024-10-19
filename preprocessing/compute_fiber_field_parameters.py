@@ -1,10 +1,10 @@
 # %%
 from prior_fields.tensor.fiber_grid import FiberGrid, FiberGridComputer
-from prior_fields.tensor.io import collect_data_from_lge_mri_meshes
+from prior_fields.tensor.preprocessing import collect_data_from_human_atrial_fiber_meshes
 
 # %%
 # takes about 2.5 minutes
-uac, fiber_angles, tags = collect_data_from_lge_mri_meshes()
+uac, fiber_angles, tags = collect_data_from_human_atrial_fiber_meshes()
 
 # %%
 # takes about 30 seconds

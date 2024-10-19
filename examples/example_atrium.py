@@ -1,13 +1,14 @@
 # %%
-from pathlib import Path
 
 import numpy as np
 from pyvista import Plotter
 
 from prior_fields.prior.plots import get_poly_data
 from prior_fields.prior.prior import BiLaplacianPriorNumpyWrapper
-from prior_fields.tensor.io import get_mesh_and_point_data_from_lge_mri_based_data
 from prior_fields.tensor.mapper import get_fiber_parameters
+from prior_fields.tensor.reader import (
+    read_atrial_mesh_with_fibers_and_tags_mapped_to_vertices,
+)
 from prior_fields.tensor.tangent_space_coordinates import get_reference_coordinates
 from prior_fields.tensor.transformer import (
     angles_to_3d_vector,
@@ -20,9 +21,7 @@ from prior_fields.tensor.transformer import (
 ##################
 # %%
 print("Reading mesh...")
-V_raw, F, uac, fibers, tags = get_mesh_and_point_data_from_lge_mri_based_data(
-    Path("data/LGE-MRI-based/1")
-)
+V_raw, F, uac, fibers, _ = read_atrial_mesh_with_fibers_and_tags_mapped_to_vertices(1)
 Vmin = V_raw.min()
 Vmax = V_raw.max()
 V = V_raw / (Vmax - Vmin)

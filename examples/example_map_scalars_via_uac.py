@@ -1,16 +1,17 @@
 # %%
-from pathlib import Path
 
 from pyvista import Plotter
 from scipy.spatial import KDTree
 
 from prior_fields.prior.plots import get_poly_data
 from prior_fields.prior.prior import BiLaplacianPriorNumpyWrapper
-from prior_fields.tensor.io import get_mesh_and_point_data_from_lge_mri_based_data
+from prior_fields.tensor.reader import (
+    read_atrial_mesh_with_fibers_and_tags_mapped_to_vertices,
+)
 
 # %%
-V_raw, F, uac, fibers_atlas, tags = get_mesh_and_point_data_from_lge_mri_based_data(
-    Path("data/LGE-MRI-based/A")
+V_raw, F, uac, fibers_atlas, _ = (
+    read_atrial_mesh_with_fibers_and_tags_mapped_to_vertices("A")
 )
 Vmin = V_raw.min()
 Vmax = V_raw.max()
@@ -21,9 +22,7 @@ prior = BiLaplacianPriorNumpyWrapper(V, F, sigma=0.2, ell=1.0)
 sample = prior.sample()
 
 # %%
-V_raw, F1, uac1, fibers1, tags1 = get_mesh_and_point_data_from_lge_mri_based_data(
-    Path("data/LGE-MRI-based/1")
-)
+V_raw, F1, uac1, fibers1, _ = read_atrial_mesh_with_fibers_and_tags_mapped_to_vertices(1)
 Vmin = V_raw.min()
 Vmax = V_raw.max()
 V1 = V_raw / (Vmax - Vmin)
