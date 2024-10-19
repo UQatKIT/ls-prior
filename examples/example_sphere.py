@@ -27,13 +27,13 @@ plot_function(sample, title="BiLaplacianPrior sample")
 # Gaussian field as angles of vector field #
 ############################################
 # %%
-alphas = sample_to_angles(function_to_numpy(sample))
+angles = sample_to_angles(function_to_numpy(sample))
 
 V = sphere_mesh.coordinates()
 F = sphere_mesh.cells()
 
 x_axes, y_axes, _ = get_reference_coordinates(V, F)
-vector_field = angles_to_3d_vector(alphas=alphas, x_axes=x_axes, y_axes=y_axes)
+vector_field = angles_to_3d_vector(angles=angles, x_axes=x_axes, y_axes=y_axes)
 
 # %%
 plotter = Plotter()

@@ -9,13 +9,13 @@ def normalize(vecs: ArrayNx3 | ArrayNx2) -> ArrayNx3 | ArrayNx2:
     return np.divide(vecs.T, length, where=length != 0).T
 
 
-def angles_to_3d_vector(alphas: Array1d, x_axes: ArrayNx3, y_axes: ArrayNx3) -> ArrayNx3:
+def angles_to_3d_vector(angles: Array1d, x_axes: ArrayNx3, y_axes: ArrayNx3) -> ArrayNx3:
     """
     Compute 3d vectors of directions from given angles and reference coordinate systems.
 
     Parameters
     ----------
-    alphas : Array1d
+    angles : Array1d
         Array of angles between vectors and x-axes
     x_axes : ArrayNx3
         Vectors representing the x-axes of the reference coordinates systems.
@@ -25,9 +25,10 @@ def angles_to_3d_vector(alphas: Array1d, x_axes: ArrayNx3, y_axes: ArrayNx3) -> 
     Returns
     -------
     ArrayNx3
-        Directions corresponding to the given alphas
+        Directions corresponding to the given angles
     """
-    return (np.cos(alphas) * x_axes.T).T + (np.sin(alphas) * y_axes.T).T
+    coeff_x, coeff_y = angles_to_2d_vector_coefficients(angles)
+    return (coeff_x * x_axes.T).T + (coeff_y * y_axes.T).T
 
 
 def angles_between_vectors(a, b):

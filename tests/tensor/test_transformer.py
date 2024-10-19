@@ -36,23 +36,23 @@ def y_axes(x_axes):
 
 
 def test_angles_to_3d_vector_and_back(x_axes, y_axes):
-    alphas_inp = np.random.uniform(-np.pi, np.pi, 100)
+    angles_inp = np.random.uniform(-np.pi, np.pi, 100)
 
-    alphas_out = vectors_3d_to_angles(
-        angles_to_3d_vector(alphas_inp, x_axes, y_axes), x_axes, y_axes
+    angles_out = vectors_3d_to_angles(
+        angles_to_3d_vector(angles_inp, x_axes, y_axes), x_axes, y_axes
     )
-    assert np.allclose(alphas_inp, alphas_out)
+    assert np.allclose(angles_inp, angles_out)
 
 
 def test_vectors_3d_to_angles_outputs_between_minus_pi_and_pi(x_axes, y_axes):
-    alphas_inp = np.random.uniform(-10, 10, 100)
+    angles_inp = np.random.uniform(-10, 10, 100)
 
-    alphas_out = vectors_3d_to_angles(
-        angles_to_3d_vector(alphas_inp, x_axes, y_axes), x_axes, y_axes
+    angles_out = vectors_3d_to_angles(
+        angles_to_3d_vector(angles_inp, x_axes, y_axes), x_axes, y_axes
     )
 
-    assert all(-np.pi <= alphas_out)
-    assert all(alphas_out <= np.pi)
+    assert all(-np.pi <= angles_out)
+    assert all(angles_out <= np.pi)
 
 
 def test_sigmoid_transformation_forward_reverse():
@@ -61,5 +61,5 @@ def test_sigmoid_transformation_forward_reverse():
 
 
 def test_sigmoid_transformation_reverse_forward():
-    alphas = np.random.uniform(-np.pi, np.pi, 1000)
-    assert np.allclose(alphas, sample_to_angles(angles_to_sample(alphas)))
+    angles = np.random.uniform(-np.pi, np.pi, 1000)
+    assert np.allclose(angles, sample_to_angles(angles_to_sample(angles)))

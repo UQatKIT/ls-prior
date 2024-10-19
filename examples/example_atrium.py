@@ -83,9 +83,9 @@ sample = prior.sample()
 #########################################
 # %%
 print("Transform sample to vector field...")
-alphas = sample_to_angles(sample)
+angles = sample_to_angles(sample)
 x_axes, y_axes, _ = get_reference_coordinates(V, F)
-vector_field = angles_to_3d_vector(alphas=alphas, x_axes=x_axes, y_axes=y_axes)
+vector_field = angles_to_3d_vector(angles=angles, x_axes=x_axes, y_axes=y_axes)
 
 plotter = Plotter()
 plotter.add_mesh(get_poly_data(V, F), color="lightgrey", opacity=0.99)
@@ -101,7 +101,7 @@ plotter.add_mesh(get_poly_data(V, F), color="lightgrey", opacity=0.99)
 plotter.add_arrows(
     V,
     angles_to_3d_vector(
-        alphas=sample_to_angles(prior.sample()), x_axes=x_axes, y_axes=y_axes
+        angles=sample_to_angles(prior.sample()), x_axes=x_axes, y_axes=y_axes
     ),
     mag=0.01,
     color="tab:blue",
@@ -109,7 +109,7 @@ plotter.add_arrows(
 plotter.add_arrows(
     V,
     angles_to_3d_vector(
-        alphas=sample_to_angles(prior.sample()), x_axes=x_axes, y_axes=y_axes
+        angles=sample_to_angles(prior.sample()), x_axes=x_axes, y_axes=y_axes
     ),
     mag=0.01,
     color="tab:orange",
