@@ -56,6 +56,14 @@ class FiberGrid:
 
     @classmethod
     def read_from_binary_file(cls, path: str):
+        """Read 'FiberGrid' from .npy file.
+
+        Parameters
+        ----------
+        path : str
+            Path to binary file,
+            e.g. data/LGE-MRI-based/fiber_grid_max_depth7_point_threshold100.npy.
+        """
         grid = np.load(path)
 
         match_max_depth = re.search(r"max_depth(\d+)_", path)
@@ -218,9 +226,9 @@ class FiberGridComputer:
         self.fiber_angle_circstd: list[float] = []
         self.anatomical_tag_mode: list[int] = []
 
-        self._uac = uac
-        self._fiber_angles = fiber_angles
-        self._anatomical_structure_tags = anatomical_structure_tags
+        self.uac = uac
+        self.fiber_angles = fiber_angles
+        self.anatomical_structure_tags = anatomical_structure_tags
 
         # Start with full unit square
         # Extend upper boundaries (we use open intervals on the right)
@@ -254,10 +262,10 @@ class FiberGridComputer:
 
         # Select data points within the current cell
         mask = (
-            (self._uac[:, 0] >= x_min)
-            & (self._uac[:, 0] < x_max)
-            & (self._uac[:, 1] >= y_min)
-            & (self._uac[:, 1] < y_max)
+            (self.uac[:, 0] >= x_min)
+            & (self.uac[:, 0] < x_max)
+            & (self.uac[:, 1] >= y_min)
+            & (self.uac[:, 1] < y_max)
         )
         data_count = mask.sum()
 
@@ -270,20 +278,20 @@ class FiberGridComputer:
             if data_count < n_min:
                 # Find nearest neighbors of cell to compute parameters
                 midpoint = ((x_min + x_max) / 2, (y_min + y_max) / 2)
-                tree = KDTree(self._uac)
+                tree = KDTree(self.uac)
                 _, idx = tree.query(midpoint, k=n_min, p=np.infty)
                 mask[idx] = True
 
             # Compute properties in the cell
             circ_kwargs = dict(low=-np.pi / 2, high=np.pi / 2, nan_policy="omit")
             self.fiber_angle_circmean.append(
-                circmean(self._fiber_angles[mask], **circ_kwargs)
+                circmean(self.fiber_angles[mask], **circ_kwargs)
             )
             self.fiber_angle_circstd.append(
-                circstd(self._fiber_angles[mask], **circ_kwargs)
+                circstd(self.fiber_angles[mask], **circ_kwargs)
             )
             self.anatomical_tag_mode.append(
-                mode(self._anatomical_structure_tags[mask]).mode
+                mode(self.anatomical_structure_tags[mask]).mode
             )
         else:
             # Subdivide into four quadrants
