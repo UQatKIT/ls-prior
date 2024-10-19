@@ -1,10 +1,9 @@
 # %%
-import numpy as np
 from dolfin import BoundaryMesh, Mesh
-from pyvista import Plotter, PolyData
+from pyvista import Plotter
 
 from prior_fields.prior.converter import function_to_numpy
-from prior_fields.prior.plots import plot_function
+from prior_fields.prior.plots import get_poly_data, plot_function
 from prior_fields.prior.prior import BiLaplacianPrior
 from prior_fields.tensor.tangent_space_coordinates import get_reference_coordinates
 from prior_fields.tensor.transformer import angles_to_3d_vector, sample_to_angles
@@ -40,8 +39,7 @@ vector_field = angles_to_3d_vector(alphas=alphas, x_axes=x_axes, y_axes=y_axes)
 plotter = Plotter()
 plotter.add_text("Vector field on sphere with reference coordinate systems")
 
-mesh = PolyData(V, np.hstack((np.full((F.shape[0], 1), 3), F)))
-plotter.add_mesh(mesh, color="lightgrey", opacity=0.9)
+plotter.add_mesh(get_poly_data(V, F), color="lightgrey", opacity=0.9)
 
 plotter.add_arrows(V, x_axes, mag=0.1, color="tab:green", label="x-axes")
 plotter.add_arrows(V, y_axes, mag=0.1, color="tab:green", label="y-axes")

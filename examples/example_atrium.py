@@ -2,8 +2,9 @@
 from pathlib import Path
 
 import numpy as np
-from pyvista import Plotter, PolyData
+from pyvista import Plotter
 
+from prior_fields.prior.plots import get_poly_data
 from prior_fields.prior.prior import BiLaplacianPriorNumpyWrapper
 from prior_fields.tensor.io import get_mesh_and_point_data_from_lge_mri_based_data
 from prior_fields.tensor.mapper import get_fiber_parameters
@@ -42,7 +43,7 @@ plotter = Plotter(shape=(1, 3))
 plotter.subplot(0, 0)
 plotter.add_text("Mean fiber angle")
 plotter.add_mesh(
-    PolyData(V, np.hstack((np.full((F.shape[0], 1), 3), F))),
+    get_poly_data(V, F),
     scalars=mean_fiber_angle,
     cmap="twilight",
     scalar_bar_args=dict(title="angle", n_labels=2, label_font_size=12),
@@ -51,7 +52,7 @@ plotter.add_mesh(
 plotter.subplot(0, 1)
 plotter.add_text("Pointwise variance")
 plotter.add_mesh(
-    PolyData(V, np.hstack((np.full((F.shape[0], 1), 3), F))),
+    get_poly_data(V, F),
     scalars=sigma,
     scalar_bar_args=dict(title="sigma", n_labels=2, label_font_size=12),
 )
@@ -59,7 +60,7 @@ plotter.add_mesh(
 plotter.subplot(0, 2)
 plotter.add_text("Correlation length")
 plotter.add_mesh(
-    PolyData(V, np.hstack((np.full((F.shape[0], 1), 3), F))),
+    get_poly_data(V, F),
     scalars=ell,
     scalar_bar_args=dict(title="ell", n_labels=2, label_font_size=12),
 )
@@ -87,11 +88,7 @@ x_axes, y_axes, _ = get_reference_coordinates(V, F)
 vector_field = angles_to_3d_vector(alphas=alphas, x_axes=x_axes, y_axes=y_axes)
 
 plotter = Plotter()
-plotter.add_mesh(
-    PolyData(V, np.hstack((np.full((F.shape[0], 1), 3), F))),
-    color="lightgrey",
-    opacity=0.99,
-)
+plotter.add_mesh(get_poly_data(V, F), color="lightgrey", opacity=0.99)
 plotter.add_arrows(V, vector_field, mag=0.01, color="tab:blue")
 plotter.show(window_size=(800, 500))
 
@@ -100,11 +97,7 @@ plotter.show(window_size=(800, 500))
 ###################
 # %%
 plotter = Plotter()
-plotter.add_mesh(
-    PolyData(V, np.hstack((np.full((F.shape[0], 1), 3), F))),
-    color="lightgrey",
-    opacity=0.99,
-)
+plotter.add_mesh(get_poly_data(V, F), color="lightgrey", opacity=0.99)
 plotter.add_arrows(
     V,
     angles_to_3d_vector(

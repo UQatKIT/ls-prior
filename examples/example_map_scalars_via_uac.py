@@ -1,10 +1,10 @@
 # %%
 from pathlib import Path
 
-import numpy as np
-from pyvista import Plotter, PolyData
+from pyvista import Plotter
 from scipy.spatial import KDTree
 
+from prior_fields.prior.plots import get_poly_data
 from prior_fields.prior.prior import BiLaplacianPriorNumpyWrapper
 from prior_fields.tensor.io import get_mesh_and_point_data_from_lge_mri_based_data
 
@@ -33,10 +33,10 @@ _, idx_neighbors = tree.query(uac1, k=1)
 sample1 = sample[idx_neighbors]
 
 # %%
-mesh = PolyData(V, np.hstack([np.full((F.shape[0], 1), 3), F]))
+mesh = get_poly_data(V, F)
 mesh["sample"] = sample
 
-mesh1 = PolyData(V1, np.hstack([np.full((F1.shape[0], 1), 3), F1]))
+mesh1 = get_poly_data(V1, F1)
 mesh1["sample"] = sample1
 
 plotter = Plotter(shape=(1, 2))

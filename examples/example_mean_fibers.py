@@ -3,10 +3,11 @@ from pathlib import Path
 
 import numpy as np
 from matplotlib import pyplot as plt
-from pyvista import Plotter, PolyData
+from pyvista import Plotter
 from scipy.spatial import KDTree
 from scipy.stats import circmean, circstd
 
+from prior_fields.prior.plots import get_poly_data
 from prior_fields.tensor.io import get_mesh_and_point_data_from_lge_mri_based_data
 from prior_fields.tensor.mapper import (
     FiberGrid,
@@ -109,9 +110,8 @@ _, idx = tree.query(grid, k=1)
 # Interactive plot of fiber fields
 plotter = Plotter()
 plotter.add_text("Comparison of fiber fields (subsampled)")
-mesh = PolyData(V, np.hstack((np.full((F.shape[0], 1), 3), F)))
 plotter.add_mesh(
-    mesh,
+    get_poly_data(V, F),
     scalars=fiber_std,
     scalar_bar_args=dict(title="Pointwise standard deviation"),
     cmap="Blues",
@@ -131,9 +131,11 @@ mean_angle = vector_coefficients_2d_to_angles(coeff_x, coeff_y)
 
 plotter = Plotter()
 plotter.add_text("Mean fiber angle")
-mesh = PolyData(V, np.hstack((np.full((F.shape[0], 1), 3), F)))
 plotter.add_mesh(
-    mesh, scalars=mean_angle, scalar_bar_args=dict(title="Mean angle"), cmap="twilight"
+    get_poly_data(V, F),
+    scalars=mean_angle,
+    scalar_bar_args=dict(title="Mean angle"),
+    cmap="twilight",
 )
 
 plotter.show(window_size=(700, 700))

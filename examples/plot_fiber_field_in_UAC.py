@@ -3,9 +3,10 @@ from pathlib import Path
 
 import matplotlib.pyplot as plt
 import numpy as np
-from pyvista import Plotter, PolyData
+from pyvista import Plotter
 from scipy.stats import circmean, circstd, mode
 
+from prior_fields.prior.plots import get_poly_data
 from prior_fields.tensor.io import get_mesh_and_point_data_from_lge_mri_based_data
 from prior_fields.tensor.mapper import get_coefficients, map_fibers_to_tangent_space
 from prior_fields.tensor.tangent_space_coordinates import get_uac_basis_vectors
@@ -26,8 +27,7 @@ fibers_in_tangent_space = map_fibers_to_tangent_space(
 plotter = Plotter()
 plotter.add_text("Original fibers vs. fibers mapped to tangent space")
 
-mesh = PolyData(V, np.hstack((np.full((F.shape[0], 1), 3), F)))
-plotter.add_mesh(mesh, color="lightgrey", opacity=0.9)
+plotter.add_mesh(get_poly_data(V, F), color="lightgrey", opacity=0.9)
 
 length = 200
 plotter.add_arrows(

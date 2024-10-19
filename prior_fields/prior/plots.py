@@ -3,6 +3,12 @@ import numpy as np
 from dolfin import Function, plot
 from pyvista import Plotter, PolyData
 
+from prior_fields.prior.dtypes import ArrayNx3
+
+
+def get_poly_data(V: ArrayNx3, F: ArrayNx3) -> PolyData:
+    return PolyData(V, np.hstack((np.full((F.shape[0], 1), 3), F)))
+
 
 def plot_function(f: Function, show_mesh: bool = False, title: str = ""):
     """Plot function defined on a finite element space.
@@ -32,10 +38,9 @@ def plot_function(f: Function, show_mesh: bool = False, title: str = ""):
 
         V = f.function_space().mesh().coordinates()
         F = f.function_space().mesh().cells()
-        mesh = PolyData(V, np.hstack((np.full((F.shape[0], 1), 3), F)))
 
         plotter.add_mesh(
-            mesh,
+            get_poly_data(V, F),
             scalars=f.compute_vertex_values(f.function_space().mesh()),
             show_edges=show_mesh,
         )
