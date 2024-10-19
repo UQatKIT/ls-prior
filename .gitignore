@@ -7,8 +7,8 @@
 *.pts
 *.npy
 
-# raw mesh files
-data/shape_model/cn617_*
+# unused data files
+data/shape_model/*
 
 # figures
 figures/*
