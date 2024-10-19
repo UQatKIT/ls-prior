@@ -36,34 +36,6 @@ def angles_between_vectors(a, b):
     return np.arccos(dot_product)
 
 
-def vectors_3d_to_angles(
-    directions: ArrayNx3, x_axes: ArrayNx3, y_axes: ArrayNx3
-) -> Array1d:
-    """
-    Compute angles in reference coordinate systems for given 3d vectors of directions.
-
-    Parameters
-    ----------
-    directions : ArrayNx3
-        3d vectors of directions in the coordinate systems.
-    x_axes : ArrayNx3
-        Vectors representing the x-axes of the reference coordinates systems.
-    y_axes : ArrayNx3
-        Vectors representing the y-axes of the reference coordinates systems.
-
-    Returns
-    -------
-    Array1D
-         Angles between :math:`-\\pi` and :math:`\\pi`
-    """
-    alphas_x = angles_between_vectors(x_axes, directions)
-    alphas_y = angles_between_vectors(y_axes, directions)
-    alphas = np.array(
-        [ax if ay <= np.pi / 2 else -ax for ax, ay in zip(alphas_x, alphas_y)]
-    )
-    return alphas
-
-
 def vector_coefficients_2d_to_angles(coeff_x, coeff_y):
     """
     Interpret vector coefficients as opposite and adjacent in the triangle determining
