@@ -134,14 +134,13 @@ def _get_directions_with_no_change_in_one_uac(
     count_missing = 0
 
     for v_idx in range(V.shape[0]):
-
         found_direction = False
 
         for f_idx, uac_changes in vertices_to_uac_change_map[v_idx].items():
             # c is a list of length 3 (triangular face has three vertices)
             # One entry is always zero (uac(current vertex) - uac(current vertex))
             # The face contains the direction of interest, if
-            # 1. there is a second change = 0 (same uac at neighoring vertex), or
+            # 1. there is a second change = 0 (same uac at neighboring vertex), or
             # 2. change is positive towards one and negative towards the other neighbor
 
             v_indices_face = F[f_idx]
@@ -179,7 +178,6 @@ def _get_directions_with_no_change_in_one_uac(
 
             # post-processing of no-change direction
             if found_direction:
-
                 # map direction to tangent space
                 direction_no_change = (
                     direction_no_change
