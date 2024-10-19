@@ -50,3 +50,5 @@ plotter.add_text("Sample on geometry 1")
 plotter.add_mesh(mesh1)
 
 plotter.show(window_size=(800, 400))
+
+# %%
