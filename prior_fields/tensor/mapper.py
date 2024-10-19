@@ -4,12 +4,26 @@ from warnings import warn
 import numpy as np
 from scipy.stats import mode
 
-from prior_fields.prior.dtypes import Array1d, ArrayNx3
+from prior_fields.prior.dtypes import Array1d, ArrayNx2, ArrayNx3
 from prior_fields.tensor.fiber_grid import FiberGrid
 from prior_fields.tensor.transformer import normalize
 
 
 def get_dict_with_adjacent_faces_for_each_vertex(F: ArrayNx3) -> dict[int, list[int]]:
+    """
+    Assemble dictionary with vertex indices as keys and lists of indices of the adjacent
+    faces as values.
+
+    Parameters
+    ----------
+    F : ArrayNx3
+        Array of vertex indices, where each row represents one triangle of the mesh.
+
+    Returns
+    -------
+    dict[int, list[int]]
+        Dictionary mapping vertex indices to indices of adjacent faces.
+    """
     adjacent_faces: dict[int, list[int]] = {i: [] for i in range(F.max() + 1)}
 
     for face_index, face_vertices in enumerate(F):
@@ -130,13 +144,27 @@ def get_coefficients(
     return np.einsum("ij,ij->i", fibers, x), np.einsum("ij,ij->i", fibers, y)
 
 
-def get_fiber_parameters(V, uac):
+def get_fiber_parameters(uac: ArrayNx2) -> tuple[Array1d, Array1d]:
+    """
+    Map mean and standard deviation of fiber angles from `FiberGrid` to vertices based on
+    the given UACs.
+
+    Parameters
+    ----------
+    uac : ArrayNx2
+        Universal atrial coordinates of vertices.
+
+    Returns
+    -------
+    (Array1d, Array1d)
+        Arrays with mean and standard deviation of fiber angles.
+    """
     fiber_grid = FiberGrid.read_from_binary_file(
         "data/LGE-MRI-based/fiber_grid_max_depth7_point_threshold100.npy"
     )
 
-    fiber_mean = np.zeros(V.shape[0])
-    fiber_std = np.zeros(V.shape[0])
+    fiber_mean = np.zeros(uac.shape[0])
+    fiber_std = np.zeros(uac.shape[0])
     unmatched_vertices = []
 
     for i in range(fiber_mean.shape[0]):
@@ -155,8 +183,9 @@ def get_fiber_parameters(V, uac):
 
     if len(unmatched_vertices) > 0:
         warn(
-            f"\nCouldn't find grid cell for {100*len(unmatched_vertices)/V.shape[0]:.2f}"
-            "% of the vertices"
+            "\nCouldn't find grid cell for "
+            f"{100 * len(unmatched_vertices) / uac.shape[0]:.2f}%"
+            " of the vertices"
         )
         stderr.flush()
 

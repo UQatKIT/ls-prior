@@ -31,7 +31,7 @@ V = V_raw / (Vmax - Vmin)
 ##################
 # %%
 print("Get parameters...")
-mean_fiber_angle, std_fiber_angle = get_fiber_parameters(V, uac)
+mean_fiber_angle, std_fiber_angle = get_fiber_parameters(uac)
 
 sample_mean = angles_to_sample(mean_fiber_angle)
 sigma = std_fiber_angle * std_fiber_angle
