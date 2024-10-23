@@ -5,7 +5,6 @@
 *.ply
 *.lon
 *.pts
-*.npy
 
 # unused data files
 data/shape_model/*
