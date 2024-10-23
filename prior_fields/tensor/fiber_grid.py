@@ -156,20 +156,19 @@ class FiberGrid:
 
         plt.show()
 
-    def save(self, filename_prefix: str = "fiber_grid") -> None:
+    def save(self, file: str = "data/LGE-MRI-based/fiber_grid") -> None:
         """Write fiber grid to binary file.
 
         Parameters
         ----------
-        filename_prefix : str, optional
-            Prefix of the filename, defaults to 'fiber_grid'.
+        file : str, optional
+            Path including file name prefix to which the fiber grid is saved,
+            defaults to 'data/LGE-MRI-based/fiber_grid'.
             The suffix is fixed to contain max_depth and point_threshold which are used
             to initialize a FiberGrid from the file.
         """
         np.save(
-            f"data/LGE-MRI-based/{filename_prefix}"
-            f"_max_depth{self.max_depth}"
-            f"_point_threshold{self.point_threshold}.npy",
+            f"{file}_max_depth{self.max_depth}_point_threshold{self.point_threshold}",
             np.hstack(
                 [
                     self.grid_x,

@@ -1,7 +1,5 @@
-from sys import stderr
-from warnings import warn
-
 import numpy as np
+from loguru import logger
 from potpourri3d import MeshVectorHeatSolver
 
 from prior_fields.prior.dtypes import Array1d, ArrayNx2, ArrayNx3
@@ -77,12 +75,12 @@ def get_uac_basis_vectors(
 
     vertex_to_faces_map = _get_vertex_to_face_map(F)
 
-    print("Get coordinate of no change in beta...")
+    logger.info("Get coordinate of no change in beta...")
     directions_constant_beta = _get_directions_with_no_change_in_one_uac(
         uac[:, 1], uac[:, 0], vertex_to_faces_map, V, F, basis_n
     )
 
-    print("Get coordinate of no change in alpha...")
+    logger.info("Get coordinate of no change in alpha...")
     directions_constant_alpha = _get_directions_with_no_change_in_one_uac(
         uac[:, 0], uac[:, 1], vertex_to_faces_map, V, F, basis_n
     )
@@ -221,10 +219,9 @@ def _get_directions_with_no_change_in_one_uac(
             basis_uac.append(np.zeros(3))
 
     if count_missing > 0:
-        warn(
-            "\nNo face with no-change found for "
+        logger.warning(
+            "No face with no-change found for "
             f"{100 * count_missing / V.shape[0]:.3f}% of the vertices."
         )
-        stderr.flush()
 
     return np.vstack(basis_uac)

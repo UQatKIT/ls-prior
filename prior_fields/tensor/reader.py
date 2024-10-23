@@ -4,6 +4,7 @@ from typing import Literal
 
 import meshio
 import numpy as np
+from loguru import logger
 
 from prior_fields.prior.dtypes import Array1d
 from prior_fields.tensor.mapper import (
@@ -113,6 +114,8 @@ def read_atrial_mesh_with_fibers_and_tags_mapped_to_vertices(
     """
     V, F, uac, fibers_on_faces, tag_of_faces = read_raw_atrial_mesh(geometry)
 
+    logger.info("Map fibers and tags to vertices...")
+
     # Construct mapping of vertex indices to vertex indices of its adjacent faces
     adjacent_faces = get_dict_with_adjacent_faces_for_each_vertex(F)
 
@@ -163,6 +166,7 @@ def read_all_human_atrial_fiber_meshes() -> tuple[
         i = int(idx) if idx.isnumeric() else None
 
         if i is not None:
+            logger.info(f"Read data for geometry {i}...")
             V[i], F[i], uac[i], fibers[i], tags[i] = (
                 read_atrial_mesh_with_fibers_and_tags_mapped_to_vertices(i)
             )

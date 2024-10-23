@@ -1,7 +1,5 @@
-from sys import stderr
-from warnings import warn
-
 import numpy as np
+from loguru import logger
 from scipy.stats import mode
 
 from prior_fields.prior.dtypes import Array1d, ArrayNx2, ArrayNx3
@@ -109,11 +107,11 @@ def map_fibers_to_tangent_space(fibers: ArrayNx3, x: ArrayNx3, y: ArrayNx3) -> A
     # thresh = 0.25  # corresponds to approximately 75 degrees
     thresh = 0.5  # corresponds to 60 degrees
     mask_orthogonal = (abs(fiber_coeff_x) < thresh) & (abs(fiber_coeff_y) < thresh)
-    warn(
-        f"\nExcluding {100 * mask_orthogonal.sum() / fibers.shape[0]:.2f}% of the fibers"
+
+    logger.warning(
+        f"Excluding {100 * mask_orthogonal.sum() / fibers.shape[0]:.2f}% of the fibers"
         " as they are almost orthogonal to the tangent space."
     )
-    stderr.flush()
 
     fibers_mapped = fiber_coeff_x[:, np.newaxis] * x + fiber_coeff_y[:, np.newaxis] * y
 
@@ -161,11 +159,10 @@ def get_fiber_parameters_from_uac_grid(uac: ArrayNx2) -> tuple[Array1d, Array1d]
             unmatched_vertices.append(i)
 
     if len(unmatched_vertices) > 0:
-        warn(
-            "\nCouldn't find grid cell for "
+        logger.warning(
+            "Couldn't find grid cell for "
             f"{100 * len(unmatched_vertices) / uac.shape[0]:.2f}%"
-            " of the vertices"
+            " of the vertices."
         )
-        stderr.flush()
 
     return fiber_mean, fiber_std

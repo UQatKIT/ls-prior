@@ -1,4 +1,5 @@
 import numpy as np
+from loguru import logger
 
 from prior_fields.prior.dtypes import Array1d, ArrayNx2, ArrayNx3
 from prior_fields.tensor.mapper import map_fibers_to_tangent_space
@@ -36,11 +37,10 @@ def collect_data_from_human_atrial_fiber_meshes() -> tuple[ArrayNx2, Array1d, Ar
 
     # Get UAC-based coordinates (takes about 80 seconds)
     for i in keys:
-        print(f"Geometry {i}: Get UAC-based tangent space coordinates.")
+        logger.info(f"Get UAC-based tangent space coordinates for geometry {i}...")
         directions_constant_beta_dict[i], directions_constant_alpha_dict[i] = (
             get_uac_basis_vectors(V_dict[i], F_dict[i], uac_dict[i])
         )
-        print()
 
     # Unite different geometries
     uac = np.vstack([uac_dict[i] for i in keys])
