@@ -2,15 +2,15 @@
 import numpy as np
 
 from prior_fields.prior.converter import scale_mesh_to_unit_cube
+from prior_fields.tensor.conduction_velocity import (
+    conduction_velocity_to_longitudinal_velocity,
+    get_conduction_velocity_tensor_from_angles_and_velocities,
+)
 from prior_fields.tensor.fiber_grid import get_fiber_parameters_from_uac_grid
 from prior_fields.tensor.reader import (
     read_atrial_mesh_with_fibers_and_tags_mapped_to_vertices,
 )
 from prior_fields.tensor.tangent_space import get_uac_basis_vectors
-from prior_fields.tensor.transformer import (
-    conduction_velocity_to_longitudinal_velocity,
-    get_conduction_velocity_tensor_from_angles_and_velocities,
-)
 
 # %%
 V_raw, F, uac, fibers, _ = read_atrial_mesh_with_fibers_and_tags_mapped_to_vertices("A")
