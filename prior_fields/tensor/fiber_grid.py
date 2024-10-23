@@ -7,7 +7,7 @@ import numpy as np
 from loguru import logger
 from matplotlib import pyplot as plt
 from scipy.spatial import KDTree
-from scipy.stats import circmean, circstd, mode
+from scipy.stats import circmean, circvar, mode
 
 from prior_fields.prior.dtypes import Array1d, ArrayNx2
 from prior_fields.tensor.reader import collect_data_from_human_atrial_fiber_meshes
@@ -17,7 +17,8 @@ from prior_fields.tensor.transformer import angles_to_2d_vector_coefficients
 def compute_uac_fiber_grid(
     max_depth: int, point_threshold: int, file: str = "data/fiber_grid.npy"
 ) -> None:
-    """Compute and save `FiberGrid` based on all 7 human atrial geometries.
+    """
+    Compute and save `FiberGrid` based on all 7 human atrial geometries.
 
     Parameters
     ----------
@@ -49,8 +50,8 @@ def get_fiber_parameters_from_uac_grid(
     uac: ArrayNx2, file: str = "data/fiber_grid_max_depth8_point_threshold120.npy"
 ) -> tuple[Array1d, Array1d]:
     """
-    Map mean and standard deviation of fiber angles from `FiberGrid` to vertices based on
-    the given UACs.
+    Map mean and variance of fiber angles from `FiberGrid` to vertices based on the given
+    UACs.
 
     Parameters
     ----------
@@ -67,7 +68,7 @@ def get_fiber_parameters_from_uac_grid(
     fiber_grid = FiberGrid.read_from_binary_file(file)
 
     fiber_mean = np.zeros(uac.shape[0])
-    fiber_std = np.zeros(uac.shape[0])
+    fiber_var = np.zeros(uac.shape[0])
     unmatched_vertices = []
 
     for i in range(fiber_mean.shape[0]):
@@ -79,9 +80,9 @@ def get_fiber_parameters_from_uac_grid(
         )[0]
         try:
             fiber_mean[i] = fiber_grid.fiber_angle_circmean[j[0]]
-            fiber_std[i] = fiber_grid.fiber_angle_circstd[j[0]]
+            fiber_var[i] = fiber_grid.fiber_angle_circvar[j[0]]
         except IndexError:
-            fiber_std[i] = np.nan
+            fiber_var[i] = np.nan
             unmatched_vertices.append(i)
 
     if len(unmatched_vertices) > 0:
@@ -91,14 +92,14 @@ def get_fiber_parameters_from_uac_grid(
             " of the vertices."
         )
 
-    return fiber_mean, fiber_std
+    return fiber_mean, fiber_var
 
 
 class FiberGrid:
     """
     Adpative grid of the UAC unit square with cell size depending on the data density.
     Each cell has the following attributes:
-    - Circular mean and standard deviation of the fiber angle
+    - Circular mean and variance of the fiber angle
     - Mode of anatomical structure tag
 
     Attributes
@@ -109,8 +110,8 @@ class FiberGrid:
         Array of lower and upper boundaries of the cells in y-direction.
     fiber_angle_circmean : Array1d
         Circular mean of fiber angles in (-pi/2, pi/2] for each cell.
-    fiber_angle_circstd : Array1d
-        Circular standard deviation of fiber angles for each cell.
+    fiber_angle_circvar : Array1d
+        Circular variance of fiber angles for each cell.
     anatomical_tag_mode : Array1d
         Mode of anatomical structure tag for each cell.
     """
@@ -120,18 +121,19 @@ class FiberGrid:
         grid_x: ArrayNx2,
         grid_y: ArrayNx2,
         fiber_angle_circmean: Array1d,
-        fiber_angle_circstd: Array1d,
+        fiber_angle_circvar: Array1d,
         anatomical_tag_mode: Array1d,
     ) -> None:
         self.grid_x = grid_x
         self.grid_y = grid_y
         self.fiber_angle_circmean = fiber_angle_circmean
-        self.fiber_angle_circstd = fiber_angle_circstd
+        self.fiber_angle_circvar = fiber_angle_circvar
         self.anatomical_tag_mode = anatomical_tag_mode
 
     @classmethod
     def read_from_binary_file(cls, path: str) -> FiberGrid:
-        """Read 'FiberGrid' from .npy file.
+        """
+        Read 'FiberGrid' from .npy file.
 
         Parameters
         ----------
@@ -144,18 +146,18 @@ class FiberGrid:
             grid_x=grid[:, 0:2],
             grid_y=grid[:, 2:4],
             fiber_angle_circmean=grid[:, 4],
-            fiber_angle_circstd=grid[:, 5],
+            fiber_angle_circvar=grid[:, 5],
             anatomical_tag_mode=grid[:, 6],
         )
 
-    def plot(self, color: Literal["tag", "mean", "std"]) -> None:
+    def plot(self, color: Literal["tag", "mean", "var"]) -> None:
         """
         Plot the adaptive grid with mean fiber vector in each cell. The cells are colored
         according to the fiber properties or anatomical region.
 
         Parameters
         ----------
-        color : 'tag' | 'mean' | 'std'
+        color : 'tag' | 'mean' | 'var'
             Property used to color the grid cells.
         """
         _, ax = plt.subplots(1, 1, figsize=(8, 8))
@@ -173,9 +175,7 @@ class FiberGrid:
                 else (
                     self.fiber_angle_circmean
                     if color == "mean"
-                    else self.fiber_angle_circstd
-                    if color == "std"
-                    else None
+                    else self.fiber_angle_circvar if color == "var" else None
                 )
             ),
             s=[
@@ -214,15 +214,16 @@ class FiberGrid:
             plt.title("Circular mean of fiber angle")
             plt.tight_layout()
             plt.savefig("figures/uac_fibers_with_circmean.svg")
-        elif color == "std":
-            plt.title("Circular standard deviation of fiber angle")
+        elif color == "var":
+            plt.title("Circular variance of fiber angle")
             plt.tight_layout()
-            plt.savefig("figures/uac_fibers_with_circstd.svg")
+            plt.savefig("figures/uac_fibers_with_circvar.svg")
 
         plt.show()
 
     def save(self, file: str = "data/fiber_grid") -> None:
-        """Write fiber grid to binary file.
+        """
+        Write fiber grid to binary file.
 
         Parameters
         ----------
@@ -239,7 +240,7 @@ class FiberGrid:
                     np.vstack(
                         [
                             self.fiber_angle_circmean,
-                            self.fiber_angle_circstd,
+                            self.fiber_angle_circvar,
                             self.anatomical_tag_mode,
                         ]
                     ).T,
@@ -285,7 +286,7 @@ class FiberGridComputer:
         self.grid_y: list[list[float]] = []
 
         self.fiber_angle_circmean: list[float] = []
-        self.fiber_angle_circstd: list[float] = []
+        self.fiber_angle_circvar: list[float] = []
         self.anatomical_tag_mode: list[int] = []
 
         self.uac = uac
@@ -302,7 +303,7 @@ class FiberGridComputer:
             grid_x=np.array(self.grid_x),
             grid_y=np.array(self.grid_y),
             fiber_angle_circmean=np.array(self.fiber_angle_circmean),
-            fiber_angle_circstd=np.array(self.fiber_angle_circstd),
+            fiber_angle_circvar=np.array(self.fiber_angle_circvar),
             anatomical_tag_mode=np.array(self.anatomical_tag_mode),
         )
 
@@ -348,8 +349,8 @@ class FiberGridComputer:
             self.fiber_angle_circmean.append(
                 circmean(self.fiber_angles[mask], **circ_kwargs)
             )
-            self.fiber_angle_circstd.append(
-                circstd(self.fiber_angles[mask], **circ_kwargs)
+            self.fiber_angle_circvar.append(
+                circvar(self.fiber_angles[mask], **circ_kwargs)
             )
             self.anatomical_tag_mode.append(
                 mode(self.anatomical_structure_tags[mask]).mode

@@ -4,7 +4,7 @@ import numpy as np
 from matplotlib import pyplot as plt
 from pyvista import Plotter
 from scipy.spatial import KDTree
-from scipy.stats import circmean, circstd
+from scipy.stats import circmean, circvar
 
 from prior_fields.prior.converter import scale_mesh_to_unit_cube
 from prior_fields.prior.plots import get_poly_data
@@ -26,36 +26,30 @@ V = scale_mesh_to_unit_cube(V_raw)
 basis_x, basis_y = get_uac_basis_vectors(V, F, uac)
 atlas_fibers = map_fibers_to_tangent_space(fibers_atlas, basis_x, basis_y)
 
-# Get mean fibers and angle mean/std
-fiber_angle_mean, fiber_angle_std = get_fiber_parameters_from_uac_grid(
+# Get mean fibers and angle mean/variance
+fiber_angle_mean, fiber_angle_var = get_fiber_parameters_from_uac_grid(
     uac, file="data/fiber_grid_max_depth8_point_threshold120.npy"
 )
 mean_fibers = angles_to_3d_vector(fiber_angle_mean, basis_x, basis_y)
 
 # %%
 print("Angles between fibers from atlas data and mean fibers mapped to atlas geometry:")
-idx_notnan = (
-    (np.linalg.norm(mean_fibers, axis=1) != 0)
-    & (np.linalg.norm(atlas_fibers, axis=1) != 0)
-    & ~np.isnan(mean_fibers).any(axis=1)
-    & ~np.isnan(atlas_fibers).any(axis=1)
-)
 angles_between_atlas_and_mean_fiber = angles_between_vectors(atlas_fibers, mean_fibers)
-min_angle = angles_between_atlas_and_mean_fiber[idx_notnan].min()
-max_angle = angles_between_atlas_and_mean_fiber[idx_notnan].max()
+min_angle = angles_between_atlas_and_mean_fiber.min()
+max_angle = angles_between_atlas_and_mean_fiber.max()
 circular_mean = circmean(
-    angles_between_atlas_and_mean_fiber[idx_notnan], low=0, high=np.pi
+    angles_between_atlas_and_mean_fiber, low=0, high=np.pi, nan_policy="omit"
 )
-circular_std = circstd(
-    angles_between_atlas_and_mean_fiber[idx_notnan], low=0, high=np.pi
+circular_var = circvar(
+    angles_between_atlas_and_mean_fiber, low=0, high=np.pi, nan_policy="omit"
 )
 
 print(f"Range:\t\t({min_angle:.4f}, {max_angle:.4f})")
 print(f"Circular mean:\t{circular_mean:.4f}")
-print(f"Circular std:\t{circular_std:.4f}")
+print(f"Circular var:\t{circular_var:.4f}")
 
 plt.figure(figsize=(6, 4))
-plt.hist(angles_between_atlas_and_mean_fiber[idx_notnan], bins=25)
+plt.hist(angles_between_atlas_and_mean_fiber, bins=25)
 plt.title("Histogram of angles between atlas fibers and mean fibers")
 plt.show()
 
@@ -74,8 +68,8 @@ plotter = Plotter()
 plotter.add_text("Comparison of fiber fields (subsampled)")
 plotter.add_mesh(
     get_poly_data(V, F),
-    scalars=fiber_angle_std,
-    scalar_bar_args=dict(title="Pointwise standard deviation"),
+    scalars=fiber_angle_var,
+    scalar_bar_args=dict(title="Pointwise variance"),
     cmap="Blues",
 )
 plotter.add_arrows(

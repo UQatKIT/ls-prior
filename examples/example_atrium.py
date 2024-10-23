@@ -20,7 +20,6 @@ from prior_fields.tensor.transformer import (
 # Read mesh data #
 ##################
 # %%
-print("Reading mesh...")
 V_raw, F, uac, fibers, _ = read_atrial_mesh_with_fibers_and_tags_mapped_to_vertices(1)
 V = scale_mesh_to_unit_cube(V_raw)
 
@@ -28,13 +27,13 @@ V = scale_mesh_to_unit_cube(V_raw)
 # Set parameters #
 ##################
 # %%
-print("Get parameters...")
-mean_fiber_angle, std_fiber_angle = get_fiber_parameters_from_uac_grid(uac)
+mean_fiber_angle, var_fiber_angle = get_fiber_parameters_from_uac_grid(uac)
 
 sample_mean = angles_to_sample(mean_fiber_angle)
-sigma = std_fiber_angle * std_fiber_angle
+sigma = np.sqrt(var_fiber_angle)
 ell = np.ones_like(sigma)
 
+# %%
 plotter = Plotter(shape=(1, 3))
 
 plotter.subplot(0, 0)
@@ -50,8 +49,8 @@ plotter.subplot(0, 1)
 plotter.add_text("Pointwise variance")
 plotter.add_mesh(
     get_poly_data(V, F),
-    scalars=sigma,
-    scalar_bar_args=dict(title="sigma", n_labels=2, label_font_size=12),
+    scalars=var_fiber_angle,
+    scalar_bar_args=dict(title="sigma^2", n_labels=2, label_font_size=12),
 )
 
 plotter.subplot(0, 2)
@@ -68,18 +67,15 @@ plotter.show(window_size=(900, 400))
 # Bi-Laplacian Prior #
 ######################
 # %%
-print("Initialize prior...")
 prior = BiLaplacianPriorNumpyWrapper(V, F, sigma=sigma, ell=ell, mean=sample_mean)
 
 # %%
-print("Sample from prior...")
 sample = prior.sample()
 
 #########################################
 # Prior field as angles of vector field #
 #########################################
 # %%
-print("Transform sample to vector field...")
 angles = sample_to_angles(sample)
 x_axes, y_axes, _ = get_reference_coordinates(V, F)
 vector_field = angles_to_3d_vector(angles=angles, x_axes=x_axes, y_axes=y_axes)
