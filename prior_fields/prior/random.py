@@ -5,7 +5,8 @@ from prior_fields.prior.converter import numpy_to_vector
 
 
 def random_normal_vector(dim: int, prng: Generator) -> Vector:
-    """Create a vector of standard normally distributed noise.
+    """
+    Create a vector of standard normally distributed noise.
 
     Parameters
     ----------

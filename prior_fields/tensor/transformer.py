@@ -31,18 +31,38 @@ def angles_to_3d_vector(angles: Array1d, x_axes: ArrayNx3, y_axes: ArrayNx3) -> 
     return (coeff_x * x_axes.T).T + (coeff_y * y_axes.T).T
 
 
-def angles_between_vectors(a, b):
+def angles_between_vectors(a: ArrayNx3, b: ArrayNx3) -> Array1d:
+    """Compute the angle between a and b as :math:`arccos(a * b / (|a| * |b|))`."""
     dot_product = np.einsum("ij,ij->i", normalize(a), normalize(b))
     dot_product = np.clip(dot_product, -1.0, 1.0)  # handle floating point issues
     return np.arccos(dot_product)
 
 
-def vector_coefficients_2d_to_angles(coeff_x, coeff_y):
+def vector_coefficients_2d_to_angles(coeff_x: Array1d, coeff_y: Array1d) -> Array1d:
     """
+    Compute angles from vector coefficients.
+
     Interpret vector coefficients as opposite and adjacent in the triangle determining
-    the angle between x-axis and vector. This is more robust than just computing the
-    angle between the x-axis and the vector for the given case, that the basis is not
-    orthogonal.
+    the angle between x-axis and vector. With that define the angle between the x-axis
+    and the vector in a straightened coordinate system in which x- and y-axis are
+    orthogonal as :math:`arctan(coeff_y / coeff_x)`.
+
+    Note
+    ----
+    This is more robust than just computing the angle between the x-axis and the vector
+    for the given case, that the basis is not orthogonal.
+
+    Parameters
+    ----------
+    coeff_x : Array1d
+        Lengths of vectors in x-direction.
+    coeff_y : Array1d
+        Lengths of vectors in y-direction.
+
+    Returns
+    -------
+    Array1d
+        Angles between vectors and x-axes
     """
     angles = np.zeros_like(coeff_x)
 
@@ -62,7 +82,8 @@ def vector_coefficients_2d_to_angles(coeff_x, coeff_y):
 
 
 def angles_to_2d_vector_coefficients(angles: Array1d) -> tuple[Array1d, Array1d]:
-    """Get coefficients of normalized vectors at given angle with the x-axis.
+    """
+    Get coefficients of normalized vectors at given angle with the x-axis.
 
     Note
     ----

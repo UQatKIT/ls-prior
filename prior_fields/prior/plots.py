@@ -10,8 +10,9 @@ def get_poly_data(V: ArrayNx3, F: ArrayNx3) -> PolyData:
     return PolyData(V, np.hstack((np.full((F.shape[0], 1), 3), F)))
 
 
-def plot_function(f: Function, show_mesh: bool = False, title: str = ""):
-    """Plot function defined on a finite element space.
+def plot_function(f: Function, show_mesh: bool = False, title: str = "") -> None:
+    """
+    Plot function defined on a finite element space.
 
     Parameters
     ----------

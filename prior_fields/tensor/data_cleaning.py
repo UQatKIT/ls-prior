@@ -8,7 +8,8 @@ from prior_fields.prior.dtypes import ArrayNx3
 def remove_vertex_from_mesh(
     idx: int, V: ArrayNx3, F: ArrayNx3, fibers: ArrayNx3
 ) -> tuple[ArrayNx3, ArrayNx3, ArrayNx3]:
-    """Remove vertex, corresponding fibers, and related faces from mesh.
+    """
+    Remove vertex, corresponding fibers, and related faces from mesh.
 
     Parameters
     ----------
@@ -46,7 +47,8 @@ def remove_vertex_from_mesh(
 
 
 def _get_duplicate_edges(F: ArrayNx3) -> list[list[int]]:
-    """Get list of directed edges that belong to more than one face.
+    """
+    Get list of directed edges that belong to more than one face.
 
     Parameters
     ----------
@@ -71,7 +73,8 @@ def _reorder_neighbours(
     faces_to_neighbours_map: dict,
     reordered_faces: list[int],
 ) -> ArrayNx3:
-    """Recursively reorder neighbouring faces until there are no duplicate edges.
+    """
+    Recursively reorder neighbouring faces until there are no duplicate edges.
 
     Parameters
     ----------
@@ -109,10 +112,13 @@ def _reorder_neighbours(
         raise RecursionError("Could not reach all vertices.")
 
 
-def _handle_artifacts(F, faces_to_neighbours_map, reordered_faces):
+def _handle_artifacts(
+    F: ArrayNx3, faces_to_neighbours_map: dict, reordered_faces: list[int]
+) -> tuple[dict, list[int]]:
     """
     Manually handle the boundary artifact that two faces are neighbours to each other but
-    not to any further face."""
+    not to any further face.
+    """
     faces_with_single_neighbour = [
         k for k, v in faces_to_neighbours_map.items() if len(v) == 1
     ]
@@ -133,7 +139,8 @@ def _handle_artifacts(F, faces_to_neighbours_map, reordered_faces):
 
 
 def reorder_edges_of_faces(F: ArrayNx3) -> ArrayNx3:
-    """Reorder edges of faces for `potpourri3d.MeshVectorHeatSolver`.
+    """
+    Reorder edges of faces for `potpourri3d.MeshVectorHeatSolver`.
 
     Parameters
     ----------

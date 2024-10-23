@@ -5,6 +5,7 @@ from dolfin import (
     Matrix,
     Mesh,
     PETScKrylovSolver,
+    PETScPreconditioner,
     TestFunction,
     TrialFunction,
     UserExpression,
@@ -106,7 +107,8 @@ class BiLaplacianPrior:
         theta: UserExpression | None = None,
         seed: int | None = None,
     ) -> None:
-        """Construct a bi-Laplacian prior.
+        """
+        Construct a bi-Laplacian prior.
 
         Parameters
         ----------
@@ -152,7 +154,8 @@ class BiLaplacianPrior:
         self.prng = np.random.default_rng(seed=seed)
 
     def sample(self) -> Function:
-        """Draw sample from bi-Laplacian prior.
+        """
+        Draw sample from bi-Laplacian prior.
 
         Returns
         ----------
@@ -188,7 +191,8 @@ class BiLaplacianPrior:
         return 0.5 * Qd.inner(d)
 
     def grad(self, m: Vector) -> Vector:
-        """Compute gradient of discrete cost functional :math:`A M^{-1} A (m - mean)`.
+        """
+        Compute gradient of discrete cost functional :math:`A M^{-1} A (m - mean)`.
 
         Parameters
         ----------
@@ -208,7 +212,8 @@ class BiLaplacianPrior:
         return Qd
 
     def compute_hessian_vector_product(self, d: Vector) -> Vector:
-        """Multiply hessian to given direction vector.
+        """
+        Multiply hessian to given direction vector.
 
         Parameters
         ----------
@@ -259,10 +264,12 @@ class BiLaplacianPrior:
         solver.parameters["nonzero_initial_guess"] = False
 
     @staticmethod
-    def _init_trial_test_functions(Vh) -> tuple[Argument, Argument]:
+    def _init_trial_test_functions(Vh: FunctionSpace) -> tuple[Argument, Argument]:
         return TrialFunction(Vh), TestFunction(Vh)
 
-    def _init_variational_forms(self, trial, test) -> tuple[Form, Form]:
+    def _init_variational_forms(
+        self, trial: Argument, test: Argument
+    ) -> tuple[Form, Form]:
         """Initialize variational forms of the operators M & A."""
         varfM = self.tau * self.kappa**2 * inner(trial, test) * dx
 
@@ -277,14 +284,16 @@ class BiLaplacianPrior:
 
         return varfM, varfA
 
-    def _init_operator(self, varf, preconditioner):
+    def _init_operator(
+        self, varf: Form, preconditioner: PETScPreconditioner | str
+    ) -> tuple[Matrix, PETScKrylovSolver]:
         """Assemble variational form of an operator, initialize corresponding solver."""
         mat = assemble(varf)
         solver = PETScKrylovSolver("cg", preconditioner)
         self._init_solver(solver, mat)
         return mat, solver
 
-    def _init_sqrtm(self, varfM):
+    def _init_sqrtm(self, varfM: Form):
         """Sparse decomposition :math:`M = sqrtM sqrtM^\\top`."""
         H_e_list = []
         idx = []
@@ -332,7 +341,8 @@ class BiLaplacianPrior:
         return f
 
     def _multiply_with_precision(self, d: Vector) -> Vector:
-        """Multiply vector with precision matrix :math:`Q = C^{-1} = A M^{-1} A`.
+        """
+        Multiply vector with precision matrix :math:`Q = C^{-1} = A M^{-1} A`.
 
         Parameters
         ----------
@@ -360,7 +370,8 @@ class BiLaplacianPrior:
 
 
 class BiLaplacianPriorNumpyWrapper:
-    """Wrapper to support numpy inputs and outputs for the BiLaplacianPrior.
+    """
+    Wrapper to support numpy inputs and outputs for the BiLaplacianPrior.
 
     Example
     -------
@@ -397,7 +408,8 @@ class BiLaplacianPriorNumpyWrapper:
         mean: Array1d | None = None,
         seed: int | None = None,
     ) -> None:
-        """Construct a bi-Laplacian prior from numpy inputs.
+        """
+        Construct a bi-Laplacian prior from numpy inputs.
 
         Parameters
         ----------
@@ -437,7 +449,8 @@ class BiLaplacianPriorNumpyWrapper:
         )
 
     def sample(self) -> Array1d:
-        """Draw sample from bi-Laplacian prior.
+        """
+        Draw sample from bi-Laplacian prior.
 
         Returns
         -------
@@ -447,7 +460,8 @@ class BiLaplacianPriorNumpyWrapper:
         return self._prior.sample().compute_vertex_values(self._prior.Vh.mesh())
 
     def cost(self, m: Array1d) -> float:
-        """Compute cost functional of the prior field for given values at each vertex.
+        """
+        Compute cost functional of the prior field for given values at each vertex.
 
         Parameters
         ----------
@@ -462,7 +476,8 @@ class BiLaplacianPriorNumpyWrapper:
         return self._prior.cost(numpy_to_vector(m))
 
     def grad(self, m: Array1d) -> Array1d:
-        """Compute gradient of the cost functional for given values at each vertex.
+        """
+        Compute gradient of the cost functional for given values at each vertex.
 
         Parameters
         ----------
@@ -477,7 +492,8 @@ class BiLaplacianPriorNumpyWrapper:
         return vector_to_numpy(self._prior.grad(numpy_to_vector(m)))
 
     def compute_hessian_vector_product(self, d: Array1d) -> Array1d:
-        """Multiply hessian to given direction vector.
+        """
+        Multiply hessian to given direction vector.
 
         Parameters
         ----------
@@ -506,7 +522,8 @@ class BiLaplacianPriorNumpyWrapper:
 
 
 class AnisotropicTensor2d(UserExpression):
-    """User expression to model anisotropy in :math:`\\mathbb{R}^2`.
+    """
+    User expression to model anisotropy in :math:`\\mathbb{R}^2`.
 
     Represents an anisotropic tensor of the form
     :math:`\\Theta =
@@ -542,24 +559,3 @@ class AnisotropicTensor2d(UserExpression):
 
     def value_shape(self):
         return (2, 2)
-
-
-class AnisotropicTensor3d(UserExpression):
-    """User expression to model anisotropy in :math:`\\mathbb{R}^3`."""
-
-    def __init__(self, **kwargs):
-        super().__init__(**kwargs)
-
-    def eval(self, values, x):
-        values[0] = 1
-        values[1] = 2
-        values[2] = 1
-        values[3] = 1
-        values[4] = 5
-        values[5] = 1
-        values[6] = 1
-        values[7] = 2
-        values[8] = 1
-
-    def value_shape(self):
-        return (3, 3)

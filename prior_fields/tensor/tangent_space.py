@@ -10,7 +10,8 @@ from prior_fields.tensor.transformer import normalize, vector_coefficients_2d_to
 def get_reference_coordinates(
     V: ArrayNx3, F: ArrayNx3
 ) -> tuple[ArrayNx3, ArrayNx3, ArrayNx3]:
-    """Use vector heat method to get reference coordinate systems at each vertex.
+    """
+    Use vector heat method to get reference coordinate systems at each vertex.
 
     The basis vectors (1, 0) and (0, 1) in the tangent space associated with vertex 1 are
     transported to every other vertex in V using the vector heat method.
@@ -49,7 +50,8 @@ def get_reference_coordinates(
 def get_uac_basis_vectors(
     V: ArrayNx3, F: ArrayNx3, uac: ArrayNx2
 ) -> tuple[ArrayNx3, ArrayNx3]:
-    """Get normalized vectors in tangent space in the direction with constant alpha/beta.
+    """
+    Get normalized vectors in tangent space in the direction with constant alpha/beta.
 
     Note
     ----
@@ -89,7 +91,7 @@ def get_uac_basis_vectors(
     return normalize(directions_constant_beta), normalize(directions_constant_alpha)
 
 
-def _get_vertex_to_face_map(F):
+def _get_vertex_to_face_map(F: ArrayNx3) -> dict[int, Array1d]:
     """
     Get dictionary with vertex indices as keys
     and as list of indices of faces that contain the vertex as values.
@@ -206,7 +208,26 @@ def _get_directions_with_no_change_in_one_uac(
     return np.vstack(basis_uac)
 
 
-def get_angles_in_tangent_space(fibers, basis_x, basis_y):
+def get_angles_in_tangent_space(
+    fibers: ArrayNx3, basis_x: ArrayNx3, basis_y: ArrayNx3
+) -> Array1d:
+    """
+    Get angles of fibers in tangent space spanned by basis_x and basis_y.
+
+    Parameters
+    ----------
+    fibers : ArrayNx3
+        Array where the n-th row represents the fiber direction at vertex n.
+    basis_x : ArrayNx3
+        Array where the n-th row is a vector in the tangent space at vertex n.
+    basis_y : ArrayNx3
+        Array where the n-th row is another vector in the tangent space at vertex n.
+
+    Returns
+    -------
+    Array1d
+        Fiber angles in the tangent spaces
+    """
     fibers_tangent_space = map_fibers_to_tangent_space(fibers, basis_x, basis_y)
     coeffs_x, coeffs_y = get_coefficients(fibers_tangent_space, basis_x, basis_y)
     fiber_angles = vector_coefficients_2d_to_angles(coeffs_x, coeffs_y)

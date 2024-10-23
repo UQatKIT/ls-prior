@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from math import ceil
 from typing import Literal
 
@@ -14,7 +16,19 @@ from prior_fields.tensor.transformer import angles_to_2d_vector_coefficients
 
 def compute_uac_fiber_grid(
     max_depth: int, point_threshold: int, file: str = "data/fiber_grid.npy"
-):
+) -> None:
+    """Compute and save `FiberGrid` based on all 7 human atrial geometries.
+
+    Parameters
+    ----------
+    max_depth : int
+        Maximum number of splits per cell (`FiberGridComputer.max_depth`).
+    point_threshold : int
+        Minimum number of points to split a cell (`FiberGridComputer.point_threshold`).
+    file : str, optional
+        Path including file name to which the fiber grid is saved,
+        defaults to 'data/fiber_grid.npy'.
+    """
     logger.info("Collecting data from human atrial fiber meshes...")
     uac, fiber_angles, tags = collect_data_from_human_atrial_fiber_meshes()
 
@@ -43,7 +57,7 @@ def get_fiber_parameters_from_uac_grid(
     uac : ArrayNx2
         Universal atrial coordinates of vertices.
     file : str
-        Path to bindary file with fiber grid.
+        Path to binary file with fiber grid.
 
     Returns
     -------
@@ -116,7 +130,7 @@ class FiberGrid:
         self.anatomical_tag_mode = anatomical_tag_mode
 
     @classmethod
-    def read_from_binary_file(cls, path: str):
+    def read_from_binary_file(cls, path: str) -> FiberGrid:
         """Read 'FiberGrid' from .npy file.
 
         Parameters
@@ -159,7 +173,9 @@ class FiberGrid:
                 else (
                     self.fiber_angle_circmean
                     if color == "mean"
-                    else self.fiber_angle_circstd if color == "std" else None
+                    else self.fiber_angle_circstd
+                    if color == "std"
+                    else None
                 )
             ),
             s=[
@@ -281,6 +297,7 @@ class FiberGridComputer:
         self._subdivide(0, 1 + 1e-6, 0, 1 + 1e-6)
 
     def get_fiber_grid(self) -> FiberGrid:
+        """Use grid and parameters to initialize a `FiberGrid` instance."""
         return FiberGrid(
             grid_x=np.array(self.grid_x),
             grid_y=np.array(self.grid_y),

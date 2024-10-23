@@ -48,8 +48,8 @@ def get_tau_from_sigma_and_ell(
     sigma: float | Array1d, ell: float | Array1d
 ) -> float | Array1d:
     """
-    Get :math:`\\tau` from marginal variance :math:`\\sigma` and correlation length
-    :math:`\\ell`.
+    Get :math:`\\tau` from marginal standard deviation :math:`\\sigma` and correlation
+    length :math:`\\ell`.
 
     Notes
     -----

@@ -9,7 +9,8 @@ from prior_fields.tensor.transformer import normalize
 def map_vectors_from_faces_to_vertices(
     vecs: ArrayNx3, adjacent_faces: dict[int, list[int]]
 ) -> ArrayNx3:
-    """Map vectors defined on face-level to vertices.
+    """
+    Map vectors defined on face-level to vertices.
 
     For each vertex, the resulting vector is the component-wise mean over the vectors of
     all adjacent faces.
@@ -33,7 +34,8 @@ def map_vectors_from_faces_to_vertices(
 def map_categories_from_faces_to_vertices(
     categories: Array1d, adjacent_faces: dict[int, list[int]]
 ) -> Array1d:
-    """Map categories defined on face-level to vertices.
+    """
+    Map categories defined on face-level to vertices.
 
     For each vertex, the resulting tag is the mode over the tags of the adjacent faces.
 
@@ -56,7 +58,8 @@ def map_categories_from_faces_to_vertices(
 def get_coefficients(
     fibers: ArrayNx3, x: ArrayNx3, y: ArrayNx3
 ) -> tuple[ArrayNx3, ArrayNx3]:
-    """Get coefficients to write fibers in (x, y) basis.
+    """
+    Get coefficients to write fibers in (x, y) basis.
 
     Parameters
     ----------
@@ -76,7 +79,8 @@ def get_coefficients(
 
 
 def map_fibers_to_tangent_space(fibers: ArrayNx3, x: ArrayNx3, y: ArrayNx3) -> ArrayNx3:
-    """Get normalized fibers in tangent spaces spanned by x and y.
+    """
+    Get normalized fibers in tangent spaces spanned by x and y.
 
     Note
     ----

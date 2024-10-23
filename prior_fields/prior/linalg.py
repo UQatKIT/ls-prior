@@ -9,7 +9,8 @@ from prior_fields.prior.converter import (
 
 
 def multiply_matrices(A: Matrix, B: Matrix) -> Matrix:
-    """Compute the product of two matrices.
+    """
+    Compute the product of two matrices.
 
     Parameters
     ----------

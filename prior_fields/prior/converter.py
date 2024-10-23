@@ -87,10 +87,24 @@ def petsc_to_matrix(M: Mat) -> Matrix:
     return Matrix(PETScMatrix(M))
 
 
-################################
-# Convert mesh representations #
-################################
+################
+# Convert mesh #
+################
 def create_triangle_mesh_from_coordinates(V: ArrayNx2 | ArrayNx3, F: ArrayNx3) -> Mesh:
+    """
+    Create dolfin.Mesh with triangular faces from numpy vertices and faces.
+
+    Parameters
+    ----------
+    V : ArrayNx2 | ArrayNx3
+        Array with vertex coordinates.
+    F : ArrayNx3
+        (n, 3) array where each row contains the vertex indices of one face of the mesh.
+
+    Returns
+    -------
+    dl.Mesh
+    """
     mesh = Mesh()
 
     editor = MeshEditor()
@@ -110,7 +124,8 @@ def create_triangle_mesh_from_coordinates(V: ArrayNx2 | ArrayNx3, F: ArrayNx3) -
 
 
 def scale_mesh_to_unit_cube(V: ArrayNx3) -> ArrayNx3:
-    """Scale vertex coordinates such that the mesh lies within the unit cube.
+    """
+    Scale vertex coordinates such that the mesh lies within the unit cube.
 
     Parameters
     ----------

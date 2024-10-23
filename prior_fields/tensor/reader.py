@@ -20,7 +20,8 @@ from prior_fields.tensor.tangent_space import (
 def read_raw_atrial_mesh(
     geometry: int | Literal["A"],
 ) -> tuple[ArrayNx3, ArrayNx3, ArrayNx2, ArrayNx3, Array1d]:
-    """Read vertices, faces, UAC, fibers, and anatomical tags from .vtk file.
+    """
+    Read vertices, faces, UAC, fibers, and anatomical tags from .vtk file.
 
     Note
     ----
@@ -64,7 +65,8 @@ def read_raw_atrial_mesh(
 def _extract_anatomical_tags_from_file(
     geometry: int | Literal["A"],
 ) -> Array1d:
-    """Read anatomical structure tags at faces from .elem file.
+    """
+    Read anatomical structure tags at faces from .elem file.
 
     Parameters
     ----------
