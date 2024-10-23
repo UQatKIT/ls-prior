@@ -52,12 +52,12 @@ def read_raw_atrial_mesh(
     fibers = mesh.cell_data["fibers"][0]
 
     # tag for anatomical structure assignment
-    tag = extract_anatomical_tags_from_file(geometry)
+    tag = _extract_anatomical_tags_from_file(geometry)
 
     return V, F, uac, fibers, tag
 
 
-def extract_anatomical_tags_from_file(
+def _extract_anatomical_tags_from_file(
     geometry: int | Literal["A"],
 ) -> Array1d:
     """Read anatomical structure tags at faces from .elem file.

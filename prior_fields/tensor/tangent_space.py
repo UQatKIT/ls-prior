@@ -90,6 +90,28 @@ def get_uac_basis_vectors(
     return normalize(directions_constant_beta), normalize(directions_constant_alpha)
 
 
+def get_coefficients(
+    fibers: ArrayNx3, x: ArrayNx3, y: ArrayNx3
+) -> tuple[ArrayNx3, ArrayNx3]:
+    """Get coefficients to write fibers in (x, y) basis.
+
+    Parameters
+    ----------
+    fibers : ArrayNx3
+        (n, 3) array where each row is a fiber vector.
+    x : ArrayNx3
+        (n, 3) array where each row is a vector in the tangent space.
+    y : ArrayNx3
+        (n, 3) array where each row is another vector in the tangent space.
+
+    Returns
+    -------
+    (ArrayNx3, ArrayNx3)
+
+    """
+    return np.einsum("ij,ij->i", fibers, x), np.einsum("ij,ij->i", fibers, y)
+
+
 def _get_vertex_to_face_map(F):
     """
     Get dictionary with vertex indices as keys

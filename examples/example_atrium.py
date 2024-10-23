@@ -5,11 +5,11 @@ from pyvista import Plotter
 
 from prior_fields.prior.plots import get_poly_data
 from prior_fields.prior.prior import BiLaplacianPriorNumpyWrapper
-from prior_fields.tensor.mapper import get_fiber_parameters
+from prior_fields.tensor.mapper import get_fiber_parameters_from_uac_grid
 from prior_fields.tensor.reader import (
     read_atrial_mesh_with_fibers_and_tags_mapped_to_vertices,
 )
-from prior_fields.tensor.tangent_space_coordinates import get_reference_coordinates
+from prior_fields.tensor.tangent_space import get_reference_coordinates
 from prior_fields.tensor.transformer import (
     angles_to_3d_vector,
     angles_to_sample,
@@ -31,7 +31,7 @@ V = V_raw / (Vmax - Vmin)
 ##################
 # %%
 print("Get parameters...")
-mean_fiber_angle, std_fiber_angle = get_fiber_parameters(uac)
+mean_fiber_angle, std_fiber_angle = get_fiber_parameters_from_uac_grid(uac)
 
 sample_mean = angles_to_sample(mean_fiber_angle)
 sigma = std_fiber_angle * std_fiber_angle

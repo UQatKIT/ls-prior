@@ -12,7 +12,7 @@ from prior_fields.tensor.mapper import map_fibers_to_tangent_space
 from prior_fields.tensor.reader import (
     read_atrial_mesh_with_fibers_and_tags_mapped_to_vertices,
 )
-from prior_fields.tensor.tangent_space_coordinates import get_uac_basis_vectors
+from prior_fields.tensor.tangent_space import get_uac_basis_vectors
 from prior_fields.tensor.transformer import angles_between_vectors, angles_to_3d_vector
 
 # %%

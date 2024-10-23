@@ -5,7 +5,7 @@ from pyvista import Plotter
 from prior_fields.prior.converter import function_to_numpy
 from prior_fields.prior.plots import get_poly_data, plot_function
 from prior_fields.prior.prior import BiLaplacianPrior
-from prior_fields.tensor.tangent_space_coordinates import get_reference_coordinates
+from prior_fields.tensor.tangent_space import get_reference_coordinates
 from prior_fields.tensor.transformer import angles_to_3d_vector, sample_to_angles
 
 # %%

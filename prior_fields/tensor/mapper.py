@@ -6,6 +6,7 @@ from scipy.stats import mode
 
 from prior_fields.prior.dtypes import Array1d, ArrayNx2, ArrayNx3
 from prior_fields.tensor.fiber_grid import FiberGrid
+from prior_fields.tensor.tangent_space import get_coefficients
 from prior_fields.tensor.transformer import normalize
 
 
@@ -122,29 +123,7 @@ def map_fibers_to_tangent_space(fibers: ArrayNx3, x: ArrayNx3, y: ArrayNx3) -> A
     return normalize(fibers_mapped)
 
 
-def get_coefficients(
-    fibers: ArrayNx3, x: ArrayNx3, y: ArrayNx3
-) -> tuple[ArrayNx3, ArrayNx3]:
-    """Get coefficients to write fibers in tangent space basis.
-
-    Parameters
-    ----------
-    fibers : ArrayNx3
-        (n, 3) array where each row is a fiber vector.
-    x : ArrayNx3
-        (n, 3) array where each row is a vector in the tangent space.
-    y : ArrayNx3
-        (n, 3) array where each row is another vector in the tangent space.
-
-    Returns
-    -------
-    (ArrayNx3, ArrayNx3)
-
-    """
-    return np.einsum("ij,ij->i", fibers, x), np.einsum("ij,ij->i", fibers, y)
-
-
-def get_fiber_parameters(uac: ArrayNx2) -> tuple[Array1d, Array1d]:
+def get_fiber_parameters_from_uac_grid(uac: ArrayNx2) -> tuple[Array1d, Array1d]:
     """
     Map mean and standard deviation of fiber angles from `FiberGrid` to vertices based on
     the given UACs.

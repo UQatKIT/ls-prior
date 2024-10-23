@@ -1,9 +1,9 @@
 import numpy as np
 
 from prior_fields.prior.dtypes import Array1d, ArrayNx2, ArrayNx3
-from prior_fields.tensor.mapper import get_coefficients, map_fibers_to_tangent_space
+from prior_fields.tensor.mapper import map_fibers_to_tangent_space
 from prior_fields.tensor.reader import read_all_human_atrial_fiber_meshes
-from prior_fields.tensor.tangent_space_coordinates import get_uac_basis_vectors
+from prior_fields.tensor.tangent_space import get_coefficients, get_uac_basis_vectors
 from prior_fields.tensor.transformer import vector_coefficients_2d_to_angles
 
 
