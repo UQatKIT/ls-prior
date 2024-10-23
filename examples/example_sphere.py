@@ -45,7 +45,7 @@ plotter.add_arrows(V, x_axes, mag=0.1, color="tab:green", label="x-axes")
 plotter.add_arrows(V, y_axes, mag=0.1, color="tab:green", label="y-axes")
 plotter.add_arrows(V, vector_field, mag=0.1, color="tab:red", label="vector field")
 
-plotter.add_legend(size=(0.3, 0.1), loc="lower left")
+plotter.add_legend(size=(0.3, 0.1), loc="lower left")  # type: ignore
 plotter.show(window_size=(800, 500))
 
 # %%
