@@ -8,10 +8,8 @@ from scipy.stats import circmean, circstd
 
 from prior_fields.prior.converter import scale_mesh_to_unit_cube
 from prior_fields.prior.plots import get_poly_data
-from prior_fields.tensor.mapper import (
-    get_fiber_parameters_from_uac_grid,
-    map_fibers_to_tangent_space,
-)
+from prior_fields.tensor.fiber_grid import get_fiber_parameters_from_uac_grid
+from prior_fields.tensor.mapper import map_fibers_to_tangent_space
 from prior_fields.tensor.reader import (
     read_atrial_mesh_with_fibers_and_tags_mapped_to_vertices,
 )
@@ -19,7 +17,7 @@ from prior_fields.tensor.tangent_space import get_uac_basis_vectors
 from prior_fields.tensor.transformer import angles_between_vectors, angles_to_3d_vector
 
 # %%
-print("Read atlas mesh...\n")
+# Read atlas data
 V_raw, F, uac, fibers_atlas, _ = (
     read_atrial_mesh_with_fibers_and_tags_mapped_to_vertices("A")
 )
@@ -28,15 +26,14 @@ V = scale_mesh_to_unit_cube(V_raw)
 basis_x, basis_y = get_uac_basis_vectors(V, F, uac)
 atlas_fibers = map_fibers_to_tangent_space(fibers_atlas, basis_x, basis_y)
 
-print("\nRead mean fiber grid and map parameters fibers to vertices...\n")
+# Get mean fibers and angle mean/std
 fiber_angle_mean, fiber_angle_std = get_fiber_parameters_from_uac_grid(
     uac, file="data/fiber_grid_max_depth8_point_threshold120.npy"
 )
-
 mean_fibers = angles_to_3d_vector(fiber_angle_mean, basis_x, basis_y)
 
 # %%
-print("Comparison of fibers from atlas data and mean fibers mapped to atlas geometry:")
+print("Angles between fibers from atlas data and mean fibers mapped to atlas geometry:")
 idx_notnan = (
     (np.linalg.norm(mean_fibers, axis=1) != 0)
     & (np.linalg.norm(atlas_fibers, axis=1) != 0)

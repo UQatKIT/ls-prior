@@ -2,34 +2,8 @@ import numpy as np
 from loguru import logger
 from scipy.stats import mode
 
-from prior_fields.prior.dtypes import Array1d, ArrayNx2, ArrayNx3
-from prior_fields.tensor.fiber_grid import FiberGrid
-from prior_fields.tensor.tangent_space import get_coefficients
+from prior_fields.prior.dtypes import Array1d, ArrayNx3
 from prior_fields.tensor.transformer import normalize
-
-
-def get_dict_with_adjacent_faces_for_each_vertex(F: ArrayNx3) -> dict[int, list[int]]:
-    """
-    Assemble dictionary with vertex indices as keys and lists of indices of the adjacent
-    faces as values.
-
-    Parameters
-    ----------
-    F : ArrayNx3
-        Array of vertex indices, where each row represents one triangle of the mesh.
-
-    Returns
-    -------
-    dict[int, list[int]]
-        Dictionary mapping vertex indices to indices of adjacent faces.
-    """
-    adjacent_faces: dict[int, list[int]] = {i: [] for i in range(F.max() + 1)}
-
-    for face_index, face_vertices in enumerate(F):
-        for vertex_id in face_vertices:
-            adjacent_faces[vertex_id].append(face_index)
-
-    return adjacent_faces
 
 
 def map_vectors_from_faces_to_vertices(
@@ -79,6 +53,28 @@ def map_categories_from_faces_to_vertices(
     return np.array([mode(categories[i]).mode for i in adjacent_faces.values()])
 
 
+def get_coefficients(
+    fibers: ArrayNx3, x: ArrayNx3, y: ArrayNx3
+) -> tuple[ArrayNx3, ArrayNx3]:
+    """Get coefficients to write fibers in (x, y) basis.
+
+    Parameters
+    ----------
+    fibers : ArrayNx3
+        (n, 3) array where each row is a fiber vector.
+    x : ArrayNx3
+        (n, 3) array where each row is a vector in the tangent space.
+    y : ArrayNx3
+        (n, 3) array where each row is another vector in the tangent space.
+
+    Returns
+    -------
+    (ArrayNx3, ArrayNx3)
+
+    """
+    return np.einsum("ij,ij->i", fibers, x), np.einsum("ij,ij->i", fibers, y)
+
+
 def map_fibers_to_tangent_space(fibers: ArrayNx3, x: ArrayNx3, y: ArrayNx3) -> ArrayNx3:
     """Get normalized fibers in tangent spaces spanned by x and y.
 
@@ -119,52 +115,3 @@ def map_fibers_to_tangent_space(fibers: ArrayNx3, x: ArrayNx3, y: ArrayNx3) -> A
     fibers_mapped[mask_reverse] *= -1
 
     return normalize(fibers_mapped)
-
-
-def get_fiber_parameters_from_uac_grid(
-    uac: ArrayNx2, file: str = "data/fiber_grid_max_depth8_point_threshold120.npy"
-) -> tuple[Array1d, Array1d]:
-    """
-    Map mean and standard deviation of fiber angles from `FiberGrid` to vertices based on
-    the given UACs.
-
-    Parameters
-    ----------
-    uac : ArrayNx2
-        Universal atrial coordinates of vertices.
-    file : str
-        Path to bindary file with fiber grid.
-
-    Returns
-    -------
-    (Array1d, Array1d)
-        Arrays with mean and standard deviation of fiber angles.
-    """
-    fiber_grid = FiberGrid.read_from_binary_file(file)
-
-    fiber_mean = np.zeros(uac.shape[0])
-    fiber_std = np.zeros(uac.shape[0])
-    unmatched_vertices = []
-
-    for i in range(fiber_mean.shape[0]):
-        j = np.where(
-            (uac[i, 0] >= fiber_grid.grid_x[:, 0])
-            & (uac[i, 0] < fiber_grid.grid_x[:, 1])
-            & (uac[i, 1] >= fiber_grid.grid_y[:, 0])
-            & (uac[i, 1] < fiber_grid.grid_y[:, 1])
-        )[0]
-        try:
-            fiber_mean[i] = fiber_grid.fiber_angle_circmean[j[0]]
-            fiber_std[i] = fiber_grid.fiber_angle_circstd[j[0]]
-        except IndexError:
-            fiber_std[i] = np.nan
-            unmatched_vertices.append(i)
-
-    if len(unmatched_vertices) > 0:
-        logger.warning(
-            "Couldn't find grid cell for "
-            f"{100 * len(unmatched_vertices) / uac.shape[0]:.2f}%"
-            " of the vertices."
-        )
-
-    return fiber_mean, fiber_std

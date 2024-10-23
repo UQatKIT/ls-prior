@@ -1,5 +1,4 @@
 # %%
-
 from pyvista import Plotter
 from scipy.spatial import KDTree
 
@@ -25,7 +24,6 @@ V1_raw, F1, uac1, fibers1, _ = read_atrial_mesh_with_fibers_and_tags_mapped_to_v
     1
 )
 V1 = scale_mesh_to_unit_cube(V1_raw)
-
 
 tree = KDTree(uac)
 _, idx_neighbors = tree.query(uac1, k=1)

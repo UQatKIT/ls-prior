@@ -8,7 +8,7 @@ from scipy.spatial import KDTree
 from scipy.stats import circmean, circstd, mode
 
 from prior_fields.prior.dtypes import Array1d, ArrayNx2
-from prior_fields.tensor.preprocessing import collect_data_from_human_atrial_fiber_meshes
+from prior_fields.tensor.reader import collect_data_from_human_atrial_fiber_meshes
 from prior_fields.tensor.transformer import angles_to_2d_vector_coefficients
 
 
@@ -29,6 +29,55 @@ def compute_uac_fiber_grid(
 
     logger.info(f"Saving fiber grid to {file}")
     fiber_grid.save(file)
+
+
+def get_fiber_parameters_from_uac_grid(
+    uac: ArrayNx2, file: str = "data/fiber_grid_max_depth8_point_threshold120.npy"
+) -> tuple[Array1d, Array1d]:
+    """
+    Map mean and standard deviation of fiber angles from `FiberGrid` to vertices based on
+    the given UACs.
+
+    Parameters
+    ----------
+    uac : ArrayNx2
+        Universal atrial coordinates of vertices.
+    file : str
+        Path to bindary file with fiber grid.
+
+    Returns
+    -------
+    (Array1d, Array1d)
+        Arrays with mean and standard deviation of fiber angles.
+    """
+    fiber_grid = FiberGrid.read_from_binary_file(file)
+
+    fiber_mean = np.zeros(uac.shape[0])
+    fiber_std = np.zeros(uac.shape[0])
+    unmatched_vertices = []
+
+    for i in range(fiber_mean.shape[0]):
+        j = np.where(
+            (uac[i, 0] >= fiber_grid.grid_x[:, 0])
+            & (uac[i, 0] < fiber_grid.grid_x[:, 1])
+            & (uac[i, 1] >= fiber_grid.grid_y[:, 0])
+            & (uac[i, 1] < fiber_grid.grid_y[:, 1])
+        )[0]
+        try:
+            fiber_mean[i] = fiber_grid.fiber_angle_circmean[j[0]]
+            fiber_std[i] = fiber_grid.fiber_angle_circstd[j[0]]
+        except IndexError:
+            fiber_std[i] = np.nan
+            unmatched_vertices.append(i)
+
+    if len(unmatched_vertices) > 0:
+        logger.warning(
+            "Couldn't find grid cell for "
+            f"{100 * len(unmatched_vertices) / uac.shape[0]:.2f}%"
+            " of the vertices."
+        )
+
+    return fiber_mean, fiber_std
 
 
 class FiberGrid:

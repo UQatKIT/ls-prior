@@ -3,7 +3,8 @@ from loguru import logger
 from potpourri3d import MeshVectorHeatSolver
 
 from prior_fields.prior.dtypes import Array1d, ArrayNx2, ArrayNx3
-from prior_fields.tensor.transformer import normalize
+from prior_fields.tensor.mapper import get_coefficients, map_fibers_to_tangent_space
+from prior_fields.tensor.transformer import normalize, vector_coefficients_2d_to_angles
 
 
 def get_reference_coordinates(
@@ -86,28 +87,6 @@ def get_uac_basis_vectors(
     )
 
     return normalize(directions_constant_beta), normalize(directions_constant_alpha)
-
-
-def get_coefficients(
-    fibers: ArrayNx3, x: ArrayNx3, y: ArrayNx3
-) -> tuple[ArrayNx3, ArrayNx3]:
-    """Get coefficients to write fibers in (x, y) basis.
-
-    Parameters
-    ----------
-    fibers : ArrayNx3
-        (n, 3) array where each row is a fiber vector.
-    x : ArrayNx3
-        (n, 3) array where each row is a vector in the tangent space.
-    y : ArrayNx3
-        (n, 3) array where each row is another vector in the tangent space.
-
-    Returns
-    -------
-    (ArrayNx3, ArrayNx3)
-
-    """
-    return np.einsum("ij,ij->i", fibers, x), np.einsum("ij,ij->i", fibers, y)
 
 
 def _get_vertex_to_face_map(F):
@@ -221,7 +200,14 @@ def _get_directions_with_no_change_in_one_uac(
     if count_missing > 0:
         logger.warning(
             "No face with no-change found for "
-            f"{count_missing} / {V.shape[0]}% of the vertices."
+            f"{count_missing} / {V.shape[0]} of the vertices."
         )
 
     return np.vstack(basis_uac)
+
+
+def get_angles_in_tangent_space(fibers, basis_x, basis_y):
+    fibers_tangent_space = map_fibers_to_tangent_space(fibers, basis_x, basis_y)
+    coeffs_x, coeffs_y = get_coefficients(fibers_tangent_space, basis_x, basis_y)
+    fiber_angles = vector_coefficients_2d_to_angles(coeffs_x, coeffs_y)
+    return fiber_angles

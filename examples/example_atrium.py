@@ -1,12 +1,11 @@
 # %%
-
 import numpy as np
 from pyvista import Plotter
 
 from prior_fields.prior.converter import scale_mesh_to_unit_cube
 from prior_fields.prior.plots import get_poly_data
 from prior_fields.prior.prior import BiLaplacianPriorNumpyWrapper
-from prior_fields.tensor.mapper import get_fiber_parameters_from_uac_grid
+from prior_fields.tensor.fiber_grid import get_fiber_parameters_from_uac_grid
 from prior_fields.tensor.reader import (
     read_atrial_mesh_with_fibers_and_tags_mapped_to_vertices,
 )
@@ -86,6 +85,7 @@ x_axes, y_axes, _ = get_reference_coordinates(V, F)
 vector_field = angles_to_3d_vector(angles=angles, x_axes=x_axes, y_axes=y_axes)
 
 plotter = Plotter()
+plotter.add_text("Vector field sample")
 plotter.add_mesh(get_poly_data(V, F), color="lightgrey", opacity=0.99)
 plotter.add_arrows(V, vector_field, mag=0.01, color="tab:blue")
 plotter.show(window_size=(800, 500))
@@ -95,6 +95,7 @@ plotter.show(window_size=(800, 500))
 ###################
 # %%
 plotter = Plotter()
+plotter.add_text("Comparison of two vector field samples")
 plotter.add_mesh(get_poly_data(V, F), color="lightgrey", opacity=0.99)
 plotter.add_arrows(
     V,

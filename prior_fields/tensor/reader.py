@@ -6,13 +6,14 @@ import meshio
 import numpy as np
 from loguru import logger
 
-from prior_fields.prior.dtypes import Array1d
+from prior_fields.prior.dtypes import Array1d, ArrayNx2, ArrayNx3
 from prior_fields.tensor.mapper import (
-    ArrayNx2,
-    ArrayNx3,
-    get_dict_with_adjacent_faces_for_each_vertex,
     map_categories_from_faces_to_vertices,
     map_vectors_from_faces_to_vertices,
+)
+from prior_fields.tensor.tangent_space import (
+    get_angles_in_tangent_space,
+    get_uac_basis_vectors,
 )
 
 
@@ -38,6 +39,8 @@ def read_raw_atrial_mesh(
         universal atrial coordinates of the vertices,
         and fiber orientation and anatomical structure tag for each face.
     """
+    logger.info(f"Read data for geometry {geometry}...")
+
     mesh = meshio.read(f"data/LGE-MRI-based/{geometry}/LA_Endo_{geometry}.vtk")
 
     # vertices and faces
@@ -115,7 +118,7 @@ def read_atrial_mesh_with_fibers_and_tags_mapped_to_vertices(
     V, F, uac, fibers_on_faces, tag_of_faces = read_raw_atrial_mesh(geometry)
 
     # Construct mapping of vertex indices to vertex indices of its adjacent faces
-    adjacent_faces = get_dict_with_adjacent_faces_for_each_vertex(F)
+    adjacent_faces = _get_dict_with_adjacent_faces_for_each_vertex(F)
 
     # Map fibers to vertices
     fibers = map_vectors_from_faces_to_vertices(
@@ -130,15 +133,37 @@ def read_atrial_mesh_with_fibers_and_tags_mapped_to_vertices(
     return V, F, uac, fibers, tag
 
 
-def read_all_human_atrial_fiber_meshes() -> (
-    tuple[
-        dict[int, ArrayNx3],
-        dict[int, ArrayNx3],
-        dict[int, ArrayNx2],
-        dict[int, ArrayNx3],
-        dict[int, Array1d],
-    ]
-):
+def _get_dict_with_adjacent_faces_for_each_vertex(F: ArrayNx3) -> dict[int, list[int]]:
+    """
+    Assemble dictionary with vertex indices as keys and lists of indices of the adjacent
+    faces as values.
+
+    Parameters
+    ----------
+    F : ArrayNx3
+        Array of vertex indices, where each row represents one triangle of the mesh.
+
+    Returns
+    -------
+    dict[int, list[int]]
+        Dictionary mapping vertex indices to indices of adjacent faces.
+    """
+    adjacent_faces: dict[int, list[int]] = {i: [] for i in range(F.max() + 1)}
+
+    for face_index, face_vertices in enumerate(F):
+        for vertex_id in face_vertices:
+            adjacent_faces[vertex_id].append(face_index)
+
+    return adjacent_faces
+
+
+def read_all_human_atrial_fiber_meshes() -> tuple[
+    dict[int, ArrayNx3],
+    dict[int, ArrayNx3],
+    dict[int, ArrayNx2],
+    dict[int, ArrayNx3],
+    dict[int, Array1d],
+]:
     """
     Read vertices, faces, UAC, fibers, and anatomical tags from all 7 endocardial meshes
     of the left atrium published in https://zenodo.org/records/3764917.
@@ -166,9 +191,60 @@ def read_all_human_atrial_fiber_meshes() -> (
         i = int(idx) if idx.isnumeric() else None
 
         if i is not None:
-            logger.info(f"Read data for geometry {i}...")
             V[i], F[i], uac[i], fibers[i], tags[i] = (
                 read_atrial_mesh_with_fibers_and_tags_mapped_to_vertices(i)
             )
 
     return V, F, uac, fibers, tags
+
+
+def collect_data_from_human_atrial_fiber_meshes() -> tuple[ArrayNx2, Array1d, Array1d]:
+    """
+    Collect fiber angles and anatomical tags with UACs from the endocardial geometries of
+    the left atrium.
+
+    For each geometry, the tangent space at each vertex is described through two vectors:
+        1. The direction in which beta doesn't change and alpha increases,
+        2. The direction in which alpha doesn't change and beta increases.
+    Based on these (not necessarily orthogonal) basis vectors, the fiber angle is defined
+    by interpreting the fiber coefficients as opposite and adjacent of a right triangle.
+    Doing so equally accounts for the distortion in the coordinate system in alpha- and
+    beta-direction.
+
+    Returns
+    -------
+    (ArrayNx2, Array1d, Array1d)
+        Arrays with UACs, fiber angles and anatomical tags
+    """
+    # Read data (takes about 70 seconds)
+    V_dict, F_dict, uac_dict, fibers_dict, tags_dict = (
+        read_all_human_atrial_fiber_meshes()
+    )
+    keys = sorted(V_dict.keys())
+
+    directions_constant_beta_dict: dict[int, ArrayNx3] = dict()
+    directions_constant_alpha_dict: dict[int, ArrayNx3] = dict()
+
+    # Get UAC-based coordinates (takes about 80 seconds)
+    for i in keys:
+        logger.info(f"Get UAC-based tangent space coordinates for geometry {i}...")
+        directions_constant_beta_dict[i], directions_constant_alpha_dict[i] = (
+            get_uac_basis_vectors(V_dict[i], F_dict[i], uac_dict[i])
+        )
+
+    # Unite different geometries
+    uac = np.vstack([uac_dict[i] for i in keys])
+    fibers = np.vstack([fibers_dict[i] for i in keys])
+    tags = np.hstack([tags_dict[i] for i in keys])
+    directions_constant_beta = np.vstack(
+        [directions_constant_beta_dict[i] for i in keys]
+    )
+    directions_constant_alpha = np.vstack(
+        [directions_constant_alpha_dict[i] for i in keys]
+    )
+
+    fiber_angles = get_angles_in_tangent_space(
+        fibers, directions_constant_beta, directions_constant_alpha
+    )
+
+    return uac, fiber_angles, tags
