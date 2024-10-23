@@ -7,8 +7,10 @@ from scipy.spatial import KDTree
 from scipy.stats import circmean, circstd
 
 from prior_fields.prior.plots import get_poly_data
-from prior_fields.tensor.fiber_grid import FiberGrid
-from prior_fields.tensor.mapper import map_fibers_to_tangent_space
+from prior_fields.tensor.mapper import (
+    get_fiber_parameters_from_uac_grid,
+    map_fibers_to_tangent_space,
+)
 from prior_fields.tensor.reader import (
     read_atrial_mesh_with_fibers_and_tags_mapped_to_vertices,
 )
@@ -27,38 +29,10 @@ V = V_raw / (Vmax - Vmin)
 basis_x, basis_y = get_uac_basis_vectors(V, F, uac)
 atlas_fibers = map_fibers_to_tangent_space(fibers_atlas, basis_x, basis_y)
 
-print("\nRead mean fiber grid...\n")
-fiber_grid = FiberGrid.read_from_binary_file(
-    "data/LGE-MRI-based/fiber_grid_max_depth7_point_threshold100.npy"
+print("\nRead mean fiber grid and map parameters fibers to vertices...\n")
+fiber_angle_mean, fiber_angle_std = get_fiber_parameters_from_uac_grid(
+    uac, file="data/fiber_grid_max_depth8_point_threshold120.npy"
 )
-
-# %%
-print("Map mean fibers to vertices...\n")
-fiber_angle_mean = np.zeros(atlas_fibers.shape[0])
-fiber_angle_std = np.zeros(atlas_fibers.shape[0])
-unmatched_vertices = []
-
-for i in range(fiber_angle_mean.shape[0]):
-    j = np.where(
-        (uac[i, 0] >= fiber_grid.grid_x[:, 0])
-        & (uac[i, 0] < fiber_grid.grid_x[:, 1])
-        & (uac[i, 1] >= fiber_grid.grid_y[:, 0])
-        & (uac[i, 1] < fiber_grid.grid_y[:, 1])
-    )[0]
-    try:
-        fiber_angle_mean[i] = fiber_grid.fiber_angle_circmean[j[0]]
-        fiber_angle_std[i] = fiber_grid.fiber_angle_circstd[j[0]]
-    except IndexError:
-        fiber_angle_std[i] = np.nan
-        unmatched_vertices.append(i)
-
-if len(unmatched_vertices) > 0:
-    print(
-        f"The UACs of the following vertices {len(unmatched_vertices)} / {V.shape[0]} "
-        "are not covered by the fiber grid:\n",
-        unmatched_vertices,
-        "\nSetting their fiber mean to zero and the pointwise variance to nan.\n",
-    )
 
 mean_fibers = angles_to_3d_vector(fiber_angle_mean, basis_x, basis_y)
 
@@ -115,7 +89,7 @@ plotter.add_arrows(
     V[idx], atlas_fibers[idx], mag=0.04, color="orange", label="Atlas fibers"
 )
 
-plotter.add_legend(size=(0.3, 0.1), loc="upper left")
+plotter.add_legend(size=(0.3, 0.1), loc="upper left")  # type: ignore
 plotter.show(window_size=(700, 700))
 
 # %%
