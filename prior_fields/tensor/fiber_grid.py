@@ -1,14 +1,34 @@
-import re
 from math import ceil
 from typing import Literal
 
 import numpy as np
+from loguru import logger
 from matplotlib import pyplot as plt
 from scipy.spatial import KDTree
 from scipy.stats import circmean, circstd, mode
 
 from prior_fields.prior.dtypes import Array1d, ArrayNx2
+from prior_fields.tensor.preprocessing import collect_data_from_human_atrial_fiber_meshes
 from prior_fields.tensor.transformer import angles_to_2d_vector_coefficients
+
+
+def compute_uac_fiber_grid(
+    max_depth: int, point_threshold: int, file: str = "data/fiber_grid.npy"
+):
+    logger.info("Collecting data from human atrial fiber meshes...")
+    uac, fiber_angles, tags = collect_data_from_human_atrial_fiber_meshes()
+
+    logger.info(f"Compute fiber grid with {max_depth=} and {point_threshold=}...")
+    fiber_grid = FiberGridComputer(
+        uac=uac,
+        fiber_angles=fiber_angles,
+        anatomical_structure_tags=tags,
+        max_depth=max_depth,
+        point_threshold=point_threshold,
+    ).get_fiber_grid()
+
+    logger.info(f"Saving fiber grid to {file}")
+    fiber_grid.save(file)
 
 
 class FiberGrid:
@@ -30,10 +50,6 @@ class FiberGrid:
         Circular standard deviation of fiber angles for each cell.
     anatomical_tag_mode : Array1d
         Mode of anatomical structure tag for each cell.
-    max_depth : int
-        Maximum number of splits per cell, defaults to 5.
-    point_threshold : int
-        Minimum number of points per cell, defaults to 100.
     """
 
     def __init__(
@@ -43,16 +59,12 @@ class FiberGrid:
         fiber_angle_circmean: Array1d,
         fiber_angle_circstd: Array1d,
         anatomical_tag_mode: Array1d,
-        max_depth: int = 5,
-        point_threshold: int = 100,
     ) -> None:
         self.grid_x = grid_x
         self.grid_y = grid_y
         self.fiber_angle_circmean = fiber_angle_circmean
         self.fiber_angle_circstd = fiber_angle_circstd
         self.anatomical_tag_mode = anatomical_tag_mode
-        self.max_depth = max_depth
-        self.point_threshold = point_threshold
 
     @classmethod
     def read_from_binary_file(cls, path: str):
@@ -61,19 +73,9 @@ class FiberGrid:
         Parameters
         ----------
         path : str
-            Path to binary file,
-            e.g. data/LGE-MRI-based/fiber_grid_max_depth7_point_threshold100.npy.
+            Path to binary file, e.g. data/fiber_grid.npy.
         """
         grid = np.load(path)
-
-        match_max_depth = re.search(r"max_depth(\d+)_", path)
-        max_depth = int(match_max_depth.group(1)) if match_max_depth is not None else 5
-        match_point_threshold = re.search(r"point_threshold(\d+).npy", path)
-        point_threshold = (
-            int(match_point_threshold.group(1))
-            if match_point_threshold is not None
-            else 100
-        )
 
         return FiberGrid(
             grid_x=grid[:, 0:2],
@@ -81,8 +83,6 @@ class FiberGrid:
             fiber_angle_circmean=grid[:, 4],
             fiber_angle_circstd=grid[:, 5],
             anatomical_tag_mode=grid[:, 6],
-            max_depth=max_depth,
-            point_threshold=point_threshold,
         )
 
     def plot(self, color: Literal["tag", "mean", "std"]) -> None:
@@ -156,19 +156,17 @@ class FiberGrid:
 
         plt.show()
 
-    def save(self, file: str = "data/LGE-MRI-based/fiber_grid") -> None:
+    def save(self, file: str = "data/fiber_grid") -> None:
         """Write fiber grid to binary file.
 
         Parameters
         ----------
         file : str, optional
-            Path including file name prefix to which the fiber grid is saved,
-            defaults to 'data/LGE-MRI-based/fiber_grid'.
-            The suffix is fixed to contain max_depth and point_threshold which are used
-            to initialize a FiberGrid from the file.
+            Path including file name to which the fiber grid is saved,
+            defaults to 'data/fiber_grid.npy'.
         """
         np.save(
-            f"{file}_max_depth{self.max_depth}_point_threshold{self.point_threshold}",
+            file,
             np.hstack(
                 [
                     self.grid_x,
@@ -196,8 +194,8 @@ class FiberGridComputer:
         uac: ArrayNx2,
         fiber_angles: Array1d,
         anatomical_structure_tags: Array1d,
-        max_depth: int = 5,
-        point_threshold: int = 100,
+        max_depth: int = 8,
+        point_threshold: int = 120,
     ) -> None:
         """
         Parameters
@@ -211,9 +209,9 @@ class FiberGridComputer:
         anatomical_structure_tags : Array1d
             Tag for anatomical structure assignment.
         max_depth : int, optional
-            Maximum number of splits per cell, defaults to 5.
+            Maximum number of splits per cell, defaults to 8.
         point_threshold : int, optional
-            Minimum number of points per cell, defaults to 100.
+            Minimum number of points to split a cell, defaults to 120.
         """
         self.max_depth = max_depth
         self.point_threshold = point_threshold
@@ -240,8 +238,6 @@ class FiberGridComputer:
             fiber_angle_circmean=np.array(self.fiber_angle_circmean),
             fiber_angle_circstd=np.array(self.fiber_angle_circstd),
             anatomical_tag_mode=np.array(self.anatomical_tag_mode),
-            max_depth=self.max_depth,
-            point_threshold=self.point_threshold,
         )
 
     def _subdivide(
