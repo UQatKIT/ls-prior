@@ -121,7 +121,9 @@ def map_fibers_to_tangent_space(fibers: ArrayNx3, x: ArrayNx3, y: ArrayNx3) -> A
     return normalize(fibers_mapped)
 
 
-def get_fiber_parameters_from_uac_grid(uac: ArrayNx2) -> tuple[Array1d, Array1d]:
+def get_fiber_parameters_from_uac_grid(
+    uac: ArrayNx2, file: str = "data/fiber_grid_max_depth8_point_threshold120.npy"
+) -> tuple[Array1d, Array1d]:
     """
     Map mean and standard deviation of fiber angles from `FiberGrid` to vertices based on
     the given UACs.
@@ -130,15 +132,15 @@ def get_fiber_parameters_from_uac_grid(uac: ArrayNx2) -> tuple[Array1d, Array1d]
     ----------
     uac : ArrayNx2
         Universal atrial coordinates of vertices.
+    file : str
+        Path to bindary file with fiber grid.
 
     Returns
     -------
     (Array1d, Array1d)
         Arrays with mean and standard deviation of fiber angles.
     """
-    fiber_grid = FiberGrid.read_from_binary_file(
-        "data/LGE-MRI-based/fiber_grid_max_depth7_point_threshold100.npy"
-    )
+    fiber_grid = FiberGrid.read_from_binary_file(file)
 
     fiber_mean = np.zeros(uac.shape[0])
     fiber_std = np.zeros(uac.shape[0])
