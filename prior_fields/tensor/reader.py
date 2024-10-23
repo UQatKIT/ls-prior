@@ -114,8 +114,6 @@ def read_atrial_mesh_with_fibers_and_tags_mapped_to_vertices(
     """
     V, F, uac, fibers_on_faces, tag_of_faces = read_raw_atrial_mesh(geometry)
 
-    logger.info("Map fibers and tags to vertices...")
-
     # Construct mapping of vertex indices to vertex indices of its adjacent faces
     adjacent_faces = get_dict_with_adjacent_faces_for_each_vertex(F)
 
@@ -132,13 +130,15 @@ def read_atrial_mesh_with_fibers_and_tags_mapped_to_vertices(
     return V, F, uac, fibers, tag
 
 
-def read_all_human_atrial_fiber_meshes() -> tuple[
-    dict[int, ArrayNx3],
-    dict[int, ArrayNx3],
-    dict[int, ArrayNx2],
-    dict[int, ArrayNx3],
-    dict[int, Array1d],
-]:
+def read_all_human_atrial_fiber_meshes() -> (
+    tuple[
+        dict[int, ArrayNx3],
+        dict[int, ArrayNx3],
+        dict[int, ArrayNx2],
+        dict[int, ArrayNx3],
+        dict[int, Array1d],
+    ]
+):
     """
     Read vertices, faces, UAC, fibers, and anatomical tags from all 7 endocardial meshes
     of the left atrium published in https://zenodo.org/records/3764917.

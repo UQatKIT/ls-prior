@@ -221,7 +221,7 @@ def _get_directions_with_no_change_in_one_uac(
     if count_missing > 0:
         logger.warning(
             "No face with no-change found for "
-            f"{100 * count_missing / V.shape[0]:.3f}% of the vertices."
+            f"{count_missing} / {V.shape[0]}% of the vertices."
         )
 
     return np.vstack(basis_uac)
