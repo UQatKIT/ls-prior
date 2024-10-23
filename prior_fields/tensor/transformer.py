@@ -111,6 +111,27 @@ def sample_to_angles(x: Array1d) -> Array1d:
     return np.pi * (1 / (1 + np.exp(-x)) - 0.5)
 
 
+def conduction_velocity_to_longitudinal_velocity(cv: float | Array1d, k: float = 3.75):
+    """
+    Compute longitudinal velocity from conduction velocity and anisotropy factor.
+
+    Parameters
+    ----------
+    cv : float | Array1d
+        Conduction velocity
+    k : float, optional
+        Anisotropy factor,
+        defaults to 3.75 which is reported for the left atrium in the literature, see
+        https://www.frontiersin.org/journals/physiology/articles/10.3389/fphys.2018.01910
+
+    Returns
+    -------
+    float | Array1d
+        Velocity along the fiber direction.
+    """
+    return cv / np.sqrt(1 + (1 / k**2))
+
+
 def get_conduction_velocity_tensor_from_angles_and_velocities(
     angles: Array1d,
     velocities_l: Array1d,
