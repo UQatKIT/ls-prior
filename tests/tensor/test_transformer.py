@@ -2,11 +2,11 @@ import numpy as np
 import pytest
 
 from prior_fields.tensor.transformer import (
-    angles_to_3d_vector,
+    angles_to_2d_vector_coefficients,
     angles_to_sample,
     normalize,
     sample_to_angles,
-    vectors_3d_to_angles,
+    vector_coefficients_2d_to_angles,
 )
 
 
@@ -35,24 +35,19 @@ def y_axes(x_axes):
     return y_axes
 
 
-def test_angles_to_3d_vector_and_back(x_axes, y_axes):
-    angles_inp = np.random.uniform(-np.pi, np.pi, 100)
-
-    angles_out = vectors_3d_to_angles(
-        angles_to_3d_vector(angles_inp, x_axes, y_axes), x_axes, y_axes
-    )
+def test_angles_to_2d_vector_coefficients_and_back():
+    angles_inp = np.random.uniform(-np.pi / 2, np.pi / 2, 100)
+    coeff_x, coeff_y = angles_to_2d_vector_coefficients(angles_inp)
+    angles_out = vector_coefficients_2d_to_angles(coeff_x, coeff_y)
     assert np.allclose(angles_inp, angles_out)
 
 
-def test_vectors_3d_to_angles_outputs_between_minus_pi_and_pi(x_axes, y_axes):
+def test_vector_coefficients_2d_to_angles_outputs_between_minus_pi_half_and_pi_half():
     angles_inp = np.random.uniform(-10, 10, 100)
-
-    angles_out = vectors_3d_to_angles(
-        angles_to_3d_vector(angles_inp, x_axes, y_axes), x_axes, y_axes
-    )
-
-    assert all(-np.pi <= angles_out)
-    assert all(angles_out <= np.pi)
+    coeff_x, coeff_y = angles_to_2d_vector_coefficients(angles_inp)
+    angles_out = vector_coefficients_2d_to_angles(coeff_x, coeff_y)
+    assert all(-np.pi / 2 < angles_out)
+    assert all(angles_out <= np.pi / 2)
 
 
 def test_sigmoid_transformation_forward_reverse():
@@ -61,5 +56,5 @@ def test_sigmoid_transformation_forward_reverse():
 
 
 def test_sigmoid_transformation_reverse_forward():
-    angles = np.random.uniform(-np.pi, np.pi, 1000)
+    angles = np.random.uniform(-np.pi / 2, np.pi / 2, 1000)
     assert np.allclose(angles, sample_to_angles(angles_to_sample(angles)))
