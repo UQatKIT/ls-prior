@@ -3,6 +3,7 @@
 import numpy as np
 from pyvista import Plotter
 
+from prior_fields.prior.converter import scale_mesh_to_unit_cube
 from prior_fields.prior.plots import get_poly_data
 from prior_fields.prior.prior import BiLaplacianPriorNumpyWrapper
 from prior_fields.tensor.mapper import get_fiber_parameters_from_uac_grid
@@ -22,9 +23,7 @@ from prior_fields.tensor.transformer import (
 # %%
 print("Reading mesh...")
 V_raw, F, uac, fibers, _ = read_atrial_mesh_with_fibers_and_tags_mapped_to_vertices(1)
-Vmin = V_raw.min()
-Vmax = V_raw.max()
-V = V_raw / (Vmax - Vmin)
+V = scale_mesh_to_unit_cube(V_raw)
 
 ##################
 # Set parameters #

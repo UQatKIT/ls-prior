@@ -6,6 +6,7 @@ from pyvista import Plotter
 from scipy.spatial import KDTree
 from scipy.stats import circmean, circstd
 
+from prior_fields.prior.converter import scale_mesh_to_unit_cube
 from prior_fields.prior.plots import get_poly_data
 from prior_fields.tensor.mapper import (
     get_fiber_parameters_from_uac_grid,
@@ -22,9 +23,7 @@ print("Read atlas mesh...\n")
 V_raw, F, uac, fibers_atlas, _ = (
     read_atrial_mesh_with_fibers_and_tags_mapped_to_vertices("A")
 )
-Vmin = V_raw.min()
-Vmax = V_raw.max()
-V = V_raw / (Vmax - Vmin)
+V = scale_mesh_to_unit_cube(V_raw)
 
 basis_x, basis_y = get_uac_basis_vectors(V, F, uac)
 atlas_fibers = map_fibers_to_tangent_space(fibers_atlas, basis_x, basis_y)

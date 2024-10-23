@@ -107,3 +107,19 @@ def create_triangle_mesh_from_coordinates(V: ArrayNx2 | ArrayNx3, F: ArrayNx3) -
     editor.close()
 
     return mesh
+
+
+def scale_mesh_to_unit_cube(V: ArrayNx3) -> ArrayNx3:
+    """Scale vertex coordinates such that the mesh lies within the unit cube.
+
+    Parameters
+    ----------
+    V : ArrayNx3
+        (n, 3) array where each row represents one vertex of a mesh.
+
+    Returns
+    -------
+    ArrayNx3
+        Vertex coordinates scale to [0,1]
+    """
+    return V / (V.max() - V.min())
