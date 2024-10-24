@@ -9,7 +9,7 @@ from prior_fields.tensor.fiber_grid import get_fiber_parameters_from_uac_grid
 from prior_fields.tensor.reader import (
     read_atrial_mesh_with_fibers_and_tags_mapped_to_vertices,
 )
-from prior_fields.tensor.tangent_space import get_reference_coordinates
+from prior_fields.tensor.tangent_space import get_uac_basis_vectors
 from prior_fields.tensor.transformer import (
     angles_to_3d_vector,
     angles_to_sample,
@@ -77,7 +77,7 @@ sample = prior.sample()
 #########################################
 # %%
 angles = sample_to_angles(sample)
-x_axes, y_axes, _ = get_reference_coordinates(V, F)
+x_axes, y_axes = get_uac_basis_vectors(V, F, uac)
 vector_field = angles_to_3d_vector(angles=angles, x_axes=x_axes, y_axes=y_axes)
 
 plotter = Plotter()
