@@ -74,7 +74,7 @@ def get_uac_basis_vectors(
     (ArrayNx3, ArrayNx3)
         UAC-based basis vectors of the tangent spaces at each vertex
     """
-    _, _, basis_n = get_reference_coordinates(V, F)
+    _, _, basis_n = MeshVectorHeatSolver(V, F).get_tangent_frames()
 
     vertex_to_faces_map = _get_vertex_to_face_map(F)
 
