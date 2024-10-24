@@ -1,3 +1,4 @@
+from dataclasses import dataclass
 from enum import IntEnum
 from typing import overload
 
@@ -16,15 +17,23 @@ class AnatomicalTag(IntEnum):
     RSPV = 27
 
 
+@dataclass
+class ConductionVelocityParameters:
+    A: float = 600.6
+    B: float = 3.38 * 1e6
+    C: float = 30.3
+    k: float = 3.75
+
+
 # Parameters from Supplementary Table 1 in
 # https://www.frontiersin.org/journals/physiology/articles/10.3389/fphys.2018.01910
-CV = {
-    AnatomicalTag.LA: dict(A=600.6, B=3.38 * 1e6, C=30.3, k=3.75),
-    AnatomicalTag.LAA: dict(A=600.6, B=4.1 * 1e6, C=29.9, k=3.75),
-    AnatomicalTag.LIPV: dict(A=600.6, B=1.41 * 1e5, C=40.7, k=3.75),
-    AnatomicalTag.LSPV: dict(A=600.6, B=1.41 * 1e5, C=40.7, k=3.75),
-    AnatomicalTag.RIPV: dict(A=600.6, B=1.41 * 1e5, C=40.7, k=3.75),
-    AnatomicalTag.RSPV: dict(A=600.6, B=1.41 * 1e5, C=40.7, k=3.75),
+CV: dict[AnatomicalTag, ConductionVelocityParameters] = {
+    AnatomicalTag.LA: ConductionVelocityParameters(),
+    AnatomicalTag.LAA: ConductionVelocityParameters(B=4.1 * 1e6, C=29.9),
+    AnatomicalTag.LIPV: ConductionVelocityParameters(B=1.41 * 1e5, C=40.7),
+    AnatomicalTag.LSPV: ConductionVelocityParameters(B=1.41 * 1e5, C=40.7),
+    AnatomicalTag.RIPV: ConductionVelocityParameters(B=1.41 * 1e5, C=40.7),
+    AnatomicalTag.RSPV: ConductionVelocityParameters(B=1.41 * 1e5, C=40.7),
 }
 
 
@@ -46,7 +55,7 @@ def _get_conduction_velocity_for_tag(tag: AnatomicalTag, BCL: int = 500) -> floa
     float
         Conduction velocity
     """
-    return CV[tag]["A"] - CV[tag]["B"] * np.exp(-1 * BCL / CV[tag]["C"])
+    return CV[tag].A - CV[tag].B * np.exp(-1 * BCL / CV[tag].C)
 
 
 def _get_conduction_velocities_for_tags(tags: Array1d, BCL: int = 500) -> Array1d:
@@ -56,7 +65,7 @@ def _get_conduction_velocities_for_tags(tags: Array1d, BCL: int = 500) -> Array1
 
 def _get_anisotropy_factors_for_tags(tags: Array1d) -> Array1d:
     """Get array with anisotropy factors for array of anatomical regions."""
-    return np.array([CV[tag]["k"] for tag in tags])
+    return np.array([CV[tag].k for tag in tags])
 
 
 @overload
