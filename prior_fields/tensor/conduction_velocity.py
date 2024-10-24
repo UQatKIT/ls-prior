@@ -28,7 +28,7 @@ CV = {
 }
 
 
-def get_conduction_velocity_for_tag(tag: AnatomicalTag, BCL: int = 500) -> float:
+def _get_conduction_velocity_for_tag(tag: AnatomicalTag, BCL: int = 500) -> float:
     """
     Based on values from the literature compute the conduction velocity in an anatomical
     region as :math:`A - B * exp(-BCL/C)`, where BCL is the basis cycle length.
@@ -49,29 +49,31 @@ def get_conduction_velocity_for_tag(tag: AnatomicalTag, BCL: int = 500) -> float
     return CV[tag]["A"] - CV[tag]["B"] * np.exp(-1 * BCL / CV[tag]["C"])
 
 
-def get_conduction_velocities_for_tags(tags: Array1d, BCL: int = 500) -> Array1d:
+def _get_conduction_velocities_for_tags(tags: Array1d, BCL: int = 500) -> Array1d:
     """Get array with conduction velocities for array of anatomical regions."""
-    return np.array([get_conduction_velocity_for_tag(tag, BCL) for tag in tags])
+    return np.array([_get_conduction_velocity_for_tag(tag, BCL) for tag in tags])
 
 
-def get_anisotropy_factors_for_tags(tags: Array1d) -> Array1d:
+def _get_anisotropy_factors_for_tags(tags: Array1d) -> Array1d:
     """Get array with anisotropy factors for array of anatomical regions."""
     return np.array([CV[tag]["k"] for tag in tags])
 
 
 @overload
-def conduction_velocity_to_longitudinal_velocity(cv: float, k: float) -> float: ...
+def _conduction_velocity_to_longitudinal_velocity(cv: float, k: float) -> float: ...
 
 
 @overload
-def conduction_velocity_to_longitudinal_velocity(cv: Array1d, k: float) -> Array1d: ...
+def _conduction_velocity_to_longitudinal_velocity(cv: Array1d, k: float) -> Array1d: ...
 
 
 @overload
-def conduction_velocity_to_longitudinal_velocity(cv: Array1d, k: Array1d) -> Array1d: ...
+def _conduction_velocity_to_longitudinal_velocity(
+    cv: Array1d, k: Array1d
+) -> Array1d: ...
 
 
-def conduction_velocity_to_longitudinal_velocity(cv, k=3.75):
+def _conduction_velocity_to_longitudinal_velocity(cv, k=3.75):
     """
     Compute longitudinal velocity from conduction velocity and anisotropy factor.
 
@@ -92,7 +94,21 @@ def conduction_velocity_to_longitudinal_velocity(cv, k=3.75):
     return cv / np.sqrt(1 + (1 / k**2))
 
 
-def get_conduction_velocity_tensor_from_angles_and_velocities(
+def get_longitudinal_and_transversal_velocities_for_tags(
+    tags: Array1d,
+) -> tuple[Array1d, Array1d]:
+    conduction_velocities = _get_conduction_velocities_for_tags(tags)
+    anisotropy_factors = _get_anisotropy_factors_for_tags(tags)
+
+    velocities_l = _conduction_velocity_to_longitudinal_velocity(
+        conduction_velocities, k=anisotropy_factors
+    )
+    velocities_t = velocities_l / anisotropy_factors
+
+    return velocities_l, velocities_t
+
+
+def get_conduction_velocity(
     angles: Array1d,
     velocities_l: Array1d,
     velocities_t: Array1d,
