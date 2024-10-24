@@ -1,10 +1,74 @@
+from enum import IntEnum
+from typing import overload
+
 import numpy as np
 
 from prior_fields.prior.dtypes import Array1d, ArrayNx3, ArrayNx3x3
 from prior_fields.tensor.transformer import angles_to_2d_vector_coefficients
 
 
-def conduction_velocity_to_longitudinal_velocity(cv: float | Array1d, k: float = 3.75):
+class AnatomicalTag(IntEnum):
+    LA = 11
+    LAA = 13
+    LIPV = 21
+    LSPV = 23
+    RIPV = 25
+    RSPV = 27
+
+
+# Parameters from Supplementary Table 1 in
+# https://www.frontiersin.org/journals/physiology/articles/10.3389/fphys.2018.01910
+CV = {
+    AnatomicalTag.LA: dict(A=600.6, B=3.38 * 1e6, BCL=500, C=30.3, k=3.75),
+    AnatomicalTag.LAA: dict(A=600.6, B=4.1 * 1e6, BCL=500, C=29.9, k=3.75),
+    AnatomicalTag.LIPV: dict(A=600.6, B=1.41 * 1e5, BCL=500, C=40.7, k=3.75),
+    AnatomicalTag.LSPV: dict(A=600.6, B=1.41 * 1e5, BCL=500, C=40.7, k=3.75),
+    AnatomicalTag.RIPV: dict(A=600.6, B=1.41 * 1e5, BCL=500, C=40.7, k=3.75),
+    AnatomicalTag.RSPV: dict(A=600.6, B=1.41 * 1e5, BCL=500, C=40.7, k=3.75),
+}
+
+
+def get_conduction_velocity_for_tag(tag: AnatomicalTag) -> float:
+    """
+    Based on values from the literature compute the conduction velocity in an anatomical
+    region as :math:`A - B * exp(-BCL/C)`, where BCL is the basis cycle length.
+
+    Parameters
+    ----------
+    tag : AnatomicalTag
+        Specifies the anatomical region.
+
+    Returns
+    -------
+    float
+        Conduction velocity
+    """
+    return CV[tag]["A"] - CV[tag]["B"] * np.exp(-1 * CV[tag]["BCL"] / CV[tag]["C"])
+
+
+def get_conduction_velocities_for_tags(tags: Array1d) -> Array1d:
+    """Get array with conduction velocities for array of anatomical regions."""
+    return np.array([get_conduction_velocity_for_tag(tag) for tag in tags])
+
+
+def get_anisotropy_factors_for_tags(tags: Array1d) -> Array1d:
+    """Get array with anisotropy factors for array of anatomical regions."""
+    return np.array([CV[tag]["k"] for tag in tags])
+
+
+@overload
+def conduction_velocity_to_longitudinal_velocity(cv: float, k: float) -> float: ...
+
+
+@overload
+def conduction_velocity_to_longitudinal_velocity(cv: Array1d, k: float) -> Array1d: ...
+
+
+@overload
+def conduction_velocity_to_longitudinal_velocity(cv: Array1d, k: Array1d) -> Array1d: ...
+
+
+def conduction_velocity_to_longitudinal_velocity(cv, k=3.75):
     """
     Compute longitudinal velocity from conduction velocity and anisotropy factor.
 
