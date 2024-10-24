@@ -19,16 +19,16 @@ class AnatomicalTag(IntEnum):
 # Parameters from Supplementary Table 1 in
 # https://www.frontiersin.org/journals/physiology/articles/10.3389/fphys.2018.01910
 CV = {
-    AnatomicalTag.LA: dict(A=600.6, B=3.38 * 1e6, BCL=500, C=30.3, k=3.75),
-    AnatomicalTag.LAA: dict(A=600.6, B=4.1 * 1e6, BCL=500, C=29.9, k=3.75),
-    AnatomicalTag.LIPV: dict(A=600.6, B=1.41 * 1e5, BCL=500, C=40.7, k=3.75),
-    AnatomicalTag.LSPV: dict(A=600.6, B=1.41 * 1e5, BCL=500, C=40.7, k=3.75),
-    AnatomicalTag.RIPV: dict(A=600.6, B=1.41 * 1e5, BCL=500, C=40.7, k=3.75),
-    AnatomicalTag.RSPV: dict(A=600.6, B=1.41 * 1e5, BCL=500, C=40.7, k=3.75),
+    AnatomicalTag.LA: dict(A=600.6, B=3.38 * 1e6, C=30.3, k=3.75),
+    AnatomicalTag.LAA: dict(A=600.6, B=4.1 * 1e6, C=29.9, k=3.75),
+    AnatomicalTag.LIPV: dict(A=600.6, B=1.41 * 1e5, C=40.7, k=3.75),
+    AnatomicalTag.LSPV: dict(A=600.6, B=1.41 * 1e5, C=40.7, k=3.75),
+    AnatomicalTag.RIPV: dict(A=600.6, B=1.41 * 1e5, C=40.7, k=3.75),
+    AnatomicalTag.RSPV: dict(A=600.6, B=1.41 * 1e5, C=40.7, k=3.75),
 }
 
 
-def get_conduction_velocity_for_tag(tag: AnatomicalTag) -> float:
+def get_conduction_velocity_for_tag(tag: AnatomicalTag, BCL: int = 500) -> float:
     """
     Based on values from the literature compute the conduction velocity in an anatomical
     region as :math:`A - B * exp(-BCL/C)`, where BCL is the basis cycle length.
@@ -37,18 +37,21 @@ def get_conduction_velocity_for_tag(tag: AnatomicalTag) -> float:
     ----------
     tag : AnatomicalTag
         Specifies the anatomical region.
+    BCL : int, optional
+        Basic cycle length, defaults to 500.
+        Reasonable values are in the order of 200 to 1,000 [ms].
 
     Returns
     -------
     float
         Conduction velocity
     """
-    return CV[tag]["A"] - CV[tag]["B"] * np.exp(-1 * CV[tag]["BCL"] / CV[tag]["C"])
+    return CV[tag]["A"] - CV[tag]["B"] * np.exp(-1 * BCL / CV[tag]["C"])
 
 
-def get_conduction_velocities_for_tags(tags: Array1d) -> Array1d:
+def get_conduction_velocities_for_tags(tags: Array1d, BCL: int = 500) -> Array1d:
     """Get array with conduction velocities for array of anatomical regions."""
-    return np.array([get_conduction_velocity_for_tag(tag) for tag in tags])
+    return np.array([get_conduction_velocity_for_tag(tag, BCL) for tag in tags])
 
 
 def get_anisotropy_factors_for_tags(tags: Array1d) -> Array1d:
