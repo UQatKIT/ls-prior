@@ -157,18 +157,9 @@ def _get_directions_with_no_change_in_one_uac(
 
             # 2.
             elif (uac_changes.max() > 0) & (uac_changes.min() < 0):
-                edge_lengths = (
-                    np.linalg.norm(V[v_indices_face] - V[v_idx], axis=1) / 1000
-                )
-                uac_changes_per_distance = np.divide(
-                    uac_changes, edge_lengths, where=edge_lengths != 0
-                )
-
                 # compute direction in which uac coordinate does not change
                 weights_no_change = abs(
-                    np.divide(
-                        1, uac_changes_per_distance, where=uac_changes_per_distance != 0
-                    )
+                    np.divide(1, uac_changes, where=uac_changes != 0)
                 )
                 weights_no_change = weights_no_change / np.linalg.norm(weights_no_change)
                 direction_no_change = (
