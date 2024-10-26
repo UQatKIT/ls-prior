@@ -1,4 +1,5 @@
 # %%
+import matplotlib.pyplot as plt
 import numpy as np
 from pyvista import Plotter
 from scipy.spatial import KDTree
@@ -21,7 +22,7 @@ from prior_fields.tensor.transformer import (
 # Read mesh data #
 ##################
 # %%
-V_raw, F, uac, fibers, _ = read_atrial_mesh_with_fibers_and_tags_mapped_to_vertices(1)
+V_raw, F, uac, _, _ = read_atrial_mesh_with_fibers_and_tags_mapped_to_vertices(1)
 V = scale_mesh_to_unit_cube(V_raw)
 
 ##################
@@ -32,7 +33,7 @@ mean_fiber_angle, var_fiber_angle, _ = get_fiber_parameters_from_uac_data(uac, k
 
 sample_mean = angles_to_sample(mean_fiber_angle)
 sigma = np.sqrt(var_fiber_angle)
-ell = np.ones_like(sigma)
+ell = 0.5 * np.ones_like(sigma)
 
 # %%
 plotter = Plotter(shape=(1, 3))
@@ -71,12 +72,24 @@ plotter.show(window_size=(900, 400))
 prior = BiLaplacianPriorNumpyWrapper(V, F, sigma=sigma, ell=ell, mean=sample_mean)
 
 # %%
-sample = prior.sample()
+# validate correlation length
+nrow, ncol = 4, 3
+fig, ax = plt.subplots(nrow, ncol, figsize=(12, 12))
+for i in range(nrow):
+    for j in range(ncol):
+        ax[i][j].hist(
+            [mean_fiber_angle, sample_to_angles(prior.sample())],
+            bins=50,
+            label=["mean", "sample"],
+        )
+        ax[i][j].legend(prop={"size": 8})
+plt.show()
 
 #########################################
 # Prior field as angles of vector field #
 #########################################
 # %%
+sample = prior.sample()
 angles = sample_to_angles(sample)
 x_axes, y_axes = get_uac_basis_vectors(V, F, uac)
 vector_field = angles_to_3d_vector(angles=angles, x_axes=x_axes, y_axes=y_axes)
