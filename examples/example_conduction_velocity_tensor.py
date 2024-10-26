@@ -1,5 +1,4 @@
 # %%
-
 from prior_fields.prior.converter import scale_mesh_to_unit_cube
 from prior_fields.tensor.conduction_velocity import (
     get_conduction_velocity,
@@ -19,7 +18,6 @@ angles, _ = get_fiber_parameters_from_uac_grid(uac)
 
 # %%
 velocities_l, velocities_t = get_longitudinal_and_transversal_velocities_for_tags(tags)
-
 cv_tensor = get_conduction_velocity(angles, velocities_l, velocities_t, basis_x, basis_y)
 
 # %%

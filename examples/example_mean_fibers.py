@@ -1,7 +1,8 @@
 # %%
 
+
+import matplotlib.pyplot as plt
 import numpy as np
-from matplotlib import pyplot as plt
 from pyvista import Plotter
 from scipy.spatial import KDTree
 from scipy.stats import circmean, circvar
