@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from math import ceil
+from pathlib import Path
 from typing import Literal
 
 import numpy as np
@@ -13,9 +14,11 @@ from prior_fields.prior.dtypes import Array1d, ArrayNx2
 from prior_fields.tensor.reader import collect_data_from_human_atrial_fiber_meshes
 from prior_fields.tensor.transformer import angles_to_2d_vector_coefficients
 
+circ_kwargs = dict(low=-np.pi / 2, high=np.pi / 2, nan_policy="omit")
+
 
 def compute_uac_fiber_grid(
-    max_depth: int, point_threshold: int, file: str = "data/fiber_grid.npy"
+    max_depth: int, point_threshold: int, path: Path = Path("data/")
 ) -> None:
     """
     Compute and save `FiberGrid` based on all 7 human atrial geometries.
@@ -26,12 +29,15 @@ def compute_uac_fiber_grid(
         Maximum number of splits per cell (`FiberGridComputer.max_depth`).
     point_threshold : int
         Minimum number of points to split a cell (`FiberGridComputer.point_threshold`).
-    file : str, optional
-        Path including file name to which the fiber grid is saved,
-        defaults to 'data/fiber_grid.npy'.
+    path : Path, optional
+        Path to which uac based data and fiber grid is saved, defaults to 'data/'.
     """
     logger.info("Collecting data from human atrial fiber meshes...")
     uac, fiber_angles, tags = collect_data_from_human_atrial_fiber_meshes()
+
+    uac_data_file = path / "uacs_fibers_tags.npy"
+    logger.info(f"Saving collected data to {uac_data_file}")
+    np.save(uac_data_file, np.hstack([uac, np.vstack([fiber_angles, tags]).T]))
 
     logger.info(f"Compute fiber grid with {max_depth=} and {point_threshold=}...")
     fiber_grid = FiberGridComputer(
@@ -42,8 +48,11 @@ def compute_uac_fiber_grid(
         point_threshold=point_threshold,
     ).get_fiber_grid()
 
-    logger.info(f"Saving fiber grid to {file}")
-    fiber_grid.save(file)
+    fiber_grid_file = (
+        path / f"fiber_grid_max_depth{max_depth}_point_threshold{point_threshold}.npy"
+    )
+    logger.info(f"Saving fiber grid to {fiber_grid_file}")
+    fiber_grid.save(fiber_grid_file)
 
 
 def get_fiber_parameters_from_uac_grid(
@@ -93,6 +102,49 @@ def get_fiber_parameters_from_uac_grid(
         )
 
     return fiber_mean, fiber_var
+
+
+def get_fiber_parameters_from_uac_data(
+    uac: ArrayNx2, k: int = 50, file: str = "data/uacs_fibers_tags.npy"
+) -> tuple[Array1d, Array1d, Array1d]:
+    # TODO: data class
+    data = np.load(file)
+    uac_ref = data[:, 0:2]
+    fiber_angle_ref = data[:, 2]
+    tag_ref = data[:, 3]
+
+    tree = KDTree(uac_ref)
+    d, idx_neighbors = tree.query(uac, k=k, p=2, distance_upper_bound=0.01)
+    logger.info(
+        "Minimum number of neighbors for data point:"
+        + str(int(np.isfinite(d).mean(axis=1).min() * k)),
+    )
+    logger.info(
+        "Mean number of neighbors for data point:"
+        + str(int(np.isfinite(d).mean(axis=1).mean() * k)),
+    )
+    logger.info(
+        "Median number of neighbors for data point:"
+        + str(int(np.median(np.isfinite(d).mean(axis=1)) * k)),
+    )
+
+    mean_fiber_angle = np.array(
+        [
+            circmean(fiber_angle_ref[n[np.isfinite(d[i])]], **circ_kwargs)
+            for i, n in enumerate(idx_neighbors)
+        ]
+    )
+    var_fiber_angle = np.array(
+        [
+            circvar(fiber_angle_ref[n[np.isfinite(d[i])]], **circ_kwargs)
+            for i, n in enumerate(idx_neighbors)
+        ]
+    )
+    mode_tag = np.array(
+        [mode(tag_ref[n[np.isfinite(d[i])]]).mode for i, n in enumerate(idx_neighbors)]
+    )
+
+    return mean_fiber_angle, var_fiber_angle, mode_tag
 
 
 class FiberGrid:
@@ -221,13 +273,13 @@ class FiberGrid:
 
         plt.show()
 
-    def save(self, file: str = "data/fiber_grid") -> None:
+    def save(self, file: Path = Path("data/fiber_grid.npy")) -> None:
         """
         Write fiber grid to binary file.
 
         Parameters
         ----------
-        file : str, optional
+        file : Path, optional
             Path including file name to which the fiber grid is saved,
             defaults to 'data/fiber_grid.npy'.
         """
@@ -345,7 +397,6 @@ class FiberGridComputer:
                 mask[idx] = True
 
             # Compute properties in the cell
-            circ_kwargs = dict(low=-np.pi / 2, high=np.pi / 2, nan_policy="omit")
             self.fiber_angle_circmean.append(
                 circmean(self.fiber_angles[mask], **circ_kwargs)
             )
