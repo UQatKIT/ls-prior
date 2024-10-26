@@ -1,6 +1,7 @@
 # %%
 import numpy as np
 from pyvista import Plotter
+from scipy.spatial import KDTree
 
 from prior_fields.prior.converter import scale_mesh_to_unit_cube
 from prior_fields.prior.plots import get_poly_data
@@ -90,25 +91,49 @@ plotter.show(window_size=(800, 500))
 # Compare samples #
 ###################
 # %%
+# Subsample vectors for plotting
+axis = np.linspace(0, 1, 100, endpoint=True)
+x, y = np.meshgrid(axis.tolist(), axis.tolist())
+grid = np.c_[x.ravel(), y.ravel()]
+
+tree = KDTree(uac)
+_, idx = tree.query(grid, k=1)
+
 plotter = Plotter()
 plotter.add_text("Comparison of two vector field samples")
 plotter.add_mesh(get_poly_data(V, F), color="lightgrey", opacity=0.99)
 plotter.add_arrows(
-    V,
+    V[idx],
     angles_to_3d_vector(
-        angles=sample_to_angles(prior.sample()), x_axes=x_axes, y_axes=y_axes
+        angles=sample_to_angles(prior.sample())[idx],
+        x_axes=x_axes[idx],
+        y_axes=y_axes[idx],
     ),
     mag=0.01,
     color="tab:blue",
+    label="sample 1",
 )
 plotter.add_arrows(
-    V,
+    V[idx],
     angles_to_3d_vector(
-        angles=sample_to_angles(prior.sample()), x_axes=x_axes, y_axes=y_axes
+        angles=sample_to_angles(prior.sample())[idx],
+        x_axes=x_axes[idx],
+        y_axes=y_axes[idx],
+    ),
+    mag=0.01,
+    color="tab:green",
+    label="sample 2",
+)
+plotter.add_arrows(
+    V[idx],
+    angles_to_3d_vector(
+        angles=mean_fiber_angle[idx], x_axes=x_axes[idx], y_axes=y_axes[idx]
     ),
     mag=0.01,
     color="tab:orange",
+    label="mean",
 )
+plotter.add_legend()  # type: ignore
 plotter.show(window_size=(800, 500))
 
 # %%
