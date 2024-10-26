@@ -1,4 +1,5 @@
 import re
+from math import degrees
 from pathlib import Path
 from typing import Literal
 
@@ -15,6 +16,7 @@ from prior_fields.tensor.tangent_space import (
     get_angles_in_tangent_space,
     get_uac_basis_vectors,
 )
+from prior_fields.tensor.transformer import angles_between_vectors
 
 
 def read_raw_atrial_mesh(
@@ -249,4 +251,27 @@ def collect_data_from_human_atrial_fiber_meshes() -> tuple[ArrayNx2, Array1d, Ar
         fibers, directions_constant_beta, directions_constant_alpha
     )
 
+    _validate_uac_bases(directions_constant_beta, directions_constant_alpha)
+
     return uac, fiber_angles, tags
+
+
+def _validate_uac_bases(basis_x, basis_y):
+    critical_value = 30
+    angles = angles_between_vectors(basis_x, basis_y)
+    angles = np.array([degrees(a) for a in angles])
+    angles[
+        (np.linalg.norm(basis_x, axis=1) == 0) | (np.linalg.norm(basis_y, axis=1) == 0)
+    ] = np.nan
+    logger.warning(
+        f"{100 * (angles == 0).sum() / basis_x.shape[0]:.4f}% of the bases vectors are "
+        "parallel."
+    )
+    logger.warning(
+        f"{100 * (angles < critical_value).sum() / basis_x.shape[0]:.4f}% of the bases "
+        f"vectors are almost parallel (angle < {critical_value} degrees)."
+    )
+    logger.warning(
+        f"{100 * np.isnan(angles).sum() / basis_x.shape[0]:.4f}% of the vertices are "
+        "missing one or both basis vectors."
+    )
