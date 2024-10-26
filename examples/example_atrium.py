@@ -100,40 +100,28 @@ tree = KDTree(uac)
 _, idx = tree.query(grid, k=1)
 
 plotter = Plotter()
-plotter.add_text("Comparison of two vector field samples")
+plotter.add_text("Comparison of vector field samples and mean")
 plotter.add_mesh(get_poly_data(V, F), color="lightgrey", opacity=0.99)
-plotter.add_arrows(
-    V[idx],
-    angles_to_3d_vector(
-        angles=sample_to_angles(prior.sample())[idx],
-        x_axes=x_axes[idx],
-        y_axes=y_axes[idx],
-    ),
-    mag=0.01,
-    color="tab:blue",
-    label="sample 1",
-)
-plotter.add_arrows(
-    V[idx],
-    angles_to_3d_vector(
-        angles=sample_to_angles(prior.sample())[idx],
-        x_axes=x_axes[idx],
-        y_axes=y_axes[idx],
-    ),
-    mag=0.01,
-    color="tab:green",
-    label="sample 2",
-)
+for _ in range(10):
+    plotter.add_arrows(
+        V[idx],
+        angles_to_3d_vector(
+            angles=sample_to_angles(prior.sample())[idx],
+            x_axes=x_axes[idx],
+            y_axes=y_axes[idx],
+        ),
+        mag=0.01,
+        color="tab:blue",
+    )
 plotter.add_arrows(
     V[idx],
     angles_to_3d_vector(
         angles=mean_fiber_angle[idx], x_axes=x_axes[idx], y_axes=y_axes[idx]
     ),
-    mag=0.01,
+    mag=0.015,
     color="tab:orange",
-    label="mean",
 )
-plotter.add_legend()  # type: ignore
+plotter.add_legend(labels=[["samples", "tab:blue"], ["mean", "tab:orange"]])
 plotter.show(window_size=(800, 500))
 
 # %%
