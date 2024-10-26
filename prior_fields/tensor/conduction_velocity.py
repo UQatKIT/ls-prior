@@ -37,7 +37,9 @@ CV: dict[AnatomicalTag, ConductionVelocityParameters] = {
 }
 
 
-def _get_conduction_velocity_for_tag(tag: AnatomicalTag, BCL: int = 500) -> float:
+def _get_conduction_velocity_for_tag(
+    tag: AnatomicalTag, BCL: int | None = None
+) -> float:
     """
     Based on values from the literature compute the conduction velocity in an anatomical
     region as :math:`A - B * exp(-BCL/C)`, where BCL is the basis cycle length.
@@ -46,8 +48,9 @@ def _get_conduction_velocity_for_tag(tag: AnatomicalTag, BCL: int = 500) -> floa
     ----------
     tag : AnatomicalTag
         Specifies the anatomical region.
-    BCL : int, optional
-        Basic cycle length, defaults to 500.
+    BCL : int | None, optional
+        Basic cycle length, defaults to None which means a BCL long enough to not reduce
+        conduction velocity due to restitution of the muscle fiber.
         Reasonable values are in the order of 200 to 1,000 [ms].
 
     Returns
@@ -55,10 +58,15 @@ def _get_conduction_velocity_for_tag(tag: AnatomicalTag, BCL: int = 500) -> floa
     float
         Conduction velocity
     """
-    return CV[tag].A - CV[tag].B * np.exp(-1 * BCL / CV[tag].C)
+    if BCL:
+        return CV[tag].A - CV[tag].B * np.exp(-1 * BCL / CV[tag].C)
+    else:
+        return CV[tag].A
 
 
-def _get_conduction_velocities_for_tags(tags: Array1d, BCL: int = 500) -> Array1d:
+def _get_conduction_velocities_for_tags(
+    tags: Array1d, BCL: int | None = None
+) -> Array1d:
     """Get array with conduction velocities for array of anatomical regions."""
     return np.array([_get_conduction_velocity_for_tag(tag, BCL) for tag in tags])
 
