@@ -8,6 +8,7 @@ import numpy as np
 from loguru import logger
 
 from prior_fields.prior.dtypes import Array1d, ArrayNx2, ArrayNx3
+from prior_fields.tensor.fiber_grid import DataUAC
 from prior_fields.tensor.mapper import (
     map_categories_from_faces_to_vertices,
     map_vectors_from_faces_to_vertices,
@@ -202,7 +203,7 @@ def read_all_human_atrial_fiber_meshes() -> tuple[
     return V, F, uac, fibers, tags
 
 
-def collect_data_from_human_atrial_fiber_meshes() -> tuple[ArrayNx2, Array1d, Array1d]:
+def collect_data_from_human_atrial_fiber_meshes() -> DataUAC:
     """
     Collect fiber angles and anatomical tags with UACs from the endocardial geometries of
     the left atrium.
@@ -217,9 +218,11 @@ def collect_data_from_human_atrial_fiber_meshes() -> tuple[ArrayNx2, Array1d, Ar
 
     Returns
     -------
-    (ArrayNx2, Array1d, Array1d)
-        Arrays with UACs, fiber angles and anatomical tags
+    DataUAC
+        UACs, fiber angles and anatomical tags
     """
+    logger.info("Collecting data from human atrial fiber meshes...")
+
     # Read data (takes about 70 seconds)
     V_dict, F_dict, uac_dict, fibers_dict, tags_dict = (
         read_all_human_atrial_fiber_meshes()
@@ -253,7 +256,7 @@ def collect_data_from_human_atrial_fiber_meshes() -> tuple[ArrayNx2, Array1d, Ar
 
     _validate_uac_bases(directions_constant_beta, directions_constant_alpha)
 
-    return uac, fiber_angles, tags
+    return DataUAC(uac, fiber_angles, tags)
 
 
 def _validate_uac_bases(basis_x, basis_y):
