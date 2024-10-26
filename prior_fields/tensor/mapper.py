@@ -104,14 +104,16 @@ def map_fibers_to_tangent_space(fibers: ArrayNx3, x: ArrayNx3, y: ArrayNx3) -> A
     fiber_coeff_x, fiber_coeff_y = get_coefficients(normalize(fibers), x, y)
 
     # Exclude fibers which are almost orthogonal to tangent space
-    # thresh = 0.25  # corresponds to approximately 75 degrees
-    thresh = 0.5  # corresponds to 60 degrees
+    thresh = 0.25  # corresponds to approximately 75 degrees
+    # thresh = 0.5  # corresponds to 60 degrees
     mask_orthogonal = (abs(fiber_coeff_x) < thresh) & (abs(fiber_coeff_y) < thresh)
 
     logger.warning(
         f"Excluding {100 * mask_orthogonal.sum() / fibers.shape[0]:.2f}% of the fibers"
         " as they are almost orthogonal to the tangent space."
     )
+    fiber_coeff_x[mask_orthogonal] = np.nan
+    fiber_coeff_y[mask_orthogonal] = np.nan
 
     fibers_mapped = fiber_coeff_x[:, np.newaxis] * x + fiber_coeff_y[:, np.newaxis] * y
 
