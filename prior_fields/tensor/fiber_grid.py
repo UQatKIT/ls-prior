@@ -10,8 +10,17 @@ from matplotlib import pyplot as plt
 from scipy.spatial import KDTree
 from scipy.stats import circmean, circvar, mode
 
-from prior_fields.prior.dtypes import Array1d, ArrayNx2
-from prior_fields.tensor.transformer import angles_to_2d_vector_coefficients
+from prior_fields.prior.dtypes import Array1d, ArrayNx2, ArrayNx3
+from prior_fields.tensor.tangent_space import (
+    get_angles_in_tangent_space,
+    get_reference_coordinates,
+    get_uac_basis_vectors,
+)
+from prior_fields.tensor.transformer import (
+    angles_to_2d_vector_coefficients,
+    angles_to_3d_vector,
+    angles_to_sample,
+)
 
 circ_kwargs = dict(low=-np.pi / 2, high=np.pi / 2, nan_policy="omit")
 
@@ -103,46 +112,58 @@ def get_fiber_parameters_from_uac_grid(
 
 
 def get_fiber_parameters_from_uac_data(
-    uac: ArrayNx2, k: int = 50, file: Path | str = "data/uacs_fibers_tags.npy"
+    V: ArrayNx3,
+    F: ArrayNx3,
+    uac: ArrayNx2,
+    k: int = 50,
+    file: Path | str = "data/uacs_fibers_tags.npy",
 ) -> tuple[Array1d, Array1d, Array1d]:
 
     data_uac = DataUAC.load(file)
 
+    # Find k nearest neighbors to each UAC in the target geometry
     tree = KDTree(data_uac.uac)
-    d, idx_neighbors = tree.query(uac, k=k, p=2, distance_upper_bound=0.01)
-    logger.info(
-        "Minimum number of neighbors for data point:"
-        + str(int(np.isfinite(d).mean(axis=1).min() * k)),
-    )
-    logger.info(
-        "Mean number of neighbors for data point:"
-        + str(int(np.isfinite(d).mean(axis=1).mean() * k)),
-    )
-    logger.info(
-        "Median number of neighbors for data point:"
-        + str(int(np.median(np.isfinite(d).mean(axis=1)) * k)),
+    _, idx_neighbors = tree.query(uac, k=k, p=2)
+
+    # Get angles of kNN based on UAC
+    angles_uac = data_uac.fiber_angles[idx_neighbors].reshape(-1)
+
+    # Transform angles to 3d fiber vectors on vertices of target geometry
+    alpha_axes, beta_axes = get_uac_basis_vectors(V, F, uac)
+    alpha_axes_repeated = _repeat_array(alpha_axes, k)
+    beta_axes_repeated = _repeat_array(beta_axes, k)
+    fibers = angles_to_3d_vector(
+        angles=angles_uac, x_axes=alpha_axes_repeated, y_axes=beta_axes_repeated
     )
 
-    mean_fiber_angle = np.array(
-        [
-            circmean(data_uac.fiber_angles[n[np.isfinite(d[i])]], **circ_kwargs)
-            for i, n in enumerate(idx_neighbors)
-        ]
-    )
-    var_fiber_angle = np.array(
-        [
-            circvar(data_uac.fiber_angles[n[np.isfinite(d[i])]], **circ_kwargs)
-            for i, n in enumerate(idx_neighbors)
-        ]
-    )
-    mode_tag = np.array(
-        [
-            mode(data_uac.anatomical_tags[n[np.isfinite(d[i])]]).mode
-            for i, n in enumerate(idx_neighbors)
-        ]
-    )
+    # Compute orthonormal bases of tangent spaces and fiber angles within these bases
+    x_axes, y_axes, _ = get_reference_coordinates(V, F)
+    x_axes_repeated = _repeat_array(x_axes, k)
+    y_axes_repeated = _repeat_array(y_axes, k)
+    angles_vhm = get_angles_in_tangent_space(fibers, x_axes_repeated, y_axes_repeated)
 
-    return mean_fiber_angle, var_fiber_angle, mode_tag
+    # Transform angles to values in (-inf, inf) for BiLaplacianPrior parameterization
+    prior_values = angles_to_sample(angles_vhm).reshape(-1, k)
+
+    # Compute parameters
+    prior_mean = np.nanmean(prior_values, axis=1)
+    prior_sigma = np.nanstd(prior_values, axis=1)
+    mode_tag = mode(data_uac.anatomical_tags[idx_neighbors], axis=1).mode
+
+    # Handle missing values
+    prior_mean[np.isnan(prior_mean)] = np.nanmean(prior_mean)
+    prior_sigma[np.isnan(prior_sigma)] = np.nanmean(prior_sigma)
+
+    # Replace zeros in sigma
+    prior_sigma = np.clip(prior_sigma, a_min=1e-3, a_max=None)
+
+    return prior_mean, prior_sigma, mode_tag
+
+
+def _repeat_array(array: ArrayNx3, n: int) -> ArrayNx3:
+    return np.vstack(
+        [array[:, 0].repeat(n), array[:, 1].repeat(n), array[:, 2].repeat(n)]
+    ).T
 
 
 class DataUAC:
@@ -160,10 +181,7 @@ class DataUAC:
     """
 
     def __init__(
-        self,
-        uac: ArrayNx2,
-        fiber_angles: Array1d,
-        anatomical_tags: Array1d,
+        self, uac: ArrayNx2, fiber_angles: Array1d, anatomical_tags: Array1d
     ) -> None:
         self.uac = uac
         self.fiber_angles = fiber_angles

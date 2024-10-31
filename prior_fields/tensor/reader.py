@@ -243,18 +243,12 @@ def collect_data_from_human_atrial_fiber_meshes() -> DataUAC:
     uac = np.vstack([uac_dict[i] for i in keys])
     fibers = np.vstack([fibers_dict[i] for i in keys])
     tags = np.hstack([tags_dict[i] for i in keys])
-    directions_constant_beta = np.vstack(
-        [directions_constant_beta_dict[i] for i in keys]
-    )
-    directions_constant_alpha = np.vstack(
-        [directions_constant_alpha_dict[i] for i in keys]
-    )
+    alpha_axes = np.vstack([directions_constant_beta_dict[i] for i in keys])
+    beta_axes = np.vstack([directions_constant_alpha_dict[i] for i in keys])
 
-    fiber_angles = get_angles_in_tangent_space(
-        fibers, directions_constant_beta, directions_constant_alpha
-    )
+    _validate_uac_bases(alpha_axes, beta_axes)
 
-    _validate_uac_bases(directions_constant_beta, directions_constant_alpha)
+    fiber_angles = get_angles_in_tangent_space(fibers, alpha_axes, beta_axes)
 
     return DataUAC(uac, fiber_angles, tags)
 
