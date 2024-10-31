@@ -1,21 +1,32 @@
 # %%
+from pathlib import Path
+
 from prior_fields.prior.converter import scale_mesh_to_unit_cube
-from prior_fields.tensor.conduction_velocity import (
-    get_conduction_velocity,
-    get_longitudinal_and_transversal_velocities_for_tags,
-)
+from prior_fields.prior.prior import BiLaplacianPriorNumpyWrapper
+from prior_fields.tensor.conduction_velocity import sample_to_cv_tensor
+from prior_fields.tensor.parameters import Geometry, PriorParameters
 from prior_fields.tensor.reader import (
     read_atrial_mesh_with_fibers_and_tags_mapped_to_vertices,
 )
-from prior_fields.tensor.tangent_space import get_fiber_parameters_in_vhm_bases
+from prior_fields.tensor.tangent_space import get_reference_coordinates
+
+geometry = Geometry(1)
 
 # %%
-V, F, uac, fibers, tags = read_atrial_mesh_with_fibers_and_tags_mapped_to_vertices("A")
+V, F, uac, fibers, tags = read_atrial_mesh_with_fibers_and_tags_mapped_to_vertices(
+    geometry
+)
 V = scale_mesh_to_unit_cube(V)
-angles, _, basis_x, basis_y = get_fiber_parameters_in_vhm_bases(V, F, uac)
+basis_x, basis_y, _ = get_reference_coordinates(V, F)
+params = PriorParameters.load(Path(f"data/parameters/params_{geometry.value}.npy"))
 
 # %%
-velocities_l, velocities_t = get_longitudinal_and_transversal_velocities_for_tags(tags)
-cv_tensor = get_conduction_velocity(angles, velocities_l, velocities_t, basis_x, basis_y)
+prior = BiLaplacianPriorNumpyWrapper(
+    V, F, sigma=params.sigma, ell=params.ell, mean=params.mean
+)
+
+# %%
+cv_tensor = sample_to_cv_tensor(prior.sample(), tags, basis_x, basis_y)
+cv_tensor
 
 # %%

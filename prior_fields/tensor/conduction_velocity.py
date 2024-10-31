@@ -5,7 +5,10 @@ from typing import overload
 import numpy as np
 
 from prior_fields.prior.dtypes import Array1d, ArrayNx3, ArrayNx3x3
-from prior_fields.tensor.transformer import angles_to_2d_vector_coefficients
+from prior_fields.tensor.transformer import (
+    angles_to_2d_vector_coefficients,
+    sample_to_angles,
+)
 
 
 class AnatomicalTag(IntEnum):
@@ -155,6 +158,11 @@ def get_conduction_velocity(
     basis_y : ArrayNx3
         Array where the n-th row is another vector in the tangent space at vertex n which
         is orthogonal to `basis_x`.
+
+    Returns
+    -------
+    ArrayNx3x3
+        Conduction velocity tensors at each vertex.
     """
     coeff_x, coeff_y = angles_to_2d_vector_coefficients(angles)
     direction_l = (coeff_x * basis_x.T + coeff_y * basis_y.T).T
@@ -164,3 +172,33 @@ def get_conduction_velocity(
     tensor_t = np.einsum("i,ij,ik->ijk", velocities_t**2, direction_t, direction_t)
 
     return tensor_l + tensor_t
+
+
+def sample_to_cv_tensor(
+    sample: Array1d, tags: Array1d, basis_x: ArrayNx3, basis_y: ArrayNx3
+) -> ArrayNx3x3:
+    """
+    Compute conduction velocity tensors from prior sample, anatomical tags and vhm basis.
+
+    Parameters
+    ----------
+    sample : Array1d
+        Sample of a `BiLaplacianPriorNumpyWrapper`.
+    tags : Array1d
+        Anatomical tags used to parameterize the velocities.
+    basis_x : ArrayNx3
+        Array where the n-th row is a vector in the tangent space at vertex n.
+    basis_y : ArrayNx3
+        Array where the n-th row is another vector in the tangent space at vertex n which
+        is orthogonal to `basis_x`.
+
+    Returns
+    -------
+    ArrayNx3x3
+        Conduction velocity tensors at each vertex.
+    """
+    angles = sample_to_angles(sample)
+    velocities_l, velocities_t = get_longitudinal_and_transversal_velocities_for_tags(
+        tags
+    )
+    return get_conduction_velocity(angles, velocities_l, velocities_t, basis_x, basis_y)

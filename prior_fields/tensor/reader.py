@@ -1,7 +1,6 @@
 import re
 from math import degrees
 from pathlib import Path
-from typing import Literal
 
 import meshio
 import numpy as np
@@ -13,6 +12,7 @@ from prior_fields.tensor.mapper import (
     map_categories_from_faces_to_vertices,
     map_vectors_from_faces_to_vertices,
 )
+from prior_fields.tensor.parameters import Geometry
 from prior_fields.tensor.tangent_space import (
     get_angles_in_tangent_space,
     get_uac_basis_vectors,
@@ -21,7 +21,7 @@ from prior_fields.tensor.transformer import angles_between_vectors
 
 
 def read_raw_atrial_mesh(
-    geometry: int | Literal["A"],
+    geometry: Geometry,
 ) -> tuple[ArrayNx3, ArrayNx3, ArrayNx2, ArrayNx3, Array1d]:
     """
     Read vertices, faces, UAC, fibers, and anatomical tags from .vtk file.
@@ -43,9 +43,11 @@ def read_raw_atrial_mesh(
         universal atrial coordinates of the vertices,
         and fiber orientation and anatomical structure tag for each face.
     """
-    logger.info(f"Read data for geometry {geometry}...")
+    logger.info(f"Read data for geometry {geometry.value}...")
 
-    mesh = meshio.read(f"data/LGE-MRI-based/{geometry}/LA_Endo_{geometry}.vtk")
+    mesh = meshio.read(
+        f"data/LGE-MRI-based/{geometry.value}/LA_Endo_{geometry.value}.vtk"
+    )
 
     # vertices and faces
     V = mesh.points
@@ -65,9 +67,7 @@ def read_raw_atrial_mesh(
     return V, F, uac, fibers, tag
 
 
-def _extract_anatomical_tags_from_file(
-    geometry: int | Literal["A"],
-) -> Array1d:
+def _extract_anatomical_tags_from_file(geometry: Geometry) -> Array1d:
     """
     Read anatomical structure tags at faces from .elem file.
 
@@ -82,10 +82,10 @@ def _extract_anatomical_tags_from_file(
         Array of anatomical tags at faces.
     """
 
-    pattern = re.compile(rf"Labelled_{geometry}_.*\.elem$")
+    pattern = re.compile(rf"Labelled_{geometry.value}_.*\.elem$")
     elem_file = next(
         f
-        for f in Path(f"data/LGE-MRI-based/{geometry}/").iterdir()
+        for f in Path(f"data/LGE-MRI-based/{geometry.value}/").iterdir()
         if pattern.match(f.name)
     )
 
@@ -102,7 +102,7 @@ def _extract_anatomical_tags_from_file(
 
 
 def read_atrial_mesh_with_fibers_and_tags_mapped_to_vertices(
-    geometry: int | Literal["A"],
+    geometry: Geometry,
 ) -> tuple[ArrayNx3, ArrayNx3, ArrayNx2, ArrayNx3, Array1d]:
     """
     Read vertices, faces, UAC, fibers, and anatomical tags from .vtk file and map fibers
