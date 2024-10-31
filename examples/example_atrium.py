@@ -7,11 +7,10 @@ from scipy.spatial import KDTree
 from prior_fields.prior.converter import scale_mesh_to_unit_cube
 from prior_fields.prior.plots import get_poly_data
 from prior_fields.prior.prior import BiLaplacianPriorNumpyWrapper
-from prior_fields.tensor.fiber_grid import get_fiber_parameters_from_uac_data
 from prior_fields.tensor.reader import (
     read_atrial_mesh_with_fibers_and_tags_mapped_to_vertices,
 )
-from prior_fields.tensor.tangent_space import get_uac_basis_vectors
+from prior_fields.tensor.tangent_space import get_fiber_parameters_in_vhm_bases
 from prior_fields.tensor.transformer import (
     angles_to_3d_vector,
     angles_to_sample,
@@ -29,7 +28,9 @@ V = scale_mesh_to_unit_cube(V_raw)
 # Set parameters #
 ##################
 # %%
-mean_fiber_angle, var_fiber_angle, _ = get_fiber_parameters_from_uac_data(uac, k=100)
+mean_fiber_angle, var_fiber_angle, x_axes, y_axes = get_fiber_parameters_in_vhm_bases(
+    V, F, uac
+)
 
 sample_mean = angles_to_sample(mean_fiber_angle)
 sigma = np.sqrt(var_fiber_angle)
@@ -91,7 +92,6 @@ plt.show()
 # %%
 sample = prior.sample()
 angles = sample_to_angles(sample)
-x_axes, y_axes = get_uac_basis_vectors(V, F, uac)
 vector_field = angles_to_3d_vector(angles=angles, x_axes=x_axes, y_axes=y_axes)
 
 plotter = Plotter()

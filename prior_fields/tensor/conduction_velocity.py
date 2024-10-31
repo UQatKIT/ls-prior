@@ -142,14 +142,6 @@ def get_conduction_velocity(
         :math:`l(x) = -sin(\\alpha) e_1(x) + cos(\\alpha) e_2(x)`
     for basis vectors (e_1, e_2).
 
-    Note
-    ----
-    For the UAC-based bases of the tangent spaces, `basis_x` and `basis_y` are not
-    orthogonal. Therefore, the angles are interpreted based on `basis_x` and `basis_y` as
-    explained in `vector_coefficients_2d_to_angles()` and :math:`cos(\\alpha)` and
-    :math:`sin(\\alpha)` are replaced by the coefficients obtained from
-    `angles_to_2d_vector_coefficients()`.
-
     Parameters
     ----------
     angles : Array1d
@@ -161,7 +153,8 @@ def get_conduction_velocity(
     basis_x : ArrayNx3
         Array where the n-th row is a vector in the tangent space at vertex n.
     basis_y : ArrayNx3
-        Array where the n-th row is another vector in the tangent space at vertex n.
+        Array where the n-th row is another vector in the tangent space at vertex n which
+        is orthogonal to `basis_x`.
     """
     coeff_x, coeff_y = angles_to_2d_vector_coefficients(angles)
     direction_l = (coeff_x * basis_x.T + coeff_y * basis_y.T).T

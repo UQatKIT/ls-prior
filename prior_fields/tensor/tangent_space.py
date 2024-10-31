@@ -3,8 +3,13 @@ from loguru import logger
 from potpourri3d import MeshVectorHeatSolver
 
 from prior_fields.prior.dtypes import Array1d, ArrayNx2, ArrayNx3
+from prior_fields.tensor.fiber_grid import get_fiber_parameters_from_uac_data
 from prior_fields.tensor.mapper import get_coefficients, map_fibers_to_tangent_space
-from prior_fields.tensor.transformer import normalize, vector_coefficients_2d_to_angles
+from prior_fields.tensor.transformer import (
+    angles_to_3d_vector,
+    normalize,
+    vector_coefficients_2d_to_angles,
+)
 
 
 def get_reference_coordinates(
@@ -223,3 +228,19 @@ def get_angles_in_tangent_space(
     coeffs_x, coeffs_y = get_coefficients(fibers_tangent_space, basis_x, basis_y)
     fiber_angles = vector_coefficients_2d_to_angles(coeffs_x, coeffs_y)
     return fiber_angles
+
+
+def get_fiber_parameters_in_vhm_bases(
+    V: ArrayNx3, F: ArrayNx3, uac: ArrayNx2, k: int = 100
+) -> tuple[Array1d, Array1d, ArrayNx3, ArrayNx3]:
+    mean_angle_uac, var_angle, _ = get_fiber_parameters_from_uac_data(uac, k=k)
+
+    alpha_axes, beta_axes = get_uac_basis_vectors(V, F, uac)
+    mean_fibers = angles_to_3d_vector(
+        angles=mean_angle_uac, x_axes=alpha_axes, y_axes=beta_axes
+    )
+
+    x_axes, y_axes, _ = get_reference_coordinates(V, F)
+    mean_angle = get_angles_in_tangent_space(mean_fibers, x_axes, y_axes)
+
+    return mean_angle, var_angle, x_axes, y_axes
