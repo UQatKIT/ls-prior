@@ -101,7 +101,7 @@ def angles_to_2d_vector_coefficients(angles: Array1d) -> tuple[Array1d, Array1d]
 
 def angles_to_sample(angles: np.ndarray) -> np.ndarray:
     """Inverse of the sigmoid-like transformation from (-pi/2, pi/2) to (-inf, inf)."""
-    epsilon = 1e-6
+    epsilon = 1e-9
     y = np.clip(angles, -np.pi / 2 + epsilon, np.pi / 2 - epsilon)
     return np.log((0.5 * np.pi + y) / (0.5 * np.pi - y))
 

@@ -105,7 +105,6 @@ def map_fibers_to_tangent_space(fibers: ArrayNx3, x: ArrayNx3, y: ArrayNx3) -> A
 
     # Exclude fibers which are almost orthogonal to tangent space
     thresh = 0.25  # corresponds to approximately 75 degrees
-    # thresh = 0.5  # corresponds to 60 degrees
     mask_orthogonal = (abs(fiber_coeff_x) < thresh) & (abs(fiber_coeff_y) < thresh)
 
     logger.warning(
