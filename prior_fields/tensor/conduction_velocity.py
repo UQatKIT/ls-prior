@@ -128,7 +128,7 @@ def get_longitudinal_and_transversal_velocities_for_tags(
     return velocities_l, velocities_t
 
 
-def get_conduction_velocity(
+def get_conduction_velocity_tensor(
     angles: Array1d,
     velocities_l: Array1d,
     velocities_t: Array1d,
@@ -201,4 +201,6 @@ def sample_to_cv_tensor(
     velocities_l, velocities_t = get_longitudinal_and_transversal_velocities_for_tags(
         tags
     )
-    return get_conduction_velocity(angles, velocities_l, velocities_t, basis_x, basis_y)
+    return get_conduction_velocity_tensor(
+        angles, velocities_l, velocities_t, basis_x, basis_y
+    )
