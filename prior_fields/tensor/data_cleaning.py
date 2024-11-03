@@ -5,47 +5,6 @@ import numpy as np
 from prior_fields.prior.dtypes import ArrayNx3
 
 
-def remove_vertex_from_mesh(
-    idx: int, V: ArrayNx3, F: ArrayNx3, fibers: ArrayNx3
-) -> tuple[ArrayNx3, ArrayNx3, ArrayNx3]:
-    """
-    Remove vertex, corresponding fibers, and related faces from mesh.
-
-    Parameters
-    ----------
-    idx : int
-        Index of vertex to be removed.
-    V : ArrayNx3
-        Vertex coordinates.
-    F : ArrayNx3
-        Triangular faces connecting vertex indices.
-    fibers : ArrayNx3
-        3d fiber directions at vertices.
-
-    Returns
-    -------
-    (ArrayNx3, ArrayNx3, ArrayNx3)
-        V, F, fibers without vertex with given index.
-    """
-    org_size = V.shape[0]
-
-    # Remove faces containing the vertex to be removed.
-    F = np.delete(F, np.where(F == idx)[0], axis=0)
-
-    # TODO if this works, move to private method to avoid code duplication with io.py
-    # Identify and remove unreferenced vertices
-    referenced_indices = np.unique(F)
-    V = V[referenced_indices]
-    fibers = fibers[referenced_indices]
-
-    # Reindex F_endo to ensure correct references after removing vertices
-    reindex_map = -1 * np.ones(org_size, dtype=int)
-    reindex_map[referenced_indices] = np.arange(referenced_indices.shape[0])
-    F = reindex_map[F]
-
-    return V, F, fibers
-
-
 def _get_duplicate_edges(F: ArrayNx3) -> list[list[int]]:
     """
     Get list of directed edges that belong to more than one face.
