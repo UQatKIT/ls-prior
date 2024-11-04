@@ -3,16 +3,15 @@ from dolfin import BoundaryMesh, Expression, FunctionSpace, Mesh, UnitSquareMesh
 from pyvista import Plotter
 
 from prior_fields.prior.converter import (
-    create_triangle_mesh_from_coordinates,
     expression_to_vector,
     function_to_numpy,
-    numpy_to_function,
     scale_mesh_to_unit_cube,
     str_to_function,
     str_to_vector,
 )
 from prior_fields.prior.plots import get_poly_data, plot_function
 from prior_fields.prior.prior import BiLaplacianPrior, BiLaplacianPriorNumpyWrapper
+from prior_fields.tensor.parameters import Geometry
 from prior_fields.tensor.plots import initialize_vector_field_plotter
 from prior_fields.tensor.reader import (
     read_all_human_atrial_fiber_meshes,
@@ -124,19 +123,14 @@ plotter.save_graphic(filename="figures/atrial_geometries.eps")
 plotter.show()
 
 # %%
-V_raw, F, uac, _, _ = read_atrial_mesh_with_fibers_and_tags_mapped_to_vertices("A")
+V_raw, F, uac, _, _ = read_atrial_mesh_with_fibers_and_tags_mapped_to_vertices(
+    Geometry(2)
+)
 V = scale_mesh_to_unit_cube(V_raw)
 
 # %%
-mesh = create_triangle_mesh_from_coordinates(V, F)
-prior = BiLaplacianPrior(mesh, sigma=0.2, ell=0.1, seed=1)
+prior = BiLaplacianPriorNumpyWrapper(V, F, sigma=0.2, ell=0.1, seed=1)
 sample = prior.sample()
 plot_function(sample, file="figures/priors/atrium_baseline_sample.eps")
-
-# %%
-# TODO: broken (plotting of vertex values doesn't work or definition of vertex values is wrong)
-prior = BiLaplacianPriorNumpyWrapper(V, F, sigma=0.2, ell=0.1)
-sample = prior.sample()
-plot_function(numpy_to_function(sample, prior._prior.Vh))
 
 # %%

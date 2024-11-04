@@ -5,7 +5,7 @@ import numpy as np
 from dolfin import Function, plot
 from pyvista import Plotter, PolyData
 
-from prior_fields.prior.dtypes import ArrayNx3
+from prior_fields.prior.dtypes import Array1d, ArrayNx3
 
 
 def get_poly_data(V: ArrayNx3, F: ArrayNx3) -> PolyData:
@@ -68,3 +68,24 @@ def plot_function(
             plotter.save_graphic(filename=file)
 
         plotter.show(window_size=(500, 500))
+
+
+def plot_sample_from_numpy_wrapper(
+    s: Array1d,
+    V: ArrayNx3,
+    F: ArrayNx3,
+    show_mesh: bool = False,
+    title: str = "",
+    file: Path | str | None = None,
+) -> None:
+    plotter = Plotter()
+    plotter.add_text(title)
+
+    plotter.add_mesh(get_poly_data(V, F), scalars=s, show_edges=show_mesh)
+    plotter.add_axes(x_color="black", y_color="black", z_color="black")
+    plotter.camera.zoom(1.25)
+
+    if file:
+        plotter.save_graphic(filename=file)
+
+    plotter.show(window_size=(500, 500))
