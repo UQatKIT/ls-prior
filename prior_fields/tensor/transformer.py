@@ -103,9 +103,9 @@ def angles_to_sample(angles: np.ndarray) -> np.ndarray:
     """Inverse of the sigmoid-like transformation from (-pi/2, pi/2) to (-inf, inf)."""
     epsilon = 1e-9
     y = np.clip(angles, -np.pi / 2 + epsilon, np.pi / 2 - epsilon)
-    return np.log((0.5 * np.pi + y) / (0.5 * np.pi - y))
+    return 4 * np.log((0.5 * np.pi + y) / (0.5 * np.pi - y))
 
 
 def sample_to_angles(x: Array1d) -> Array1d:
     """Sigmoid-like transformations of values in (-inf, inf) to (-pi/2, pi/2)."""
-    return np.pi * (1 / (1 + np.exp(-x)) - 0.5)
+    return np.pi * (1 / (1 + np.exp(-x / 4)) - 0.5)
