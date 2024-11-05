@@ -9,7 +9,11 @@ from prior_fields.prior.converter import (
     str_to_function,
     str_to_vector,
 )
-from prior_fields.prior.plots import get_poly_data, plot_function
+from prior_fields.prior.plots import (
+    get_poly_data,
+    plot_function,
+    plot_sample_from_numpy_wrapper,
+)
 from prior_fields.prior.prior import BiLaplacianPrior, BiLaplacianPriorNumpyWrapper
 from prior_fields.tensor.parameters import Geometry
 from prior_fields.tensor.plots import initialize_vector_field_plotter
@@ -131,6 +135,8 @@ V = scale_mesh_to_unit_cube(V_raw)
 # %%
 prior = BiLaplacianPriorNumpyWrapper(V, F, sigma=0.2, ell=0.1, seed=1)
 sample = prior.sample()
-plot_function(sample, file="figures/priors/atrium_baseline_sample.eps")
+plot_sample_from_numpy_wrapper(
+    sample, V=V, F=F, file="figures/priors/atrium_baseline_sample.eps"
+)
 
 # %%
