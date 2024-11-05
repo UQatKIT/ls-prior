@@ -453,14 +453,14 @@ class BiLaplacianPriorNumpyWrapper:
             sigma=(
                 sigma
                 if isinstance(sigma, float)
-                else numpy_to_vector(sigma, Vh, use_vertex_to_dof_map=True)
+                else numpy_to_vector(sigma, Vh, map_vertex_values_to_dof=True)
             ),
             ell=(
                 ell
                 if isinstance(ell, float)
-                else numpy_to_vector(ell, Vh, use_vertex_to_dof_map=True)
+                else numpy_to_vector(ell, Vh, map_vertex_values_to_dof=True)
             ),
-            mean=numpy_to_vector(self.mean, Vh, use_vertex_to_dof_map=True),
+            mean=numpy_to_vector(self.mean, Vh, map_vertex_values_to_dof=True),
             seed=seed,
         )
 
@@ -490,7 +490,7 @@ class BiLaplacianPriorNumpyWrapper:
             :math:`0.5 * (m - mean)' A M^{-1} A (m - mean)`
         """
         return self._prior.cost(
-            numpy_to_vector(m, self._prior.Vh, use_vertex_to_dof_map=True)
+            numpy_to_vector(m, self._prior.Vh, map_vertex_values_to_dof=True)
         )
 
     def grad(self, m: Array1d) -> Array1d:
@@ -509,10 +509,10 @@ class BiLaplacianPriorNumpyWrapper:
         """
         return vector_to_numpy(
             self._prior.grad(
-                numpy_to_vector(m, self._prior.Vh, use_vertex_to_dof_map=True)
+                numpy_to_vector(m, self._prior.Vh, map_vertex_values_to_dof=True)
             ),
             self._prior.Vh,
-            use_vertex_to_dof_map=True,
+            get_vertex_values=True,
         )
 
     def compute_hessian_vector_product(self, d: Array1d) -> Array1d:
@@ -530,7 +530,7 @@ class BiLaplacianPriorNumpyWrapper:
             :math:`A M^{-1} A d`
         """
         return self._prior.compute_hessian_vector_product(
-            numpy_to_vector(d, self._prior.Vh, use_vertex_to_dof_map=True)
+            numpy_to_vector(d, self._prior.Vh, map_vertex_values_to_dof=True)
         )
 
     def _validate_inputs(self, sigma, ell):

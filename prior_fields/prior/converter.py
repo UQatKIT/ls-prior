@@ -22,13 +22,13 @@ from prior_fields.prior.dtypes import Array1d, Array2d, ArrayNx2, ArrayNx3
 # Convert numpy/dolfin/petsc types #
 ####################################
 def vector_to_numpy(
-    v: Vector, Vh: FunctionSpace | None = None, use_vertex_to_dof_map: bool = False
+    v: Vector, Vh: FunctionSpace | None = None, get_vertex_values: bool = False
 ) -> Array1d:
-    if use_vertex_to_dof_map:
+    if get_vertex_values:
         if FunctionSpace is None:
             raise ValueError(
                 "Need function space in order to map the values "
-                "from the vertices to the DOFs."
+                "from the DOFs to the vertices."
             )
         return v.get_local()[vertex_to_dof_map(Vh)]
     else:
@@ -36,13 +36,13 @@ def vector_to_numpy(
 
 
 def numpy_to_vector(
-    a: Array1d, Vh: FunctionSpace | None = None, use_vertex_to_dof_map: bool = False
+    a: Array1d, Vh: FunctionSpace | None = None, map_vertex_values_to_dof: bool = False
 ) -> Vector:
-    if use_vertex_to_dof_map:
+    if map_vertex_values_to_dof:
         if FunctionSpace is None:
             raise ValueError(
                 "Need function space in order to map the values "
-                "from the DOFS to the vertices."
+                "from the vertices to the DOFs."
             )
         a = a[np.argsort(vertex_to_dof_map(Vh))]
     v = Vector()
@@ -67,8 +67,8 @@ def expression_to_vector(expr: Expression, Vh: FunctionSpace) -> Vector:
     return function_to_vector(expression_to_function(expr, Vh))
 
 
-def function_to_numpy(f: Function, use_vertex_to_dof_map: bool = False) -> Array1d:
-    if use_vertex_to_dof_map:
+def function_to_numpy(f: Function, get_vertex_values: bool = False) -> Array1d:
+    if get_vertex_values:
         mesh = f.ufl_function_space().mesh()
         return f.compute_vertex_values(mesh)
     else:
@@ -76,9 +76,9 @@ def function_to_numpy(f: Function, use_vertex_to_dof_map: bool = False) -> Array
 
 
 def numpy_to_function(
-    a: Array1d, Vh: FunctionSpace, use_vertex_to_dof_map: bool = False
+    a: Array1d, Vh: FunctionSpace, map_vertex_values_to_dof: bool = False
 ) -> Function:
-    if use_vertex_to_dof_map:
+    if map_vertex_values_to_dof:
         a = a[np.argsort(vertex_to_dof_map(Vh))]
     f = Function(Vh)
     f.vector().set_local(a)

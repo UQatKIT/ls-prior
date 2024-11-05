@@ -249,9 +249,7 @@ def test_bilaplacianprior_from_wrapper_cost_is_zero_at_true_mean(request, mesh, 
     F = mesh.cells()
 
     # Convert mean expression to array ordered as the vertices in `V`
-    mean_array = vector_to_numpy(
-        str_to_vector(mean, mesh), Vh, use_vertex_to_dof_map=True
-    )
+    mean_array = vector_to_numpy(str_to_vector(mean, mesh), Vh, get_vertex_values=True)
     prior = BiLaplacianPriorNumpyWrapper(V, F, 5.0, 1.0, mean=mean_array)
 
     assert prior.cost(mean_array) == 0
@@ -279,9 +277,7 @@ def test_bilaplacianprior_from_wrapper_cost_decreases_towards_mean(request, mesh
     F = mesh.cells()
 
     # Convert mean expression to array ordered as the vertices in `V`
-    mean_array = vector_to_numpy(
-        str_to_vector(mean, mesh), Vh, use_vertex_to_dof_map=True
-    )
+    mean_array = vector_to_numpy(str_to_vector(mean, mesh), Vh, get_vertex_values=True)
 
     mean_approx = mean_array + np.ones_like(mean_array) / 1000
     mean_approx_worse = mean_array + np.ones_like(mean_array) / 900
@@ -314,9 +310,7 @@ def test_bilaplacianprior_from_wrapper_grad_is_zero_at_true_mean(request, mesh, 
     F = mesh.cells()
 
     # Convert mean expression to array ordered as the vertices in `V`
-    mean_array = vector_to_numpy(
-        str_to_vector(mean, mesh), Vh, use_vertex_to_dof_map=True
-    )
+    mean_array = vector_to_numpy(str_to_vector(mean, mesh), Vh, get_vertex_values=True)
     prior = BiLaplacianPriorNumpyWrapper(V, F, 5.0, 1.0, mean=mean_array)
     grad = prior.grad(mean_array)
 
@@ -348,9 +342,7 @@ def test_bilaplacianprior_from_wrapper_negative_grad_points_towards_true_mean(
     F = mesh.cells()
 
     # Convert mean expression to array ordered as the vertices in `V`
-    mean_array = vector_to_numpy(
-        str_to_vector(mean, mesh), Vh, use_vertex_to_dof_map=True
-    )
+    mean_array = vector_to_numpy(str_to_vector(mean, mesh), Vh, get_vertex_values=True)
     mean_approx = np.random.normal(0, 1, mean_array.shape)
 
     prior = BiLaplacianPriorNumpyWrapper(V, F, 5.0, 1.0, mean=mean_array)
