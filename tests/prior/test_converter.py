@@ -5,7 +5,9 @@ from dolfin import FunctionSpace, UnitSquareMesh
 from prior_fields.prior.converter import (
     function_to_numpy,
     numpy_to_function,
+    numpy_to_vector,
     scale_mesh_to_unit_cube,
+    vector_to_numpy,
 )
 from prior_fields.prior.prior import BiLaplacianPriorNumpyWrapper
 from prior_fields.tensor.parameters import Geometry
@@ -45,3 +47,13 @@ def test_numpy_to_function_reverts_compute_vertex_values_on_atrium(atlas_mesh):
 
     np.testing.assert_array_equal(function_to_numpy(s_function), s_numpy)
     np.testing.assert_array_equal(s_function.compute_vertex_values(mesh), s_numpy)
+
+
+def test_numpy_to_vector_reverts_vector_to_numpy():
+    mesh = UnitSquareMesh(64, 64)
+    Vh = FunctionSpace(mesh, "CG", 1)
+
+    s_numpy = np.random.standard_normal(mesh.num_vertices())
+    s_vector = numpy_to_vector(s_numpy, Vh)
+
+    np.testing.assert_array_equal(vector_to_numpy(s_vector, Vh), s_numpy)

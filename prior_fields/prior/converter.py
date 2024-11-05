@@ -21,8 +21,8 @@ from prior_fields.prior.dtypes import Array1d, Array2d, ArrayNx2, ArrayNx3
 ####################################
 # Convert numpy/dolfin/petsc types #
 ####################################
-def vector_to_numpy(v: Vector) -> Array1d:
-    return v.get_local()
+def vector_to_numpy(v: Vector, Vh: FunctionSpace) -> Array1d:
+    return v.get_local()[vertex_to_dof_map(Vh)]
 
 
 def matrix_to_numpy(M: Matrix) -> Array2d:
@@ -42,7 +42,7 @@ def expression_to_vector(expr: Expression, Vh: FunctionSpace) -> Vector:
 
 
 def expression_to_numpy(expr: Expression, Vh: FunctionSpace) -> Array1d:
-    return vector_to_numpy(expression_to_vector(expr, Vh))
+    return vector_to_numpy(expression_to_vector(expr, Vh), Vh)
 
 
 def function_to_numpy(f: Function) -> Array1d:
@@ -65,10 +65,11 @@ def numpy_to_function(a: Array1d, Vh: FunctionSpace) -> Function:
     return f
 
 
-def numpy_to_vector(a: Array1d) -> Vector:
+def numpy_to_vector(a: Array1d, Vh: FunctionSpace) -> Vector:
+    a_ordered = a[np.argsort(vertex_to_dof_map(Vh))]
     v = Vector()
     v.init(len(a))
-    v.set_local(a)
+    v.set_local(a_ordered)
     return v
 
 

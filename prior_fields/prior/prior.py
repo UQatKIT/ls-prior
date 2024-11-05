@@ -135,7 +135,7 @@ class BiLaplacianPrior:
         self.Vh = FunctionSpace(mesh, "CG", 1)
         trial, test = self._init_trial_test_functions(self.Vh)
 
-        self.kappa, self.tau, self.beta = self._init_parameters(sigma, ell)
+        self.kappa, self.tau, self.beta = self._init_parameters(sigma, ell, self.Vh)
 
         self.theta = theta
 
@@ -162,8 +162,9 @@ class BiLaplacianPrior:
         dl.Function
             bi-Laplacian sample
         """
+        # ~ N(0, I)
+        noise = random_normal_vector(dim=self.sqrtM.size(1), prng=self.prng, Vh=self.Vh)
 
-        noise = random_normal_vector(dim=self.sqrtM.size(1), prng=self.prng)  # ~ N(0, I)
         return self._transform_standard_normal_noise_with_mean_and_covariance(noise)
 
     def cost(self, m: Vector) -> float:
@@ -235,11 +236,13 @@ class BiLaplacianPrior:
         if not (isinstance(ell, float) or hasattr(ell, "get_local")):
             raise TypeError(f"Got ell of type {type(ell)}, expected float or dl.Vector.")
 
-    def _init_parameters(self, sigma: float | Vector, ell: float | Vector):
+    def _init_parameters(
+        self, sigma: float | Vector, ell: float | Vector, Vh: FunctionSpace
+    ):
         if not isinstance(sigma, float):
-            sigma = vector_to_numpy(sigma)
+            sigma = vector_to_numpy(sigma, Vh)
         if not isinstance(ell, float):
-            ell = vector_to_numpy(ell)
+            ell = vector_to_numpy(ell, Vh)
 
         kappa = get_kappa_from_ell(ell)
         tau = get_tau_from_sigma_and_ell(sigma, ell)
@@ -440,11 +443,14 @@ class BiLaplacianPriorNumpyWrapper:
         if self.mean is None:
             self.mean = np.zeros(V.shape[0])
 
+        mesh = create_triangle_mesh_from_coordinates(self.V, self.F)
+        Vh = FunctionSpace(mesh, "CG", 1)
+
         self._prior = BiLaplacianPrior(
-            mesh=create_triangle_mesh_from_coordinates(self.V, self.F),
-            sigma=sigma if isinstance(sigma, float) else numpy_to_vector(sigma),
-            ell=ell if isinstance(ell, float) else numpy_to_vector(ell),
-            mean=numpy_to_vector(self.mean),
+            mesh=mesh,
+            sigma=sigma if isinstance(sigma, float) else numpy_to_vector(sigma, Vh),
+            ell=ell if isinstance(ell, float) else numpy_to_vector(ell, Vh),
+            mean=numpy_to_vector(self.mean, Vh),
             seed=seed,
         )
 
@@ -473,7 +479,7 @@ class BiLaplacianPriorNumpyWrapper:
         float
             :math:`0.5 * (m - mean)' A M^{-1} A (m - mean)`
         """
-        return self._prior.cost(numpy_to_vector(m))
+        return self._prior.cost(numpy_to_vector(m, self._prior.Vh))
 
     def grad(self, m: Array1d) -> Array1d:
         """
@@ -489,7 +495,9 @@ class BiLaplacianPriorNumpyWrapper:
         Array1d
             :math:`A M^{-1} A (m - mean)`
         """
-        return vector_to_numpy(self._prior.grad(numpy_to_vector(m)))
+        return vector_to_numpy(
+            self._prior.grad(numpy_to_vector(m, self._prior.Vh)), self._prior.Vh
+        )
 
     def compute_hessian_vector_product(self, d: Array1d) -> Array1d:
         """
@@ -505,7 +513,9 @@ class BiLaplacianPriorNumpyWrapper:
         Array1d
             :math:`A M^{-1} A d`
         """
-        return self._prior.compute_hessian_vector_product(numpy_to_vector(d))
+        return self._prior.compute_hessian_vector_product(
+            numpy_to_vector(d, self._prior.Vh)
+        )
 
     def _validate_inputs(self, sigma, ell):
         if not (

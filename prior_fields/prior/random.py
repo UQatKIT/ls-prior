@@ -1,10 +1,10 @@
-from dolfin import Vector
+from dolfin import FunctionSpace, Vector
 from numpy.random import Generator
 
 from prior_fields.prior.converter import numpy_to_vector
 
 
-def random_normal_vector(dim: int, prng: Generator) -> Vector:
+def random_normal_vector(dim: int, prng: Generator, Vh: FunctionSpace) -> Vector:
     """
     Create a vector of standard normally distributed noise.
 
@@ -20,4 +20,4 @@ def random_normal_vector(dim: int, prng: Generator) -> Vector:
     dl.Vector
         Sample from standard normal distribution
     """
-    return numpy_to_vector(prng.standard_normal(size=dim))
+    return numpy_to_vector(prng.standard_normal(size=dim), Vh)
