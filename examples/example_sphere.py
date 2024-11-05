@@ -27,7 +27,7 @@ plot_function(sample, title="BiLaplacianPrior sample")
 # Gaussian field as angles of vector field #
 ############################################
 # %%
-angles = sample_to_angles(function_to_numpy(sample))
+angles = sample_to_angles(function_to_numpy(sample, use_vertex_to_dof_map=True))
 
 V = sphere_mesh.coordinates()
 F = sphere_mesh.cells()

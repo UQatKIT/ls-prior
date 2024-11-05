@@ -70,20 +70,21 @@ def plot_function(
         plotter.show(window_size=(500, 500))
 
 
-def plot_sample_from_numpy_wrapper(
+def plot_numpy_sample(
     s: Array1d,
     V: ArrayNx3,
     F: ArrayNx3,
     show_mesh: bool = False,
     title: str = "",
     file: Path | str | None = None,
+    zoom: float = 1.25,
 ) -> None:
     plotter = Plotter()
     plotter.add_text(title)
 
     plotter.add_mesh(get_poly_data(V, F), scalars=s, show_edges=show_mesh)
     plotter.add_axes(x_color="black", y_color="black", z_color="black")
-    plotter.camera.zoom(1.25)
+    plotter.camera.zoom(zoom)
 
     if file:
         plotter.save_graphic(filename=file)

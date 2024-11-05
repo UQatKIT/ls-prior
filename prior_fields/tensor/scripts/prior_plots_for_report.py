@@ -4,16 +4,11 @@ from pyvista import Plotter
 
 from prior_fields.prior.converter import (
     expression_to_vector,
-    function_to_numpy,
     scale_mesh_to_unit_cube,
     str_to_function,
     str_to_vector,
 )
-from prior_fields.prior.plots import (
-    get_poly_data,
-    plot_function,
-    plot_sample_from_numpy_wrapper,
-)
+from prior_fields.prior.plots import get_poly_data, plot_function, plot_numpy_sample
 from prior_fields.prior.prior import BiLaplacianPrior, BiLaplacianPriorNumpyWrapper
 from prior_fields.tensor.parameters import Geometry
 from prior_fields.tensor.plots import initialize_vector_field_plotter
@@ -86,9 +81,9 @@ V = sphere_mesh.coordinates()
 F = sphere_mesh.cells()
 x_axes, y_axes, _ = get_reference_coordinates(V, F)
 
-prior = BiLaplacianPrior(sphere_mesh_ordered, sigma=1.0, ell=0.1, seed=1)
+prior = BiLaplacianPriorNumpyWrapper(V, F, sigma=1.0, ell=0.1, seed=1)
 sample = prior.sample()
-plot_function(sample, file="figures/priors/sphere_prior_scalar_field.eps")
+plot_numpy_sample(sample, V, F, file="figures/priors/sphere_prior_scalar_field.eps")
 
 # %%
 plotter = initialize_vector_field_plotter(get_poly_data(V, F))
@@ -99,7 +94,7 @@ plotter.show()
 
 # %%
 vector_field = angles_to_3d_vector(
-    angles=sample_to_angles(function_to_numpy(sample)), x_axes=x_axes, y_axes=y_axes
+    angles=sample_to_angles(sample), x_axes=x_axes, y_axes=y_axes
 )
 
 plotter = initialize_vector_field_plotter(get_poly_data(V, F))
@@ -135,8 +130,8 @@ V = scale_mesh_to_unit_cube(V_raw)
 # %%
 prior = BiLaplacianPriorNumpyWrapper(V, F, sigma=0.2, ell=0.1, seed=1)
 sample = prior.sample()
-plot_sample_from_numpy_wrapper(
-    sample, V=V, F=F, file="figures/priors/atrium_baseline_sample.eps"
+plot_numpy_sample(
+    sample, V=V, F=F, file="figures/priors/atrium_baseline_sample.eps", zoom=1.0
 )
 
 # %%

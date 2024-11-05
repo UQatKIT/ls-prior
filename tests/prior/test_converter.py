@@ -16,15 +16,22 @@ from prior_fields.tensor.reader import (
 )
 
 
-def test_numpy_to_function_reverts_compute_vertex_values_on_unit_square():
+@pytest.mark.parametrize("use_vertex_to_dof_map", [True, False])
+def test_numpy_to_function_reverts_compute_vertex_values_on_unit_square(
+    use_vertex_to_dof_map,
+):
     mesh = UnitSquareMesh(64, 64)
     Vh = FunctionSpace(mesh, "CG", 1)
 
     s_numpy = np.random.standard_normal(mesh.num_vertices())
-    s_function = numpy_to_function(s_numpy, Vh)
+    s_function = numpy_to_function(
+        s_numpy, Vh, use_vertex_to_dof_map=use_vertex_to_dof_map
+    )
 
-    np.testing.assert_array_equal(function_to_numpy(s_function), s_numpy)
-    np.testing.assert_array_equal(s_function.compute_vertex_values(mesh), s_numpy)
+    np.testing.assert_array_equal(
+        function_to_numpy(s_function, use_vertex_to_dof_map=use_vertex_to_dof_map),
+        s_numpy,
+    )
 
 
 @pytest.fixture
@@ -36,24 +43,35 @@ def atlas_mesh():
     return V, F
 
 
-def test_numpy_to_function_reverts_compute_vertex_values_on_atrium(atlas_mesh):
+@pytest.mark.parametrize("use_vertex_to_dof_map", [True, False])
+def test_numpy_to_function_reverts_compute_vertex_values_on_atrium(
+    atlas_mesh, use_vertex_to_dof_map
+):
     V, F = atlas_mesh
     prior = BiLaplacianPriorNumpyWrapper(V, F, sigma=0.2, ell=0.1, seed=1)
     Vh = prior._prior.Vh
     mesh = Vh.mesh()
 
     s_numpy = np.random.standard_normal(mesh.num_vertices())
-    s_function = numpy_to_function(s_numpy, Vh)
+    s_function = numpy_to_function(
+        s_numpy, Vh, use_vertex_to_dof_map=use_vertex_to_dof_map
+    )
 
-    np.testing.assert_array_equal(function_to_numpy(s_function), s_numpy)
-    np.testing.assert_array_equal(s_function.compute_vertex_values(mesh), s_numpy)
+    np.testing.assert_array_equal(
+        function_to_numpy(s_function, use_vertex_to_dof_map=use_vertex_to_dof_map),
+        s_numpy,
+    )
 
 
-def test_numpy_to_vector_reverts_vector_to_numpy():
+@pytest.mark.parametrize("use_vertex_to_dof_map", [True, False])
+def test_numpy_to_vector_reverts_vector_to_numpy(use_vertex_to_dof_map):
     mesh = UnitSquareMesh(64, 64)
     Vh = FunctionSpace(mesh, "CG", 1)
 
     s_numpy = np.random.standard_normal(mesh.num_vertices())
-    s_vector = numpy_to_vector(s_numpy, Vh)
+    s_vector = numpy_to_vector(s_numpy, Vh, use_vertex_to_dof_map=use_vertex_to_dof_map)
 
-    np.testing.assert_array_equal(vector_to_numpy(s_vector, Vh), s_numpy)
+    np.testing.assert_array_equal(
+        vector_to_numpy(s_vector, Vh, use_vertex_to_dof_map=use_vertex_to_dof_map),
+        s_numpy,
+    )

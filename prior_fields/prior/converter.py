@@ -21,8 +21,34 @@ from prior_fields.prior.dtypes import Array1d, Array2d, ArrayNx2, ArrayNx3
 ####################################
 # Convert numpy/dolfin/petsc types #
 ####################################
-def vector_to_numpy(v: Vector, Vh: FunctionSpace) -> Array1d:
-    return v.get_local()[vertex_to_dof_map(Vh)]
+def vector_to_numpy(
+    v: Vector, Vh: FunctionSpace | None = None, use_vertex_to_dof_map: bool = False
+) -> Array1d:
+    if use_vertex_to_dof_map:
+        if FunctionSpace is None:
+            raise ValueError(
+                "Need function space in order to map the values "
+                "from the vertices to the DOFs."
+            )
+        return v.get_local()[vertex_to_dof_map(Vh)]
+    else:
+        return v.get_local()
+
+
+def numpy_to_vector(
+    a: Array1d, Vh: FunctionSpace | None = None, use_vertex_to_dof_map: bool = False
+) -> Vector:
+    if use_vertex_to_dof_map:
+        if FunctionSpace is None:
+            raise ValueError(
+                "Need function space in order to map the values "
+                "from the DOFS to the vertices."
+            )
+        a = a[np.argsort(vertex_to_dof_map(Vh))]
+    v = Vector()
+    v.init(len(a))
+    v.set_local(a)
+    return v
 
 
 def matrix_to_numpy(M: Matrix) -> Array2d:
@@ -41,36 +67,22 @@ def expression_to_vector(expr: Expression, Vh: FunctionSpace) -> Vector:
     return function_to_vector(expression_to_function(expr, Vh))
 
 
-def expression_to_numpy(expr: Expression, Vh: FunctionSpace) -> Array1d:
-    return vector_to_numpy(expression_to_vector(expr, Vh), Vh)
+def function_to_numpy(f: Function, use_vertex_to_dof_map: bool = False) -> Array1d:
+    if use_vertex_to_dof_map:
+        mesh = f.ufl_function_space().mesh()
+        return f.compute_vertex_values(mesh)
+    else:
+        return f.vector().get_local()
 
 
-def function_to_numpy(f: Function) -> Array1d:
-    """
-    Convert a dolfin function to a numpy array,
-    ordered according to `dolfin.vertex_to_dof_map(Vh)`.
-    """
-    mesh = f.ufl_function_space().mesh()
-    return f.compute_vertex_values(mesh)
-
-
-def numpy_to_function(a: Array1d, Vh: FunctionSpace) -> Function:
-    """
-    Convert a numpy array, which is ordered according to `dolfin.vertex_to_dof_map(Vh)`,
-    to a dolfin function.
-    """
-    a_ordered = a[np.argsort(vertex_to_dof_map(Vh))]
+def numpy_to_function(
+    a: Array1d, Vh: FunctionSpace, use_vertex_to_dof_map: bool = False
+) -> Function:
+    if use_vertex_to_dof_map:
+        a = a[np.argsort(vertex_to_dof_map(Vh))]
     f = Function(Vh)
-    f.vector().set_local(a_ordered)
+    f.vector().set_local(a)
     return f
-
-
-def numpy_to_vector(a: Array1d, Vh: FunctionSpace) -> Vector:
-    a_ordered = a[np.argsort(vertex_to_dof_map(Vh))]
-    v = Vector()
-    v.init(len(a))
-    v.set_local(a_ordered)
-    return v
 
 
 def numpy_to_matrix_sparse(M: csr_array) -> Matrix:
@@ -81,6 +93,9 @@ def numpy_to_matrix_sparse(M: csr_array) -> Matrix:
 
 
 def str_to_vector(s: str, mesh: Mesh) -> Vector:
+    """
+    Convert string to dolfin vector ordered according to the DOFs of the function space.
+    """
     expr = Expression(s, degree=1)
     Vh = FunctionSpace(mesh, "CG", 1)
     return expression_to_vector(expr, Vh)
