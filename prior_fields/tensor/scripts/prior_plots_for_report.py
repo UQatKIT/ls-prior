@@ -82,16 +82,15 @@ plot_function(sample, file="figures/priors/square_pointwise_sigma.png")
 mesh = Mesh("data/sphere.xml")  # tetrahedrons
 sphere_mesh = BoundaryMesh(mesh, "exterior", order=False)  # triangles
 sphere_mesh_ordered = BoundaryMesh(mesh, "exterior", order=True)
-
-prior = BiLaplacianPrior(sphere_mesh_ordered, sigma=0.2, ell=0.1, seed=1)
-sample = prior.sample()
-plot_function(sample, file="figures/priors/sphere_prior_scalar_field.eps")
-
-# %%
 V = sphere_mesh.coordinates()
 F = sphere_mesh.cells()
 x_axes, y_axes, _ = get_reference_coordinates(V, F)
 
+prior = BiLaplacianPrior(sphere_mesh_ordered, sigma=1.0, ell=0.1, seed=1)
+sample = prior.sample()
+plot_function(sample, file="figures/priors/sphere_prior_scalar_field.eps")
+
+# %%
 plotter = initialize_vector_field_plotter(get_poly_data(V, F))
 plotter.add_arrows(V, x_axes, mag=0.1, color="#009682")
 plotter.add_arrows(V, y_axes, mag=0.1, color="#009682")
@@ -107,6 +106,7 @@ plotter = initialize_vector_field_plotter(get_poly_data(V, F))
 plotter.add_arrows(V, vector_field, mag=0.16, color="#009682")
 plotter.save_graphic(filename="figures/priors/sphere_prior_vector_field.eps")
 plotter.show()
+
 
 ##########
 # Atrium #

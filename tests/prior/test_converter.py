@@ -1,6 +1,6 @@
 import numpy as np
 import pytest
-from dolfin import FunctionSpace, UnitSquareMesh, vertex_to_dof_map
+from dolfin import FunctionSpace, UnitSquareMesh
 
 from prior_fields.prior.converter import (
     function_to_numpy,
@@ -22,11 +22,7 @@ def test_numpy_to_function_reverts_compute_vertex_values_on_unit_square():
     s_function = numpy_to_function(s_numpy, Vh)
 
     np.testing.assert_array_equal(function_to_numpy(s_function), s_numpy)
-
-    s_numpy_reordered = s_numpy[vertex_to_dof_map(Vh)]
-    np.testing.assert_array_equal(
-        s_function.compute_vertex_values(mesh), s_numpy_reordered
-    )
+    np.testing.assert_array_equal(s_function.compute_vertex_values(mesh), s_numpy)
 
 
 @pytest.fixture
@@ -44,12 +40,8 @@ def test_numpy_to_function_reverts_compute_vertex_values_on_atrium(atlas_mesh):
     Vh = prior._prior.Vh
     mesh = Vh.mesh()
 
-    s_numpy = prior.sample()
+    s_numpy = np.random.standard_normal(mesh.num_vertices())
     s_function = numpy_to_function(s_numpy, Vh)
 
     np.testing.assert_array_equal(function_to_numpy(s_function), s_numpy)
-
-    s_numpy_reordered = s_numpy[vertex_to_dof_map(Vh)]
-    np.testing.assert_array_equal(
-        s_function.compute_vertex_values(mesh), s_numpy_reordered
-    )
+    np.testing.assert_array_equal(s_function.compute_vertex_values(mesh), s_numpy)

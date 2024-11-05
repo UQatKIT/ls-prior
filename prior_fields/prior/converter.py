@@ -1,3 +1,4 @@
+import numpy as np
 from dolfin import (
     Expression,
     Function,
@@ -9,6 +10,7 @@ from dolfin import (
     Vector,
     as_backend_type,
     interpolate,
+    vertex_to_dof_map,
 )
 from petsc4py.PETSc import Mat  # type: ignore
 from scipy.sparse import csr_array
@@ -44,12 +46,22 @@ def expression_to_numpy(expr: Expression, Vh: FunctionSpace) -> Array1d:
 
 
 def function_to_numpy(f: Function) -> Array1d:
-    return vector_to_numpy(function_to_vector(f))
+    """
+    Convert a dolfin function to a numpy array,
+    ordered according to `dolfin.vertex_to_dof_map(Vh)`.
+    """
+    mesh = f.ufl_function_space().mesh()
+    return f.compute_vertex_values(mesh)
 
 
 def numpy_to_function(a: Array1d, Vh: FunctionSpace) -> Function:
+    """
+    Convert a numpy array, which is ordered according to `dolfin.vertex_to_dof_map(Vh)`,
+    to a dolfin function.
+    """
+    a_ordered = a[np.argsort(vertex_to_dof_map(Vh))]
     f = Function(Vh)
-    f.vector().set_local(a)
+    f.vector().set_local(a_ordered)
     return f
 
 

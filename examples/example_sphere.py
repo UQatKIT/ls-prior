@@ -9,7 +9,7 @@ from prior_fields.tensor.tangent_space import get_reference_coordinates
 from prior_fields.tensor.transformer import angles_to_3d_vector, sample_to_angles
 
 # %%
-sigma = 0.1
+sigma = 5.0
 ell = 0.5
 
 mesh = Mesh("data/sphere.xml")  # tetrahedrons
