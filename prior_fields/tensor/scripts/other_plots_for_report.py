@@ -57,40 +57,41 @@ plt.show()
 geometry = Geometry(6)
 params = PriorParameters.load(Path(f"data/parameters/params_{geometry.value}.npy"))
 
-# %%
-s = np.random.normal(0, params.sigma.mean(), int(1e7))
-tanh_s = (np.pi / 2) * np.tanh(s)
-sigmoid_s = sample_to_angles(s)
-
-# %%
-kwargs = {
+trafo_kwargs = {
     "bins": np.linspace(-np.pi / 2, np.pi / 2, 100),
     "density": True,
-    "histtype": "step",
+    "color": "#009682",
 }
-
-plt.figure(figsize=(8, 5))
-
-plt.hist(tanh_s, label="tanh(s)", **kwargs)
-plt.hist(sigmoid_s, label="sigmoid(s)", **kwargs)
-
-plt.vlines([-np.pi / 2, np.pi / 2], 0, 0.6, lw=1, color="black")
-
-plt.legend()
-plt.show()
-
-print(f"Max tanh(s): {abs(tanh_s).max():.4f}")
-print(f"Max sigmoid(s): {abs(sigmoid_s).max():.4f}")
-
+sample_kwargs = {"bins": np.linspace(-25, 25, 100), "density": True, "color": "#4664aa"}
 
 # %%
-plt.figure(figsize=(8, 5))
+fig, ax = plt.subplots(2, 3, figsize=(10, 6))
 
-x = np.linspace(-15, 15, 1000)
-plt.plot(x, (np.pi / 2) * np.tanh(x), label="tanh(x)")
-plt.plot(x, sample_to_angles(x), label="sigmoid(x)")
+mean = 0
+sigma = params.sigma.mean()
+s = np.random.normal(mean, sigma, int(1e7))
+ax[0][0].hist(s, label=f"N({mean}, {sigma:.2f})", **sample_kwargs)
+ax[1][0].hist(sample_to_angles(s), **trafo_kwargs)
 
-plt.legend()
+mean = 0
+sigma = params.sigma.max()
+s = np.random.normal(mean, sigma, int(1e7))
+ax[0][1].hist(s, label=f"N({mean}, {sigma:.2f})", **sample_kwargs)
+ax[1][1].hist(sample_to_angles(s), **trafo_kwargs)
+
+mean = params.mean.max()
+sigma = params.sigma[np.argmax(params.mean)]
+s = np.random.normal(mean, sigma, int(1e7))
+ax[0][2].hist(s, label=f"N({mean:.2f}, {sigma:.2f})", **sample_kwargs)
+ax[1][2].hist(sample_to_angles(s), **trafo_kwargs)
+
+for axis in ax[0]:
+    axis.set_xlim(-25, 25)
+    axis.legend(loc="upper left")
+
+plt.tight_layout()
+plt.savefig("figures/other/distribution_after_trafo.png")
+
 plt.show()
 
 # %%
