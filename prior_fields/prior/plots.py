@@ -19,6 +19,8 @@ def plot_function(
     file: Path | str | None = None,
     vmin: float | None = None,
     vmax: float | None = None,
+    labsize: int = 20,
+    titlesize: int = 20,
 ) -> None:
     """
     Plot function defined on a finite element space.
@@ -40,8 +42,13 @@ def plot_function(
         c = plot(f, vmin=vmin, vmax=vmax)
         if show_mesh:
             plot(f.function_space().mesh())
-        plt.colorbar(c)
-        plt.title(title)
+        cbar = plt.colorbar(c)
+
+        plt.gca().tick_params(labelsize=labsize)
+        for t in cbar.ax.get_yticklabels():
+            t.set_fontsize(labsize)
+
+        plt.title(title, fontsize=titlesize)
 
         if file:
             plt.tight_layout()
@@ -50,7 +57,7 @@ def plot_function(
         plt.show()
 
     elif gdim == 3:
-        plotter = Plotter()
+        plotter = Plotter(window_size=(500, 500))
         plotter.add_text(title)
 
         plotter.add_mesh(
@@ -67,7 +74,7 @@ def plot_function(
         if file:
             plotter.save_graphic(filename=file)
 
-        plotter.show(window_size=(500, 500))
+        plotter.show()
 
 
 def plot_numpy_sample(
@@ -79,7 +86,7 @@ def plot_numpy_sample(
     file: Path | str | None = None,
     zoom: float = 1.25,
 ) -> None:
-    plotter = Plotter()
+    plotter = Plotter(window_size=(500, 500))
     plotter.add_text(title)
 
     plotter.add_mesh(get_poly_data(V, F), scalars=s, show_edges=show_mesh)
@@ -89,4 +96,4 @@ def plot_numpy_sample(
     if file:
         plotter.save_graphic(filename=file)
 
-    plotter.show(window_size=(500, 500))
+    plotter.show()

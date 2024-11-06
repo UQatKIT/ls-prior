@@ -22,15 +22,13 @@ geometry = Geometry(1)
 # Read data #
 #############
 # %%
-V, F, uac, fibers, tags = read_atrial_mesh_with_fibers_and_tags_mapped_to_vertices(
-    geometry
-)
+V, F, uac, _, _ = read_atrial_mesh_with_fibers_and_tags_mapped_to_vertices(geometry)
 V = scale_mesh_to_unit_cube(V)
 basis_x, basis_y, _ = get_reference_coordinates(V, F)
 params = PriorParameters.load(Path(f"data/parameters/params_{geometry.value}.npy"))
 
 # %%
-plotter = Plotter(shape=(1, 3))
+plotter = Plotter(shape=(1, 3), window_size=(900, 400))
 
 plotter.subplot(0, 0)
 plotter.add_text("Prior mean")
@@ -56,7 +54,7 @@ plotter.add_mesh(
     scalar_bar_args=dict(title="ell", n_labels=2, label_font_size=12),
 )
 
-plotter.show(window_size=(900, 400))
+plotter.show()
 
 ######################
 # Bi-Laplacian Prior #
@@ -85,11 +83,11 @@ angles = sample_to_angles(sample)
 x_axes, y_axes, _ = get_reference_coordinates(V, F)
 vector_field = angles_to_3d_vector(angles=angles, x_axes=x_axes, y_axes=y_axes)
 
-plotter = Plotter()
+plotter = Plotter(window_size=(800, 500))
 plotter.add_text("Vector field sample")
 plotter.add_mesh(get_poly_data(V, F), color="lightgrey", opacity=0.99)
 plotter.add_arrows(V, vector_field, mag=0.01, color="tab:blue")
-plotter.show(window_size=(800, 500))
+plotter.show()
 
 ###################
 # Compare samples #
@@ -103,7 +101,7 @@ grid = np.c_[x.ravel(), y.ravel()]
 tree = KDTree(uac)
 _, idx = tree.query(grid, k=1)
 
-plotter = Plotter()
+plotter = Plotter(window_size=(800, 500))
 plotter.add_text("Comparison of vector field samples and mean")
 plotter.add_mesh(get_poly_data(V, F), color="lightgrey", opacity=0.99)
 for _ in range(10):
@@ -126,6 +124,6 @@ plotter.add_arrows(
     color="tab:orange",
 )
 plotter.add_legend(labels=[["samples", "tab:blue"], ["mean", "tab:orange"]])
-plotter.show(window_size=(800, 500))
+plotter.show()
 
 # %%

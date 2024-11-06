@@ -36,7 +36,7 @@ x_axes, y_axes, _ = get_reference_coordinates(V, F)
 vector_field = angles_to_3d_vector(angles=angles, x_axes=x_axes, y_axes=y_axes)
 
 # %%
-plotter = Plotter()
+plotter = Plotter(window_size=(800, 500))
 plotter.add_text("Vector field on sphere with reference coordinate systems")
 
 plotter.add_mesh(get_poly_data(V, F), color="lightgrey", opacity=0.9)
@@ -46,6 +46,6 @@ plotter.add_arrows(V, y_axes, mag=0.1, color="tab:green", label="y-axes")
 plotter.add_arrows(V, vector_field, mag=0.1, color="tab:red", label="vector field")
 
 plotter.add_legend(size=(0.3, 0.1), loc="lower left")  # type: ignore
-plotter.show(window_size=(800, 500))
+plotter.show()
 
 # %%

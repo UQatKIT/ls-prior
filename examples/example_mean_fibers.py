@@ -65,7 +65,7 @@ _, idx = tree.query(grid, k=1)
 
 # %%
 # Interactive plot of fiber fields
-plotter = Plotter()
+plotter = Plotter(window_size=(700, 700))
 plotter.add_text("Comparison of fiber fields (subsampled)")
 plotter.add_mesh(
     get_poly_data(V, F),
@@ -81,11 +81,11 @@ plotter.add_arrows(
 )
 
 plotter.add_legend(size=(0.3, 0.1), loc="upper left")  # type: ignore
-plotter.show(window_size=(700, 700))
+plotter.show()
 
 # %%
 # Interactive plot of mean angle of mapped fibers
-plotter = Plotter()
+plotter = Plotter(window_size=(700, 700))
 plotter.add_text("Mean fiber angle")
 plotter.add_mesh(
     get_poly_data(V, F),
@@ -93,6 +93,6 @@ plotter.add_mesh(
     scalar_bar_args=dict(title="Mean angle"),
     cmap="twilight",
 )
-plotter.show(window_size=(700, 700))
+plotter.show()
 
 # %%

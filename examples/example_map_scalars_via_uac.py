@@ -36,7 +36,7 @@ mesh["sample"] = sample
 mesh1 = get_poly_data(V1, F1)
 mesh1["sample"] = sample1
 
-plotter = Plotter(shape=(1, 2))
+plotter = Plotter(shape=(1, 2), window_size=(800, 400))
 
 plotter.subplot(0, 0)
 plotter.add_text("Sample on atlas geometry")
@@ -46,6 +46,6 @@ plotter.subplot(0, 1)
 plotter.add_text("Sample on geometry 1")
 plotter.add_mesh(mesh1)
 
-plotter.show(window_size=(800, 400))
+plotter.show()
 
 # %%
