@@ -197,7 +197,7 @@ def read_all_human_atrial_fiber_meshes() -> tuple[
 
         if i is not None:
             V[i], F[i], uac[i], fibers[i], tags[i] = (
-                read_atrial_mesh_with_fibers_and_tags_mapped_to_vertices(i)
+                read_atrial_mesh_with_fibers_and_tags_mapped_to_vertices(Geometry(i))
             )
 
     return V, F, uac, fibers, tags
