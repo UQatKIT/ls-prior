@@ -118,9 +118,9 @@ plotter.save_graphic(filename="figures/vector_fields/sphere_prior_vector_field.e
 plotter.show()
 
 
-##########
-# Atrium #
-##########
+###########################
+# Atrium (all geometries) #
+###########################
 # %%
 V_dict, F_dict, uac_dict, fibers_dict, tags_dict = read_all_human_atrial_fiber_meshes()
 keys = sorted(V_dict.keys())
@@ -134,9 +134,12 @@ for i in keys:
     plotter.add_mesh(get_poly_data(V_dict[i], F_dict[i]))
     plotter.camera.zoom(1.4)
 
-plotter.save_graphic(filename="figures/atrial_geometries.eps")
+plotter.save_graphic(filename="figures/other/atrial_geometries.eps")
 plotter.show()
 
+#######################
+# Atrium (geometry 3) #
+#######################
 # %%
 geometry = Geometry(3)
 V_raw, F, uac, fibers, _ = read_atrial_mesh_with_fibers_and_tags_mapped_to_vertices(
@@ -145,21 +148,30 @@ V_raw, F, uac, fibers, _ = read_atrial_mesh_with_fibers_and_tags_mapped_to_verti
 V = scale_mesh_to_unit_cube(V_raw)
 x_axes, y_axes, _ = get_reference_coordinates(V, F)
 
-# %%
-params = PriorParameters.load(Path(f"data/parameters/params_{geometry.value}.npy"))
-mean_angles = sample_to_angles(params.mean)
-mean_vectors = angles_to_3d_vector(angles=mean_angles, x_axes=x_axes, y_axes=y_axes)
+# Subsample vectors for plotting
+axis = np.linspace(0, 1, 120, endpoint=True)
+x, y = np.meshgrid(axis.tolist(), axis.tolist())
+grid = np.c_[x.ravel(), y.ravel()]
+
+tree = KDTree(uac)
+_, idx = tree.query(grid, k=1)
 
 # %%
+#############################################################################
+# baseline
 prior = BiLaplacianPriorNumpyWrapper(V, F, sigma=0.2, ell=0.1, seed=1)
 sample = prior.sample()
-sample_angles = sample_to_angles(sample)
-sample_vectors = angles_to_3d_vector(angles=sample_angles, x_axes=x_axes, y_axes=y_axes)
 
-# %%
 plot_numpy_sample(
     sample, V=V, F=F, file="figures/priors/atrium_baseline_sample.eps", zoom=1.23
 )
+
+# %%
+#############################################################################
+# parameters
+params = PriorParameters.load(Path(f"data/parameters/params_{geometry.value}.npy"))
+mean_angles = sample_to_angles(params.mean)
+mean_vectors = angles_to_3d_vector(angles=mean_angles, x_axes=x_axes, y_axes=y_axes)
 
 # %%
 plot_numpy_sample(
@@ -182,14 +194,6 @@ plot_numpy_sample(
 )
 
 # %%
-# Subsample vectors for plotting
-axis = np.linspace(0, 1, 150, endpoint=True)
-x, y = np.meshgrid(axis.tolist(), axis.tolist())
-grid = np.c_[x.ravel(), y.ravel()]
-
-tree = KDTree(uac)
-_, idx = tree.query(grid, k=1)
-
 plotter = initialize_vector_field_plotter(
     get_poly_data(V, F), zoom=4.5, add_axes=False, window_size=(900, 500)
 )
@@ -205,6 +209,49 @@ plotter.add_legend(  # type: ignore
     background_opacity=0.8,
 )
 plotter.save_graphic("figures/vector_fields/fibers_vs_mean.eps")
+plotter.show()
+
+# %%
+#############################################################################
+# parameterized prior
+prior = BiLaplacianPriorNumpyWrapper(
+    V, F, sigma=params.sigma, ell=params.ell, mean=params.mean, seed=1
+)
+samples = []
+vector_samples = []
+for i in range(4):
+    samples.append(prior.sample())
+    vector_samples.append(
+        angles_to_3d_vector(
+            angles=sample_to_angles(samples[i]), x_axes=x_axes, y_axes=y_axes
+        )
+    )
+
+# %%
+plot_numpy_sample(
+    samples[0],
+    V=V,
+    F=F,
+    file="figures/priors/atrium_parameterized_sample.eps",
+    zoom=1.23,
+    clim=[np.quantile(sample, 0.01), np.quantile(sample, 0.99)],
+)
+
+plotter = initialize_vector_field_plotter(
+    get_poly_data(V, F), zoom=4.5, add_axes=False, window_size=(900, 500)
+)
+for i in range(len(samples)):
+    plotter.add_arrows(V[idx], vector_samples[i][idx], mag=0.011, color="tab:blue")
+plotter.add_arrows(V[idx], mean_vectors[idx], mag=0.014, color="tab:orange")
+plotter.add_legend(  # type: ignore
+    labels=[["samples", "tab:blue"], ["mean", "tab:orange"]],
+    bcolor="white",
+    size=(0.14, 0.1),
+    loc="lower left",
+    face="none",
+    background_opacity=0.8,
+)
+plotter.save_graphic("figures/vector_fields/samples_vs_mean.eps")
 plotter.show()
 
 # %%
