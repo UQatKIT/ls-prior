@@ -120,8 +120,14 @@ def read_atrial_mesh_with_fibers_and_tags_mapped_to_vertices(
         universal atrial coordinates of the vertices,
         and fiber orientation and anatomical structure tag both mapped to the vertices.
     """
-    V, F, uac, fibers_on_faces, tag_of_faces = read_raw_atrial_mesh(geometry)
+    V, F, uac, fibers_on_faces, tags_of_faces = read_raw_atrial_mesh(geometry)
 
+    fibers, tags = _map_fibers_and_tags_to_vertices(F, fibers_on_faces, tags_of_faces)
+
+    return V, F, uac, fibers, tags
+
+
+def _map_fibers_and_tags_to_vertices(F, fibers_on_faces, tags_of_faces):
     # Construct mapping of vertex indices to vertex indices of its adjacent faces
     adjacent_faces = _get_dict_with_adjacent_faces_for_each_vertex(F)
 
@@ -131,11 +137,11 @@ def read_atrial_mesh_with_fibers_and_tags_mapped_to_vertices(
     )
 
     # Map tag for anatomical structure assignment to vertices
-    tag = map_categories_from_faces_to_vertices(
-        categories=tag_of_faces, adjacent_faces=adjacent_faces
+    tags = map_categories_from_faces_to_vertices(
+        categories=tags_of_faces, adjacent_faces=adjacent_faces
     )
 
-    return V, F, uac, fibers, tag
+    return fibers, tags
 
 
 def _get_dict_with_adjacent_faces_for_each_vertex(F: ArrayNx3) -> dict[int, list[int]]:
