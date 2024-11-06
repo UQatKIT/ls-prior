@@ -85,11 +85,23 @@ def plot_numpy_sample(
     title: str = "",
     file: Path | str | None = None,
     zoom: float = 1.25,
+    clim: list[float] | None = None,
+    scalar_bar_title: str | None = None,
 ) -> None:
     plotter = Plotter(window_size=(500, 500))
     plotter.add_text(title)
 
-    plotter.add_mesh(get_poly_data(V, F), scalars=s, show_edges=show_mesh)
+    plotter.add_mesh(
+        get_poly_data(V, F),
+        scalars=s,
+        show_edges=show_mesh,
+        clim=clim,
+        below_color="purple" if clim and (clim[0] > s.min()) else None,
+        above_color="orange" if clim and (clim[1] < s.max()) else None,
+        scalar_bar_args=dict(
+            title=scalar_bar_title, n_labels=2, position_x=0.3, position_y=0.06
+        ),
+    )
     plotter.add_axes(x_color="black", y_color="black", z_color="black")
     plotter.camera.zoom(zoom)
 

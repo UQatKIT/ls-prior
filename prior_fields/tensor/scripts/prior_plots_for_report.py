@@ -1,6 +1,7 @@
 # %%
 from pathlib import Path
 
+import numpy as np
 from dolfin import BoundaryMesh, Expression, FunctionSpace, Mesh, UnitSquareMesh
 from matplotlib import rc
 from pyvista import Plotter, global_theme
@@ -140,12 +141,32 @@ geometry = Geometry(3)
 V_raw, F, uac, _, _ = read_atrial_mesh_with_fibers_and_tags_mapped_to_vertices(geometry)
 V = scale_mesh_to_unit_cube(V_raw)
 params = PriorParameters.load(Path(f"data/parameters/params_{geometry.value}.npy"))
-
-# %%
 prior = BiLaplacianPriorNumpyWrapper(V, F, sigma=0.2, ell=0.1, seed=1)
 sample = prior.sample()
+
+# %%
 plot_numpy_sample(
-    sample, V=V, F=F, file="figures/priors/atrium_baseline_sample.eps", zoom=1.0
+    sample, V=V, F=F, file="figures/priors/atrium_baseline_sample.eps", zoom=1.1
+)
+
+# %%
+plot_numpy_sample(
+    params.mean,
+    V=V,
+    F=F,
+    file="figures/priors/params_mean_geometry3.eps",
+    zoom=1.1,
+    clim=[np.quantile(params.mean, 0.01), np.quantile(params.mean, 0.99)],
+    scalar_bar_title="mean",
+)
+plot_numpy_sample(
+    params.sigma,
+    V=V,
+    F=F,
+    file="figures/priors/params_sigma_geometry3.eps",
+    zoom=1.1,
+    clim=[0, np.quantile(params.sigma, 0.99)],
+    scalar_bar_title="sigma",
 )
 
 # %%
