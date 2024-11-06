@@ -104,6 +104,10 @@ def plot_numpy_sample(
     )
     plotter.add_axes(x_color="black", y_color="black", z_color="black")
     plotter.camera.zoom(zoom)
+    pos = plotter.camera.position
+    plotter.camera.position = (pos[0], pos[1], pos[2] - 0.1)
+    pos = plotter.camera.focal_point
+    plotter.camera.focal_point = (pos[0], pos[1], pos[2] - 0.1)
 
     if file:
         plotter.save_graphic(filename=file)

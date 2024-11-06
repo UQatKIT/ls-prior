@@ -146,7 +146,7 @@ sample = prior.sample()
 
 # %%
 plot_numpy_sample(
-    sample, V=V, F=F, file="figures/priors/atrium_baseline_sample.eps", zoom=1.1
+    sample, V=V, F=F, file="figures/priors/atrium_baseline_sample.eps", zoom=1.23
 )
 
 # %%
@@ -155,7 +155,7 @@ plot_numpy_sample(
     V=V,
     F=F,
     file="figures/priors/params_mean_geometry3.eps",
-    zoom=1.1,
+    zoom=1.23,
     clim=[np.quantile(params.mean, 0.01), np.quantile(params.mean, 0.99)],
     scalar_bar_title="mean",
 )
@@ -164,7 +164,7 @@ plot_numpy_sample(
     V=V,
     F=F,
     file="figures/priors/params_sigma_geometry3.eps",
-    zoom=1.1,
+    zoom=1.23,
     clim=[0, np.quantile(params.sigma, 0.99)],
     scalar_bar_title="sigma",
 )
