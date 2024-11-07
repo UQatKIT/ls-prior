@@ -52,6 +52,9 @@ meshio = ">=5.3.5"
 loguru = ">=0.7.2,<0.8"
 typer = ">=0.12.5,<0.13"
 
+[tool.pixi.pypi-dependencies]
+pyacvd = ">=0.3.1"
+
 # ------------------------------------ DEVELOPMENT ------------------------------------ #
 
 [tool.pixi.feature.dev.dependencies]
