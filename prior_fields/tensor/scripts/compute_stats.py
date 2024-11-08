@@ -207,7 +207,7 @@ for n_clusters in cluster_sizes:
         f"{duration_prior_init:.2f}"
     )
 
-    durations_prior_sample = [profile(prior.sample)[0] for _ in range(100)]
+    durations_prior_sample = [profile(prior.sample)[0] for _ in range(1000)]
     sampling_times.append(durations_prior_sample)
     print(
         f"Duration for sampling from on a mesh with {n_clusters} vertices:\n"
@@ -218,7 +218,8 @@ for n_clusters in cluster_sizes:
 
 # %%
 further_sample_means = [np.mean(t[1:]) for t in sampling_times]
-further_sample_stds = [np.std(t[1:]) for t in sampling_times]
+further_sample_lower_q = [np.quantile(t[1:], 0.005) for t in sampling_times]
+further_sample_upper_q = [np.quantile(t[1:], 0.995) for t in sampling_times]
 line_x = np.array([min(cluster_sizes), max(cluster_sizes)])
 
 fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(14, 6))
@@ -253,8 +254,8 @@ ax2.plot(
 )
 ax2.fill_between(
     cluster_sizes,
-    np.array(further_sample_means) - np.array(further_sample_stds),
-    np.array(further_sample_means) + np.array(further_sample_stds),
+    further_sample_lower_q,
+    further_sample_upper_q,
     color="#4664aa",
     alpha=0.2,
 )
