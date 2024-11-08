@@ -15,13 +15,13 @@ from prior_fields.prior.converter import (
 )
 from prior_fields.prior.plots import get_poly_data, plot_function, plot_numpy_sample
 from prior_fields.prior.prior import BiLaplacianPrior, BiLaplacianPriorNumpyWrapper
-from prior_fields.tensor.parameters import Geometry, PriorParameters
+from prior_fields.tensor.parameterization import Geometry, PriorParameters
 from prior_fields.tensor.plots import initialize_vector_field_plotter
 from prior_fields.tensor.reader import (
     read_all_human_atrial_fiber_meshes,
     read_atrial_mesh_with_fibers_and_tags_mapped_to_vertices,
 )
-from prior_fields.tensor.tangent_space import get_reference_coordinates
+from prior_fields.tensor.tangent_space import get_vhm_based_coordinates
 from prior_fields.tensor.transformer import angles_to_3d_vector, sample_to_angles
 
 global_theme.font.family = "times"
@@ -39,8 +39,8 @@ rc("font", **font)
 # Minimal working example:
 # zero-mean, stationary, isotropic BiLaplacianPrior on UnitSquareMesh with 4x4 vertices
 mesh = UnitSquareMesh(3, 3)
-prior = BiLaplacianPrior(mesh, sigma=0.1, ell=0.1, seed=1)
-sample = prior.sample()
+prior_dolfin = BiLaplacianPrior(mesh, sigma=0.1, ell=0.1, seed=1)
+sample = prior_dolfin.sample()
 plot_function(
     sample, show_mesh=True, file="figures/priors/square_with_mesh.png", labsize=15
 )
@@ -51,18 +51,18 @@ mean_zero = str_to_vector("0", mesh)
 
 # %%
 # Baseline: zero-mean, stationary, isotropic BiLaplacianPrior
-prior = BiLaplacianPrior(mesh, sigma=0.2, ell=0.1, mean=mean_zero, seed=1)
-sample = prior.sample()
+prior_dolfin = BiLaplacianPrior(mesh, sigma=0.2, ell=0.1, mean=mean_zero, seed=1)
+sample = prior_dolfin.sample()
 plot_function(sample, file="figures/priors/square_baseline.png", vmin=-2.0, vmax=2.0)
 
-prior = BiLaplacianPrior(mesh, sigma=0.1, ell=0.1, mean=mean_zero, seed=1)
-sample = prior.sample()
+prior_dolfin = BiLaplacianPrior(mesh, sigma=0.1, ell=0.1, mean=mean_zero, seed=1)
+sample = prior_dolfin.sample()
 plot_function(
     sample, file="figures/priors/square_baseline_smaller_sigma.png", vmin=-2.0, vmax=2.0
 )
 
-prior = BiLaplacianPrior(mesh, sigma=0.2, ell=0.02, mean=mean_zero, seed=1)
-sample = prior.sample()
+prior_dolfin = BiLaplacianPrior(mesh, sigma=0.2, ell=0.02, mean=mean_zero, seed=1)
+sample = prior_dolfin.sample()
 plot_function(sample, file="figures/priors/square_baseline_smaller_ell.png")
 
 # %%
@@ -70,10 +70,10 @@ plot_function(sample, file="figures/priors/square_baseline_smaller_ell.png")
 mean_str = "2*(x[0]+x[1])"
 plot_function(str_to_function(mean_str, mesh), title="Mean function")
 
-prior = BiLaplacianPrior(
+prior_dolfin = BiLaplacianPrior(
     mesh, sigma=0.2, ell=0.1, mean=str_to_vector(mean_str, mesh), seed=1
 )
-sample = prior.sample()
+sample = prior_dolfin.sample()
 plot_function(sample, file="figures/priors/square_non-zero_mean.png")
 
 # %%
@@ -81,8 +81,8 @@ plot_function(sample, file="figures/priors/square_non-zero_mean.png")
 sigma_non_stationary = expression_to_vector(
     Expression("0.4-0.38*x[0]", degree=1), FunctionSpace(mesh, "CG", 1)
 )
-prior = BiLaplacianPrior(mesh, sigma=sigma_non_stationary, ell=0.1, seed=1)
-sample = prior.sample()
+prior_dolfin = BiLaplacianPrior(mesh, sigma=sigma_non_stationary, ell=0.1, seed=1)
+sample = prior_dolfin.sample()
 plot_function(sample, file="figures/priors/square_pointwise_sigma.png")
 
 ###############
@@ -94,10 +94,10 @@ sphere_mesh = BoundaryMesh(mesh, "exterior", order=False)  # triangles
 sphere_mesh_ordered = BoundaryMesh(mesh, "exterior", order=True)
 V = sphere_mesh.coordinates()
 F = sphere_mesh.cells()
-x_axes, y_axes, _ = get_reference_coordinates(V, F)
+x_axes, y_axes, _ = get_vhm_based_coordinates(V, F)
 
-prior = BiLaplacianPriorNumpyWrapper(V, F, sigma=1.0, ell=0.1, seed=1)
-sample = prior.sample()
+prior_numpy = BiLaplacianPriorNumpyWrapper(V, F, sigma=1.0, ell=0.1, seed=1)
+sample = prior_numpy.sample()
 plot_numpy_sample(sample, V, F, file="figures/priors/sphere_prior_scalar_field.eps")
 
 # %%
@@ -146,7 +146,7 @@ V_raw, F, uac, fibers, _ = read_atrial_mesh_with_fibers_and_tags_mapped_to_verti
     geometry
 )
 V = scale_mesh_to_unit_cube(V_raw)
-x_axes, y_axes, _ = get_reference_coordinates(V, F)
+x_axes, y_axes, _ = get_vhm_based_coordinates(V, F)
 
 # Subsample vectors for plotting
 axis = np.linspace(0, 1, 120, endpoint=True)
@@ -159,8 +159,8 @@ _, idx = tree.query(grid, k=1)
 # %%
 #############################################################################
 # baseline
-prior = BiLaplacianPriorNumpyWrapper(V, F, sigma=0.2, ell=0.1, seed=1)
-sample = prior.sample()
+prior_numpy = BiLaplacianPriorNumpyWrapper(V, F, sigma=0.2, ell=0.1, seed=1)
+sample = prior_numpy.sample()
 
 plot_numpy_sample(
     sample, V=V, F=F, file="figures/priors/atrium_baseline_sample.eps", zoom=1.23
@@ -214,13 +214,13 @@ plotter.show()
 # %%
 #############################################################################
 # parameterized prior
-prior = BiLaplacianPriorNumpyWrapper(
+prior_numpy = BiLaplacianPriorNumpyWrapper(
     V, F, sigma=params.sigma, ell=params.ell, mean=params.mean, seed=1
 )
 samples = []
 vector_samples = []
 for i in range(4):
-    samples.append(prior.sample())
+    samples.append(prior_numpy.sample())
     vector_samples.append(
         angles_to_3d_vector(
             angles=sample_to_angles(samples[i]), x_axes=x_axes, y_axes=y_axes

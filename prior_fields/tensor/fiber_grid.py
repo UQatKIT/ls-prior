@@ -10,17 +10,8 @@ from matplotlib import pyplot as plt
 from scipy.spatial import KDTree
 from scipy.stats import circmean, circvar, mode
 
-from prior_fields.prior.dtypes import Array1d, ArrayNx2, ArrayNx3
-from prior_fields.tensor.tangent_space import (
-    get_angles_in_tangent_space,
-    get_reference_coordinates,
-    get_uac_basis_vectors,
-)
-from prior_fields.tensor.transformer import (
-    angles_to_2d_vector_coefficients,
-    angles_to_3d_vector,
-    angles_to_sample,
-)
+from prior_fields.prior.dtypes import Array1d, ArrayNx2
+from prior_fields.tensor.transformer import angles_to_2d_vector_coefficients
 
 circ_kwargs = dict(low=-np.pi / 2, high=np.pi / 2, nan_policy="omit")
 
@@ -58,112 +49,6 @@ def compute_uac_fiber_grid(
     )
     logger.info(f"Saving fiber grid to {fiber_grid_file}")
     fiber_grid.save(fiber_grid_file)
-
-
-def get_fiber_parameters_from_uac_grid(
-    uac: ArrayNx2,
-    file: Path | str = "data/fiber_grid_max_depth8_point_threshold120.npy",
-) -> tuple[Array1d, Array1d]:
-    """
-    Map mean and variance of fiber angles from `FiberGrid` to vertices based on the given
-    UACs.
-
-    Parameters
-    ----------
-    uac : ArrayNx2
-        Universal atrial coordinates of vertices.
-    file : Path | str, optional
-        Path to binary file with fiber grid,
-        defaults to 'data/fiber_grid_max_depth8_point_threshold120.npy'.
-
-    Returns
-    -------
-    (Array1d, Array1d)
-        Arrays with mean and standard deviation of fiber angles.
-    """
-    fiber_grid = FiberGrid.load(file)
-
-    fiber_mean = np.zeros(uac.shape[0])
-    fiber_var = np.zeros(uac.shape[0])
-    unmatched_vertices = []
-
-    for i in range(fiber_mean.shape[0]):
-        j = np.where(
-            (uac[i, 0] >= fiber_grid.grid_x[:, 0])
-            & (uac[i, 0] < fiber_grid.grid_x[:, 1])
-            & (uac[i, 1] >= fiber_grid.grid_y[:, 0])
-            & (uac[i, 1] < fiber_grid.grid_y[:, 1])
-        )[0]
-        try:
-            fiber_mean[i] = fiber_grid.fiber_angle_circmean[j[0]]
-            fiber_var[i] = fiber_grid.fiber_angle_circvar[j[0]]
-        except IndexError:
-            fiber_var[i] = np.nan
-            unmatched_vertices.append(i)
-
-    if len(unmatched_vertices) > 0:
-        logger.warning(
-            "Couldn't find grid cell for "
-            f"{100 * len(unmatched_vertices) / uac.shape[0]:.2f}%"
-            " of the vertices."
-        )
-
-    return fiber_mean, fiber_var
-
-
-def get_fiber_parameters_from_uac_data(
-    V: ArrayNx3,
-    F: ArrayNx3,
-    uac: ArrayNx2,
-    k: int = 50,
-    file: Path | str = "data/uacs_fibers_tags.npy",
-) -> tuple[Array1d, Array1d, Array1d]:
-
-    data_uac = DataUAC.load(file)
-
-    # Find k nearest neighbors to each UAC in the target geometry
-    tree = KDTree(data_uac.uac)
-    _, idx_neighbors = tree.query(uac, k=k, p=2)
-
-    # Get angles of kNN based on UAC
-    angles_uac = data_uac.fiber_angles[idx_neighbors].reshape(-1)
-
-    # Transform angles to 3d fiber vectors on vertices of target geometry
-    alpha_axes, beta_axes = get_uac_basis_vectors(V, F, uac)
-    alpha_axes_repeated = _repeat_array(alpha_axes, k)
-    beta_axes_repeated = _repeat_array(beta_axes, k)
-    fibers = angles_to_3d_vector(
-        angles=angles_uac, x_axes=alpha_axes_repeated, y_axes=beta_axes_repeated
-    )
-
-    # Compute orthonormal bases of tangent spaces and fiber angles within these bases
-    x_axes, y_axes, _ = get_reference_coordinates(V, F)
-    x_axes_repeated = _repeat_array(x_axes, k)
-    y_axes_repeated = _repeat_array(y_axes, k)
-    angles_vhm = get_angles_in_tangent_space(fibers, x_axes_repeated, y_axes_repeated)
-
-    # Transform angles to values in (-inf, inf) for BiLaplacianPrior parameterization
-    prior_values = angles_to_sample(angles_vhm).reshape(-1, k)
-
-    # Compute parameters
-    prior_mean = np.nanmean(prior_values, axis=1)
-    prior_sigma = np.nanstd(prior_values, axis=1)
-    mode_tag = mode(data_uac.anatomical_tags[idx_neighbors], axis=1).mode
-
-    # Handle missing values
-    prior_mean[np.isnan(prior_mean)] = np.nanmean(prior_mean)
-    prior_sigma[np.isnan(prior_sigma)] = np.nanmean(prior_sigma)
-
-    # Replace zeros in sigma
-    prior_sigma = np.clip(prior_sigma, a_min=1e-3, a_max=None)
-
-    return prior_mean, prior_sigma, mode_tag
-
-
-def _repeat_array(array: ArrayNx3, n: int) -> ArrayNx3:
-    return np.vstack(
-        [array[:, 0].repeat(n), array[:, 1].repeat(n), array[:, 2].repeat(n)]
-    ).T
 
 
 class DataUAC:
@@ -313,7 +198,9 @@ class FiberGrid:
                 else (
                     self.fiber_angle_circmean
                     if color == "mean"
-                    else self.fiber_angle_circvar if color == "var" else None
+                    else self.fiber_angle_circvar
+                    if color == "var"
+                    else None
                 )
             ),
             s=[

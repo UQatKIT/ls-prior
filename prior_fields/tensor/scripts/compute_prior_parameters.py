@@ -4,8 +4,11 @@ import numpy as np
 import typer
 
 from prior_fields.prior.converter import scale_mesh_to_unit_cube
-from prior_fields.tensor.fiber_grid import get_fiber_parameters_from_uac_data
-from prior_fields.tensor.parameters import Geometry, PriorParameters
+from prior_fields.tensor.parameterization import (
+    Geometry,
+    PriorParameters,
+    get_fiber_parameters_from_uac_data,
+)
 from prior_fields.tensor.reader import (
     read_atrial_mesh_with_fibers_and_tags_mapped_to_vertices,
 )

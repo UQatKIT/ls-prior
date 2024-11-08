@@ -10,7 +10,7 @@ from prior_fields.prior.converter import (
     vector_to_numpy,
 )
 from prior_fields.prior.prior import BiLaplacianPriorNumpyWrapper
-from prior_fields.tensor.parameters import Geometry
+from prior_fields.tensor.parameterization import Geometry
 from prior_fields.tensor.reader import (
     read_atrial_mesh_with_fibers_and_tags_mapped_to_vertices,
 )

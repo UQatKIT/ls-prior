@@ -9,22 +9,27 @@ from scipy.stats import circmean, circvar
 
 from prior_fields.prior.converter import scale_mesh_to_unit_cube
 from prior_fields.prior.plots import get_poly_data
-from prior_fields.tensor.fiber_grid import get_fiber_parameters_from_uac_grid
-from prior_fields.tensor.mapper import map_fibers_to_tangent_space
+from prior_fields.tensor.parameterization import (
+    Geometry,
+    get_fiber_parameters_from_uac_grid,
+)
 from prior_fields.tensor.reader import (
     read_atrial_mesh_with_fibers_and_tags_mapped_to_vertices,
 )
-from prior_fields.tensor.tangent_space import get_uac_basis_vectors
+from prior_fields.tensor.tangent_space import (
+    get_uac_based_coordinates,
+    map_fibers_to_tangent_space,
+)
 from prior_fields.tensor.transformer import angles_between_vectors, angles_to_3d_vector
 
 # %%
 # Read atlas data
 V_raw, F, uac, fibers_atlas, _ = (
-    read_atrial_mesh_with_fibers_and_tags_mapped_to_vertices("A")
+    read_atrial_mesh_with_fibers_and_tags_mapped_to_vertices(Geometry("A"))
 )
 V = scale_mesh_to_unit_cube(V_raw)
 
-basis_x, basis_y = get_uac_basis_vectors(V, F, uac)
+basis_x, basis_y = get_uac_based_coordinates(V, F, uac)
 atlas_fibers = map_fibers_to_tangent_space(fibers_atlas, basis_x, basis_y)
 
 # Get mean fibers and angle mean/variance

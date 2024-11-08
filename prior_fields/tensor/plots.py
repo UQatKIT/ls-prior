@@ -13,7 +13,7 @@ def initialize_vector_field_plotter(
     plotter.add_text(title)
     plotter.add_mesh(poly_data, color="white")
     if add_axes:
-        plotter.add_axes(x_color="black", y_color="black", z_color="black")
+        plotter.add_axes(x_color="black", y_color="black", z_color="black")  # type: ignore
     plotter.add_light(
         Light(
             position=(0.3, 1.0, 1.0),

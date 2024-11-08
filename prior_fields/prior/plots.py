@@ -68,7 +68,7 @@ def plot_function(
             scalars=f.compute_vertex_values(f.function_space().mesh()),
             show_edges=show_mesh,
         )
-        plotter.add_axes(x_color="black", y_color="black", z_color="black")
+        plotter.add_axes(x_color="black", y_color="black", z_color="black")  # type: ignore
         plotter.camera.zoom(1.25)
 
         if file:
@@ -102,7 +102,7 @@ def plot_numpy_sample(
             title=scalar_bar_title, n_labels=2, position_x=0.3, position_y=0.06
         ),
     )
-    plotter.add_axes(x_color="black", y_color="black", z_color="black")
+    plotter.add_axes(x_color="black", y_color="black", z_color="black")  # type: ignore
     plotter.camera.zoom(zoom)
     pos = plotter.camera.position
     plotter.camera.position = (pos[0], pos[1], pos[2] - 0.1)

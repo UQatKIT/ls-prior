@@ -5,7 +5,7 @@ from pyvista import Plotter
 from prior_fields.prior.converter import function_to_numpy
 from prior_fields.prior.plots import get_poly_data, plot_function
 from prior_fields.prior.prior import BiLaplacianPrior
-from prior_fields.tensor.tangent_space import get_reference_coordinates
+from prior_fields.tensor.tangent_space import get_vhm_based_coordinates
 from prior_fields.tensor.transformer import angles_to_3d_vector, sample_to_angles
 
 # %%
@@ -32,7 +32,7 @@ angles = sample_to_angles(function_to_numpy(sample, get_vertex_values=True))
 V = sphere_mesh.coordinates()
 F = sphere_mesh.cells()
 
-x_axes, y_axes, _ = get_reference_coordinates(V, F)
+x_axes, y_axes, _ = get_vhm_based_coordinates(V, F)
 vector_field = angles_to_3d_vector(angles=angles, x_axes=x_axes, y_axes=y_axes)
 
 # %%

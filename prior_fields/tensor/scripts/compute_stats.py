@@ -12,14 +12,17 @@ from prior_fields.prior.converter import create_triangle_mesh_from_coordinates
 from prior_fields.prior.dtypes import ArrayNx3
 from prior_fields.prior.plots import get_poly_data
 from prior_fields.prior.prior import BiLaplacianPrior, BiLaplacianPriorNumpyWrapper
-from prior_fields.tensor.fiber_grid import get_fiber_parameters_from_uac_data
-from prior_fields.tensor.parameters import Geometry, PriorParameters
+from prior_fields.tensor.parameterization import (
+    Geometry,
+    PriorParameters,
+    get_fiber_parameters_from_uac_data,
+)
 from prior_fields.tensor.reader import (
     _map_fibers_and_tags_to_vertices,
     read_all_human_atrial_fiber_meshes,
     read_raw_atrial_mesh,
 )
-from prior_fields.tensor.tangent_space import get_uac_basis_vectors
+from prior_fields.tensor.tangent_space import get_uac_based_coordinates
 
 font = {"family": "times", "size": 20}
 rc("font", **font)
@@ -48,7 +51,7 @@ durations_uac_coordinates: list[float] = []
 for i in keys:
     durations_uac_coordinates.append(
         profile(
-            get_uac_basis_vectors,
+            get_uac_based_coordinates,
             **dict(V=V_dict[i], F=F_dict[i], uac=uac_dict[i]),
         )[0]
     )
@@ -87,9 +90,9 @@ print(
 ###################################
 # Compute parameters for geometry #
 ###################################
-durations_compute_fiber_paramters: list[float] = []
+durations_compute_fiber_parameters: list[float] = []
 for i in keys:
-    durations_compute_fiber_paramters.append(
+    durations_compute_fiber_parameters.append(
         profile(
             get_fiber_parameters_from_uac_data,
             **dict(V=V_dict[i], F=F_dict[i], uac=uac_dict[i], k=100),
@@ -99,8 +102,8 @@ for i in keys:
 
 print("Stats for computing fiber parameters for the 7 geometries:")
 print(
-    f"mean={np.mean(durations_compute_fiber_paramters):.2f}s, "
-    f"std={np.std(durations_compute_fiber_paramters):.2f}s"
+    f"mean={np.mean(durations_compute_fiber_parameters):.2f}s, "
+    f"std={np.std(durations_compute_fiber_parameters):.2f}s"
 )
 
 # %%
@@ -222,7 +225,7 @@ further_sample_lower_q = [np.quantile(t[1:], 0.005) for t in sampling_times]
 further_sample_upper_q = [np.quantile(t[1:], 0.995) for t in sampling_times]
 line_x = np.array([min(cluster_sizes), max(cluster_sizes)])
 
-fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(14, 6))
+fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(14, 6))  # type: ignore
 
 ax1.plot(
     cluster_sizes,

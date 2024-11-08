@@ -5,17 +5,14 @@ from pathlib import Path
 import meshio
 import numpy as np
 from loguru import logger
+from scipy.stats import mode
 
 from prior_fields.prior.dtypes import Array1d, ArrayNx2, ArrayNx3
 from prior_fields.tensor.fiber_grid import DataUAC
-from prior_fields.tensor.mapper import (
-    map_categories_from_faces_to_vertices,
-    map_vectors_from_faces_to_vertices,
-)
-from prior_fields.tensor.parameters import Geometry
+from prior_fields.tensor.parameterization import Geometry
 from prior_fields.tensor.tangent_space import (
     get_angles_in_tangent_space,
-    get_uac_basis_vectors,
+    get_uac_based_coordinates,
 )
 from prior_fields.tensor.transformer import angles_between_vectors
 
@@ -132,12 +129,12 @@ def _map_fibers_and_tags_to_vertices(F, fibers_on_faces, tags_of_faces):
     adjacent_faces = _get_dict_with_adjacent_faces_for_each_vertex(F)
 
     # Map fibers to vertices
-    fibers = map_vectors_from_faces_to_vertices(
+    fibers = _map_vectors_from_faces_to_vertices(
         vecs=fibers_on_faces, adjacent_faces=adjacent_faces
     )
 
     # Map tag for anatomical structure assignment to vertices
-    tags = map_categories_from_faces_to_vertices(
+    tags = _map_categories_from_faces_to_vertices(
         categories=tags_of_faces, adjacent_faces=adjacent_faces
     )
 
@@ -168,13 +165,64 @@ def _get_dict_with_adjacent_faces_for_each_vertex(F: ArrayNx3) -> dict[int, list
     return adjacent_faces
 
 
-def read_all_human_atrial_fiber_meshes() -> tuple[
-    dict[int, ArrayNx3],
-    dict[int, ArrayNx3],
-    dict[int, ArrayNx2],
-    dict[int, ArrayNx3],
-    dict[int, Array1d],
-]:
+def _map_vectors_from_faces_to_vertices(
+    vecs: ArrayNx3, adjacent_faces: dict[int, list[int]]
+) -> ArrayNx3:
+    """
+    Map vectors defined on face-level to vertices.
+
+    For each vertex, the resulting vector is the component-wise mean over the vectors of
+    all adjacent faces.
+
+    Parameters
+    ----------
+    vecs : ArrayNx3
+        Vectors defined on face-level.
+    adjacent_faces : dict[int, list[int]]
+        Dictionary where the keys are the vertex indices and the values are lists of
+        vertex indices of all adjacent faces.
+
+    Returns
+    -------
+    ArrayNx3
+        Vectors mapped to vertex-level.
+    """
+    return np.array([vecs[i].mean(axis=0) for i in adjacent_faces.values()])
+
+
+def _map_categories_from_faces_to_vertices(
+    categories: Array1d, adjacent_faces: dict[int, list[int]]
+) -> Array1d:
+    """
+    Map categories defined on face-level to vertices.
+
+    For each vertex, the resulting tag is the mode over the tags of the adjacent faces.
+
+    Parameters
+    ----------
+    categories : Array1d
+        Categories on face-level.
+    adjacent_faces : dict[int, list[int]]
+        Dictionary where the keys are the vertex indices and the values are lists of
+        vertex indices of all adjacent faces.
+
+    Returns
+    -------
+    Array1d
+        Categories mapped to vertex-level.
+    """
+    return np.array([mode(categories[i]).mode for i in adjacent_faces.values()])
+
+
+def read_all_human_atrial_fiber_meshes() -> (
+    tuple[
+        dict[int, ArrayNx3],
+        dict[int, ArrayNx3],
+        dict[int, ArrayNx2],
+        dict[int, ArrayNx3],
+        dict[int, Array1d],
+    ]
+):
     """
     Read vertices, faces, UAC, fibers, and anatomical tags from all 7 endocardial meshes
     of the left atrium published in https://zenodo.org/records/3764917.
@@ -242,7 +290,7 @@ def collect_data_from_human_atrial_fiber_meshes() -> DataUAC:
     for i in keys:
         logger.info(f"Get UAC-based tangent space coordinates for geometry {i}...")
         directions_constant_beta_dict[i], directions_constant_alpha_dict[i] = (
-            get_uac_basis_vectors(V_dict[i], F_dict[i], uac_dict[i])
+            get_uac_based_coordinates(V_dict[i], F_dict[i], uac_dict[i])
         )
 
     # Unite different geometries

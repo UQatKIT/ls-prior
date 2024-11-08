@@ -3,11 +3,10 @@ from loguru import logger
 from potpourri3d import MeshVectorHeatSolver
 
 from prior_fields.prior.dtypes import Array1d, ArrayNx2, ArrayNx3
-from prior_fields.tensor.mapper import get_coefficients, map_fibers_to_tangent_space
 from prior_fields.tensor.transformer import normalize, vector_coefficients_2d_to_angles
 
 
-def get_reference_coordinates(
+def get_vhm_based_coordinates(
     V: ArrayNx3, F: ArrayNx3
 ) -> tuple[ArrayNx3, ArrayNx3, ArrayNx3]:
     """
@@ -47,7 +46,7 @@ def get_reference_coordinates(
     return x_axes, y_axes, normal_vecs
 
 
-def get_uac_basis_vectors(
+def get_uac_based_coordinates(
     V: ArrayNx3, F: ArrayNx3, uac: ArrayNx2
 ) -> tuple[ArrayNx3, ArrayNx3]:
     """
@@ -197,6 +196,73 @@ def _get_directions_with_no_change_in_one_uac(
         )
 
     return np.vstack(basis_uac)
+
+
+def get_coefficients(
+    fibers: ArrayNx3, x: ArrayNx3, y: ArrayNx3
+) -> tuple[ArrayNx3, ArrayNx3]:
+    """
+    Get coefficients to write fibers in (x, y) basis.
+
+    Parameters
+    ----------
+    fibers : ArrayNx3
+        (n, 3) array where each row is a fiber vector.
+    x : ArrayNx3
+        (n, 3) array where each row is a vector in the tangent space.
+    y : ArrayNx3
+        (n, 3) array where each row is another vector in the tangent space.
+
+    Returns
+    -------
+    (ArrayNx3, ArrayNx3)
+
+    """
+    return np.einsum("ij,ij->i", fibers, x), np.einsum("ij,ij->i", fibers, y)
+
+
+def map_fibers_to_tangent_space(fibers: ArrayNx3, x: ArrayNx3, y: ArrayNx3) -> ArrayNx3:
+    """
+    Get normalized fibers in tangent spaces spanned by x and y.
+
+    Note
+    ----
+    Analogous to the angle restriction to (-pi/2, pi/2], the fibers in the tangent spaces
+    are transformed so that they form an acute angle with the x-axis.
+
+    Parameters
+    ----------
+    fibers : ArrayNx3
+        (n, 3) array where each row is a fiber vector.
+    x : ArrayNx3
+        (n, 3) array where each row is a vector in the tangent space.
+    y : ArrayNx3
+        (n, 3) array where each row is another vector in the tangent space.
+
+    Returns
+    -------
+    ArrayNx3
+        Fibers mapped to the tangent spaces.
+    """
+    fiber_coeff_x, fiber_coeff_y = get_coefficients(normalize(fibers), x, y)
+
+    # Exclude fibers which are almost orthogonal to tangent space
+    thresh = 0.25  # corresponds to approximately 75 degrees
+    mask_orthogonal = (abs(fiber_coeff_x) < thresh) & (abs(fiber_coeff_y) < thresh)
+
+    logger.warning(
+        f"Excluding {100 * mask_orthogonal.sum() / fibers.shape[0]:.2f}% of the fibers"
+        " as they are almost orthogonal to the tangent space."
+    )
+    fiber_coeff_x[mask_orthogonal] = np.nan
+    fiber_coeff_y[mask_orthogonal] = np.nan
+
+    fibers_mapped = fiber_coeff_x[:, np.newaxis] * x + fiber_coeff_y[:, np.newaxis] * y
+
+    mask_reverse = fiber_coeff_x < 0
+    fibers_mapped[mask_reverse] *= -1
+
+    return normalize(fibers_mapped)
 
 
 def get_angles_in_tangent_space(
