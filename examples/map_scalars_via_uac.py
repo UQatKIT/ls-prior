@@ -5,13 +5,14 @@ from scipy.spatial import KDTree
 from prior_fields.prior.converter import scale_mesh_to_unit_cube
 from prior_fields.prior.plots import get_poly_data
 from prior_fields.prior.prior import BiLaplacianPriorNumpyWrapper
+from prior_fields.tensor.parameterization import Geometry
 from prior_fields.tensor.reader import (
     read_atrial_mesh_with_fibers_and_tags_mapped_to_vertices,
 )
 
 # %%
 V_raw, F, uac, fibers_atlas, _ = (
-    read_atrial_mesh_with_fibers_and_tags_mapped_to_vertices("A")
+    read_atrial_mesh_with_fibers_and_tags_mapped_to_vertices(Geometry("A"))
 )
 V = scale_mesh_to_unit_cube(V_raw)
 
@@ -21,7 +22,7 @@ sample = prior.sample()
 
 # %%
 V1_raw, F1, uac1, fibers1, _ = read_atrial_mesh_with_fibers_and_tags_mapped_to_vertices(
-    1
+    Geometry(1)
 )
 V1 = scale_mesh_to_unit_cube(V1_raw)
 
