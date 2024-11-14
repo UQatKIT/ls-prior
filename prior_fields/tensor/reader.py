@@ -214,15 +214,13 @@ def _map_categories_from_faces_to_vertices(
     return np.array([mode(categories[i]).mode for i in adjacent_faces.values()])
 
 
-def read_all_human_atrial_fiber_meshes() -> (
-    tuple[
-        dict[int, ArrayNx3],
-        dict[int, ArrayNx3],
-        dict[int, ArrayNx2],
-        dict[int, ArrayNx3],
-        dict[int, Array1d],
-    ]
-):
+def read_all_human_atrial_fiber_meshes() -> tuple[
+    dict[int, ArrayNx3],
+    dict[int, ArrayNx3],
+    dict[int, ArrayNx2],
+    dict[int, ArrayNx3],
+    dict[int, Array1d],
+]:
     """
     Read vertices, faces, UAC, fibers, and anatomical tags from all 7 endocardial meshes
     of the left atrium published in https://zenodo.org/records/3764917.
@@ -294,6 +292,7 @@ def collect_data_from_human_atrial_fiber_meshes() -> DataUAC:
         )
 
     # Unite different geometries
+    geometry = np.hstack([i * np.ones(V_dict[i].shape[0]) for i in keys]).astype(int)
     uac = np.vstack([uac_dict[i] for i in keys])
     fibers = np.vstack([fibers_dict[i] for i in keys])
     tags = np.hstack([tags_dict[i] for i in keys])
@@ -304,7 +303,7 @@ def collect_data_from_human_atrial_fiber_meshes() -> DataUAC:
 
     fiber_angles = get_angles_in_tangent_space(fibers, alpha_axes, beta_axes)
 
-    return DataUAC(uac, fiber_angles, tags)
+    return DataUAC(geometry, uac, fiber_angles, tags)
 
 
 def _validate_uac_bases(basis_x, basis_y):

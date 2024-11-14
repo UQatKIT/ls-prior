@@ -57,6 +57,8 @@ class DataUAC:
 
     Attributes
     ----------
+    geometry : Array1d
+        Geometry to which the vertex belongs
     uac : ArrayNx2
         Universal atrial coordinates.
     fiber_angles : Array1d
@@ -66,8 +68,13 @@ class DataUAC:
     """
 
     def __init__(
-        self, uac: ArrayNx2, fiber_angles: Array1d, anatomical_tags: Array1d
+        self,
+        geometry: Array1d,
+        uac: ArrayNx2,
+        fiber_angles: Array1d,
+        anatomical_tags: Array1d,
     ) -> None:
+        self.geometry = geometry
         self.uac = uac
         self.fiber_angles = fiber_angles
         self.anatomical_tags = anatomical_tags
@@ -89,7 +96,10 @@ class DataUAC:
         data = np.load(file)
 
         return DataUAC(
-            uac=data[:, 0:2], fiber_angles=data[:, 2], anatomical_tags=data[:, 3]
+            geometry=data[:, 0],
+            uac=data[:, 1:3],
+            fiber_angles=data[:, 3],
+            anatomical_tags=data[:, 4],
         )
 
     def save(self, file: Path | str = "data/uacs_fibers_tags.npy") -> None:
@@ -105,9 +115,9 @@ class DataUAC:
         logger.info(f"Saving collected data to {file}.")
         np.save(
             file,
-            np.hstack(
-                [self.uac, np.vstack([self.fiber_angles, self.anatomical_tags]).T]
-            ),
+            np.vstack(
+                [self.geometry, self.uac.T, self.fiber_angles, self.anatomical_tags]
+            ).T,
         )
 
 
@@ -198,9 +208,7 @@ class FiberGrid:
                 else (
                     self.fiber_angle_circmean
                     if color == "mean"
-                    else self.fiber_angle_circvar
-                    if color == "var"
-                    else None
+                    else self.fiber_angle_circvar if color == "var" else None
                 )
             ),
             s=[
