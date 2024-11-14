@@ -8,7 +8,7 @@ from pathlib import Path
 import numpy as np
 from loguru import logger
 from scipy.spatial import KDTree
-from scipy.stats import mode
+from scipy.stats import circmean, mode
 
 from prior_fields.prior.dtypes import Array1d, ArrayNx2, ArrayNx3
 from prior_fields.tensor.fiber_grid import DataUAC, FiberGrid
@@ -92,38 +92,54 @@ def get_fiber_parameters_from_uac_data(
     V: ArrayNx3,
     F: ArrayNx3,
     uac: ArrayNx2,
-    k: int = 50,
+    k: int = 20,
     file: Path | str = "data/uacs_fibers_tags.npy",
 ) -> tuple[Array1d, Array1d, Array1d]:
     data_uac = DataUAC.load(file)
+    geometries = np.unique(data_uac.geometry)
 
-    # Find k nearest neighbors to each UAC in the target geometry
-    tree = KDTree(data_uac.uac)
-    _, idx_neighbors = tree.query(uac, k=k, p=2)
+    angles_uac_list: list[Array1d] = []
+    for g in geometries:
+        idx_g = data_uac.geometry == g
 
-    # Get angles of kNN based on UAC
-    angles_uac = data_uac.fiber_angles[idx_neighbors].reshape(-1)
+        # Find k nearest neighbors in g to each UAC in the target geometry
+        tree = KDTree(data_uac.uac[idx_g])
+        _, idx_neighbors = tree.query(uac, k=k, p=2)
+
+        # Get angles of kNN based on UAC
+        angles_uac_list.append(
+            circmean(
+                data_uac.fiber_angles[idx_neighbors],
+                axis=1,
+                low=-np.pi / 2,
+                high=np.pi / 2,
+                nan_policy="omit",
+            )
+        )
+
+    # Collect mean angles from different geometries for each vertex of the target mesh
+    angles_uac = np.vstack(angles_uac_list).T.reshape(-1)
 
     # Transform angles to 3d fiber vectors on vertices of target geometry
     alpha_axes, beta_axes = get_uac_based_coordinates(V, F, uac)
-    alpha_axes_repeated = _repeat_array(alpha_axes, k)
-    beta_axes_repeated = _repeat_array(beta_axes, k)
+    alpha_axes_repeated = _repeat_array(alpha_axes, len(geometries))
+    beta_axes_repeated = _repeat_array(beta_axes, len(geometries))
     fibers = angles_to_3d_vector(
         angles=angles_uac, x_axes=alpha_axes_repeated, y_axes=beta_axes_repeated
     )
 
     # Compute orthonormal bases of tangent spaces and fiber angles within these bases
     x_axes, y_axes, _ = get_vhm_based_coordinates(V, F)
-    x_axes_repeated = _repeat_array(x_axes, k)
-    y_axes_repeated = _repeat_array(y_axes, k)
+    x_axes_repeated = _repeat_array(x_axes, len(geometries))
+    y_axes_repeated = _repeat_array(y_axes, len(geometries))
     angles_vhm = get_angles_in_tangent_space(fibers, x_axes_repeated, y_axes_repeated)
 
     # Transform angles to values in (-inf, inf) for BiLaplacianPrior parameterization
-    prior_values = angles_to_sample(angles_vhm).reshape(-1, k)
+    transformed_observations = angles_to_sample(angles_vhm).reshape(-1, len(geometries))
 
     # Compute parameters
-    prior_mean = np.nanmean(prior_values, axis=1)
-    prior_sigma = np.nanstd(prior_values, axis=1)
+    prior_mean = np.nanmean(transformed_observations, axis=1)
+    prior_sigma = np.nanstd(transformed_observations, axis=1)
     mode_tag = mode(data_uac.anatomical_tags[idx_neighbors], axis=1).mode
 
     # Handle missing values
@@ -131,7 +147,7 @@ def get_fiber_parameters_from_uac_data(
     prior_sigma[np.isnan(prior_sigma)] = np.nanmean(prior_sigma)
 
     # Replace zeros in sigma
-    prior_sigma = np.clip(prior_sigma, a_min=1e-3, a_max=None)
+    prior_sigma = np.clip(prior_sigma, a_min=1e-6, a_max=None)
 
     return prior_mean, prior_sigma, mode_tag
 

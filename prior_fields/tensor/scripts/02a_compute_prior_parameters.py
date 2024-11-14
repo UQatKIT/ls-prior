@@ -17,7 +17,7 @@ app = typer.Typer(no_args_is_help=True)
 
 
 @app.command()
-def main(geometry: int, k: int = 100, path: Path = Path().cwd() / "data/parameters/"):
+def main(geometry: int, k: int = 20, path: Path = Path().cwd() / "data/parameters/"):
     V_raw, F, uac, _, _ = read_atrial_mesh_with_fibers_and_tags_mapped_to_vertices(
         Geometry(geometry)
     )
