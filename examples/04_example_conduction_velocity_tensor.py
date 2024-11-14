@@ -3,12 +3,13 @@ from pathlib import Path
 
 from prior_fields.prior.converter import scale_mesh_to_unit_cube
 from prior_fields.prior.prior import BiLaplacianPriorNumpyWrapper
-from prior_fields.tensor.conduction_velocity import sample_to_cv_tensor
+from prior_fields.tensor.conduction_velocity import angles_to_cv_tensor
 from prior_fields.tensor.parameterization import Geometry, PriorParameters
 from prior_fields.tensor.reader import (
     read_atrial_mesh_with_fibers_and_tags_mapped_to_vertices,
 )
 from prior_fields.tensor.tangent_space import get_vhm_based_coordinates
+from prior_fields.tensor.transformer import sample_to_angles, shift_angles_by_mean
 
 geometry = Geometry(1)
 
@@ -21,12 +22,13 @@ basis_x, basis_y, _ = get_vhm_based_coordinates(V, F)
 params = PriorParameters.load(Path(f"data/parameters/params_{geometry.value}.npy"))
 
 # %%
-prior = BiLaplacianPriorNumpyWrapper(
-    V, F, sigma=params.sigma, ell=params.ell, mean=params.mean
+prior = BiLaplacianPriorNumpyWrapper(V, F, sigma=params.sigma, ell=params.ell)
+angles = shift_angles_by_mean(
+    sample_to_angles(prior.sample()), sample_to_angles(params.mean)
 )
 
 # %%
-cv_tensor = sample_to_cv_tensor(prior.sample(), tags, basis_x, basis_y)
+cv_tensor = angles_to_cv_tensor(prior.sample(), tags, basis_x, basis_y)
 cv_tensor
 
 # %%

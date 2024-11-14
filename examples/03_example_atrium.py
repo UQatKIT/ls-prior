@@ -1,7 +1,6 @@
 # %%
 from pathlib import Path
 
-import matplotlib.pyplot as plt
 import numpy as np
 from pyvista import Plotter
 from scipy.spatial import KDTree
@@ -14,7 +13,11 @@ from prior_fields.tensor.reader import (
     read_atrial_mesh_with_fibers_and_tags_mapped_to_vertices,
 )
 from prior_fields.tensor.tangent_space import get_vhm_based_coordinates
-from prior_fields.tensor.transformer import angles_to_3d_vector, sample_to_angles
+from prior_fields.tensor.transformer import (
+    angles_to_3d_vector,
+    sample_to_angles,
+    shift_angles_by_mean,
+)
 
 geometry = Geometry(1)
 
@@ -60,26 +63,17 @@ plotter.show()
 # Bi-Laplacian Prior #
 ######################
 # %%
-prior = BiLaplacianPriorNumpyWrapper(
-    V, F, sigma=params.sigma, ell=params.ell, mean=params.mean
-)
-
-# %%
-# validate variance and correlation length
-nrow, ncol = 4, 3
-fig, ax = plt.subplots(nrow, ncol, figsize=(12, 12))
-for i in range(nrow):
-    for j in range(ncol):
-        ax[i][j].hist([params.mean, prior.sample()], bins=50, label=["mean", "sample"])  # type: ignore
-        ax[i][j].legend(prop={"size": 8})  # type: ignore
-plt.show()
+prior = BiLaplacianPriorNumpyWrapper(V, F, sigma=params.sigma, ell=params.ell)
 
 #########################################
 # Prior field as angles of vector field #
 #########################################
 # %%
 sample = prior.sample()
-angles = sample_to_angles(sample)
+angles_around_zero = sample_to_angles(sample)
+angles_mean = sample_to_angles(params.mean)
+angles = shift_angles_by_mean(angles_around_zero, angles_mean)
+
 x_axes, y_axes, _ = get_vhm_based_coordinates(V, F)
 vector_field = angles_to_3d_vector(angles=angles, x_axes=x_axes, y_axes=y_axes)
 
@@ -108,7 +102,9 @@ for _ in range(10):  # type: ignore
     plotter.add_arrows(
         V[idx],
         angles_to_3d_vector(
-            angles=sample_to_angles(prior.sample()[idx]),
+            angles=shift_angles_by_mean(sample_to_angles(prior.sample()), angles_mean)[
+                idx
+            ],
             x_axes=x_axes[idx],
             y_axes=y_axes[idx],
         ),

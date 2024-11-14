@@ -22,7 +22,11 @@ from prior_fields.tensor.reader import (
     read_atrial_mesh_with_fibers_and_tags_mapped_to_vertices,
 )
 from prior_fields.tensor.tangent_space import get_vhm_based_coordinates
-from prior_fields.tensor.transformer import angles_to_3d_vector, sample_to_angles
+from prior_fields.tensor.transformer import (
+    angles_to_3d_vector,
+    sample_to_angles,
+    shift_angles_by_mean,
+)
 
 global_theme.font.family = "times"
 global_theme.font.size = 20
@@ -215,32 +219,23 @@ plotter.show()
 #############################################################################
 # parameterized prior
 prior_numpy = BiLaplacianPriorNumpyWrapper(
-    V, F, sigma=params.sigma, ell=params.ell, mean=params.mean, seed=1
+    V, F, sigma=params.sigma, ell=params.ell, seed=1
 )
-samples = []
+n_samples = 4
 vector_samples = []
-for i in range(4):
-    samples.append(prior_numpy.sample())
+for i in range(n_samples):
+    angles = shift_angles_by_mean(
+        sample_to_angles(prior_numpy.sample()), sample_to_angles(params.mean)
+    )
     vector_samples.append(
-        angles_to_3d_vector(
-            angles=sample_to_angles(samples[i]), x_axes=x_axes, y_axes=y_axes
-        )
+        angles_to_3d_vector(angles=angles, x_axes=x_axes, y_axes=y_axes)
     )
 
 # %%
-plot_numpy_sample(
-    samples[0],
-    V=V,
-    F=F,
-    file="figures/priors/atrium_parameterized_sample.eps",
-    zoom=1.23,
-    clim=[np.quantile(samples[0], 0.01), np.quantile(samples[0], 0.99)],
-)
-
 plotter = initialize_vector_field_plotter(
     get_poly_data(V, F), zoom=4.5, add_axes=False, window_size=(900, 500)
 )
-for i in range(len(samples)):
+for i in range(n_samples):
     plotter.add_arrows(V[idx], vector_samples[i][idx], mag=0.011, color="tab:blue")
 plotter.add_arrows(V[idx], mean_vectors[idx], mag=0.014, color="tab:orange")
 plotter.add_legend(  # type: ignore

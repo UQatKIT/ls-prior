@@ -99,7 +99,7 @@ def angles_to_2d_vector_coefficients(angles: Array1d) -> tuple[Array1d, Array1d]
     return coeff_x, coeff_y
 
 
-def angles_to_sample(angles: np.ndarray) -> np.ndarray:
+def angles_to_sample(angles: Array1d) -> Array1d:
     """Inverse of the sigmoid-like transformation from (-pi/2, pi/2) to (-inf, inf)."""
     epsilon = 1e-9
     y = np.clip(angles, -np.pi / 2 + epsilon, np.pi / 2 - epsilon)
@@ -109,3 +109,25 @@ def angles_to_sample(angles: np.ndarray) -> np.ndarray:
 def sample_to_angles(x: Array1d) -> Array1d:
     """Sigmoid-like transformations of values in (-inf, inf) to (-pi/2, pi/2)."""
     return np.pi * (1 / (1 + np.exp(-x / 4)) - 0.5)
+
+
+def shift_angles_by_mean(angles: Array1d, mean: Array1d) -> Array1d:
+    """
+    Add mean to angles array respecting the restriction to (-pi/2, pi/2].
+
+    Parameters
+    ----------
+    angles : Array1d
+        Array of angles within (-pi/2, pi/2].
+    mean : Array1d
+        Array of mean angles within (-pi/2, pi/2] to add to the `angles`.
+
+    Returns
+    -------
+    Array1d
+        Array of angles within (-pi/2, pi/2] shifted by the mean.
+    """
+    angles_shifted = angles + mean
+    angles_shifted[angles_shifted > np.pi / 2] -= np.pi
+    angles_shifted[angles_shifted <= -np.pi / 2] += np.pi
+    return angles_shifted

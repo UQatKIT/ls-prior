@@ -7,7 +7,6 @@ import numpy as np
 from prior_fields.prior.dtypes import Array1d, ArrayNx3, ArrayNx3x3
 from prior_fields.tensor.transformer import (
     angles_to_2d_vector_coefficients,
-    sample_to_angles,
 )
 
 
@@ -174,16 +173,16 @@ def get_conduction_velocity_tensor(
     return tensor_l + tensor_t
 
 
-def sample_to_cv_tensor(
-    sample: Array1d, tags: Array1d, basis_x: ArrayNx3, basis_y: ArrayNx3
+def angles_to_cv_tensor(
+    angles: Array1d, tags: Array1d, basis_x: ArrayNx3, basis_y: ArrayNx3
 ) -> ArrayNx3x3:
     """
-    Compute conduction velocity tensors from prior sample, anatomical tags and vhm basis.
+    Compute conduction velocity tensors from VHM-angles, anatomical tags and VHM-basis.
 
     Parameters
     ----------
-    sample : Array1d
-        Sample of a `BiLaplacianPriorNumpyWrapper`.
+    angles : Array1d
+        Array of angles within VHM-based coordinate systems.
     tags : Array1d
         Anatomical tags used to parameterize the velocities.
     basis_x : ArrayNx3
@@ -197,7 +196,6 @@ def sample_to_cv_tensor(
     ArrayNx3x3
         Conduction velocity tensors at each vertex.
     """
-    angles = sample_to_angles(sample)
     velocities_l, velocities_t = get_longitudinal_and_transversal_velocities_for_tags(
         tags
     )
