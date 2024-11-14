@@ -234,7 +234,7 @@ plot_numpy_sample(
     F=F,
     file="figures/priors/atrium_parameterized_sample.eps",
     zoom=1.23,
-    clim=[np.quantile(sample, 0.01), np.quantile(sample, 0.99)],
+    clim=[np.quantile(samples[0], 0.01), np.quantile(samples[0], 0.99)],
 )
 
 plotter = initialize_vector_field_plotter(
