@@ -36,9 +36,6 @@ platforms = ["linux-64", "osx-arm64", "osx-64"]
 pip = "*"
 setuptools = ">=71.0.4,<72.1"
 
-[tool.pixi.tasks]
-postinstall = "pip install --no-build-isolation --no-deps --disable-pip-version-check -e ."
-
 # ------------------------------------------------------------------------------------- #
 #                                   PIXI DEPENDENCIES                                   #
 # ------------------------------------------------------------------------------------- #
@@ -51,6 +48,9 @@ numpy = ">=1.26.4"
 meshio = ">=5.3.5"
 loguru = ">=0.7.2,<0.8"
 typer = ">=0.12.5,<0.13"
+
+[tool.pixi.pypi-dependencies]
+prior_fields = { path = ".", editable = true }
 
 # ------------------------------------ DEVELOPMENT ------------------------------------ #
 

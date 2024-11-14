@@ -389,6 +389,7 @@ environments:
       - pypi: https://files.pythonhosted.org/packages/16/b4/e44892dd8cb34db8caf51190324432c5e011cff4cdf6ab687535b797bad8/pyacvd-0.3.1-cp312-cp312-manylinux_2_17_x86_64.manylinux2014_x86_64.whl
       - pypi: https://files.pythonhosted.org/packages/02/00/6d9c66a025387790e356247b7ad3802e7f2d19a21b8743af8d5607736986/pykdtree-1.3.13-cp312-cp312-manylinux_2_17_x86_64.manylinux2014_x86_64.whl
       - pypi: https://files.pythonhosted.org/packages/8e/ee/8a26858ca517e9c64f84b4c7734b89bda8e63bec85c3d2f432d225bb1886/scipy-1.14.1-cp312-cp312-manylinux_2_17_x86_64.manylinux2014_x86_64.whl
+      - pypi: .
       osx-64:
       - conda: https://conda.anaconda.org/conda-forge/noarch/aiohappyeyeballs-2.4.3-pyhd8ed1ab_0.conda
       - conda: https://conda.anaconda.org/conda-forge/osx-64/aiohttp-3.10.10-py312hca98d7e_0.conda
@@ -706,6 +707,7 @@ environments:
       - pypi: https://files.pythonhosted.org/packages/72/cc/7d55c62748422c448ef8754da23f3379edb6ae8652598475f10654485eb4/pyacvd-0.3.1-cp312-cp312-macosx_10_14_x86_64.whl
       - pypi: https://files.pythonhosted.org/packages/02/28/b06553552d1997de4624b3e37b979d70f7a1c094359638471917ec989e3f/pykdtree-1.3.13-cp312-cp312-macosx_12_0_x86_64.whl
       - pypi: https://files.pythonhosted.org/packages/c0/04/2bdacc8ac6387b15db6faa40295f8bd25eccf33f1f13e68a72dc3c60a99e/scipy-1.14.1-cp312-cp312-macosx_10_13_x86_64.whl
+      - pypi: .
       osx-arm64:
       - conda: https://conda.anaconda.org/conda-forge/noarch/aiohappyeyeballs-2.4.3-pyhd8ed1ab_0.conda
       - conda: https://conda.anaconda.org/conda-forge/osx-arm64/aiohttp-3.10.10-py312h906988d_0.conda
@@ -1023,9 +1025,12 @@ environments:
       - pypi: https://files.pythonhosted.org/packages/b6/41/707384c4c64930f378442d960dfb5f51e4a683b968324ae37a1ea13fd958/pyacvd-0.3.1-cp312-cp312-macosx_11_0_arm64.whl
       - pypi: https://files.pythonhosted.org/packages/d3/27/34337fdde14b29359e5e98d68052ab1a1c84f83e24c1d265c592ba68ac49/pykdtree-1.3.13-cp312-cp312-macosx_12_0_arm64.whl
       - pypi: https://files.pythonhosted.org/packages/c8/53/35b4d41f5fd42f5781dbd0dd6c05d35ba8aa75c84ecddc7d44756cd8da2e/scipy-1.14.1-cp312-cp312-macosx_12_0_arm64.whl
+      - pypi: .
   prior:
     channels:
     - url: https://conda.anaconda.org/conda-forge/
+    indexes:
+    - https://pypi.org/simple
     packages:
       linux-64:
       - conda: https://conda.anaconda.org/conda-forge/linux-64/_libgcc_mutex-0.1-conda_forge.tar.bz2
@@ -1257,6 +1262,7 @@ environments:
       - conda: https://conda.anaconda.org/conda-forge/noarch/zipp-3.21.0-pyhd8ed1ab_0.conda
       - conda: https://conda.anaconda.org/conda-forge/linux-64/zlib-1.3.1-hb9d3cd8_2.conda
       - conda: https://conda.anaconda.org/conda-forge/linux-64/zstd-1.5.6-ha6fb4c9_0.conda
+      - pypi: .
       osx-64:
       - conda: https://conda.anaconda.org/conda-forge/osx-64/blosc-1.21.6-h7d75f6d_0.conda
       - conda: https://conda.anaconda.org/conda-forge/osx-64/brotli-1.1.0-h00291cd_2.conda
@@ -1418,6 +1424,7 @@ environments:
       - conda: https://conda.anaconda.org/conda-forge/noarch/zipp-3.21.0-pyhd8ed1ab_0.conda
       - conda: https://conda.anaconda.org/conda-forge/osx-64/zlib-1.3.1-hd23fc13_2.conda
       - conda: https://conda.anaconda.org/conda-forge/osx-64/zstd-1.5.6-h915ae27_0.conda
+      - pypi: .
       osx-arm64:
       - conda: https://conda.anaconda.org/conda-forge/osx-arm64/blosc-1.21.6-h5499902_0.conda
       - conda: https://conda.anaconda.org/conda-forge/osx-arm64/brotli-1.1.0-hd74edd7_2.conda
@@ -1582,6 +1589,7 @@ environments:
       - conda: https://conda.anaconda.org/conda-forge/noarch/zipp-3.21.0-pyhd8ed1ab_0.conda
       - conda: https://conda.anaconda.org/conda-forge/osx-arm64/zlib-1.3.1-h8359307_2.conda
       - conda: https://conda.anaconda.org/conda-forge/osx-arm64/zstd-1.5.6-hb46c0d2_0.conda
+      - pypi: .
   tensor:
     channels:
     - url: https://conda.anaconda.org/conda-forge/
@@ -1767,6 +1775,7 @@ environments:
       - conda: https://conda.anaconda.org/conda-forge/linux-64/zstd-1.5.6-ha6fb4c9_0.conda
       - pypi: https://files.pythonhosted.org/packages/98/8a/a2c3f34dd06b4cbab6dee1f3d09ef18cd926f17ca1abcbd65773edb5d20c/potpourri3d-1.1.0-cp312-cp312-manylinux_2_17_x86_64.manylinux2014_x86_64.whl
       - pypi: https://files.pythonhosted.org/packages/8e/ee/8a26858ca517e9c64f84b4c7734b89bda8e63bec85c3d2f432d225bb1886/scipy-1.14.1-cp312-cp312-manylinux_2_17_x86_64.manylinux2014_x86_64.whl
+      - pypi: .
       osx-64:
       - conda: https://conda.anaconda.org/conda-forge/osx-64/blosc-1.21.6-h7d75f6d_0.conda
       - conda: https://conda.anaconda.org/conda-forge/osx-64/brotli-1.1.0-h00291cd_2.conda
@@ -1872,6 +1881,7 @@ environments:
       - conda: https://conda.anaconda.org/conda-forge/osx-64/zstd-1.5.6-h915ae27_0.conda
       - pypi: https://files.pythonhosted.org/packages/a1/95/18b15d5ef4dd8763dbbd387b8b100b617b9cc06725d8bde544265b4dc93b/potpourri3d-1.1.0-cp312-cp312-macosx_10_9_x86_64.whl
       - pypi: https://files.pythonhosted.org/packages/c0/04/2bdacc8ac6387b15db6faa40295f8bd25eccf33f1f13e68a72dc3c60a99e/scipy-1.14.1-cp312-cp312-macosx_10_13_x86_64.whl
+      - pypi: .
       osx-arm64:
       - conda: https://conda.anaconda.org/conda-forge/osx-arm64/blosc-1.21.6-h5499902_0.conda
       - conda: https://conda.anaconda.org/conda-forge/osx-arm64/brotli-1.1.0-hd74edd7_2.conda
@@ -1977,6 +1987,7 @@ environments:
       - conda: https://conda.anaconda.org/conda-forge/osx-arm64/zstd-1.5.6-hb46c0d2_0.conda
       - pypi: https://files.pythonhosted.org/packages/79/9c/d4bb5f7886cd96640ff58ecd71723d484f4028f68c9cd780bd007e6e35b6/potpourri3d-1.1.0-cp312-cp312-macosx_11_0_arm64.whl
       - pypi: https://files.pythonhosted.org/packages/c8/53/35b4d41f5fd42f5781dbd0dd6c05d35ba8aa75c84ecddc7d44756cd8da2e/scipy-1.14.1-cp312-cp312-macosx_12_0_arm64.whl
+      - pypi: .
 packages:
 - kind: conda
   name: _libgcc_mutex
@@ -13164,16 +13175,16 @@ packages:
 - kind: pypi
   name: potpourri3d
   version: 1.1.0
-  url: https://files.pythonhosted.org/packages/a1/95/18b15d5ef4dd8763dbbd387b8b100b617b9cc06725d8bde544265b4dc93b/potpourri3d-1.1.0-cp312-cp312-macosx_10_9_x86_64.whl
-  sha256: 681276dccfcf1b29ef76597d0f4dbdb9aef27295883ce5d7357e16c3f49cd68e
+  url: https://files.pythonhosted.org/packages/79/9c/d4bb5f7886cd96640ff58ecd71723d484f4028f68c9cd780bd007e6e35b6/potpourri3d-1.1.0-cp312-cp312-macosx_11_0_arm64.whl
+  sha256: 33f919d50024b998d750942a84e2d66725fd75d1236e314939a467a638838135
   requires_dist:
   - numpy
   - scipy
 - kind: pypi
   name: potpourri3d
   version: 1.1.0
-  url: https://files.pythonhosted.org/packages/79/9c/d4bb5f7886cd96640ff58ecd71723d484f4028f68c9cd780bd007e6e35b6/potpourri3d-1.1.0-cp312-cp312-macosx_11_0_arm64.whl
-  sha256: 33f919d50024b998d750942a84e2d66725fd75d1236e314939a467a638838135
+  url: https://files.pythonhosted.org/packages/a1/95/18b15d5ef4dd8763dbbd387b8b100b617b9cc06725d8bde544265b4dc93b/potpourri3d-1.1.0-cp312-cp312-macosx_10_9_x86_64.whl
+  sha256: 681276dccfcf1b29ef76597d0f4dbdb9aef27295883ce5d7357e16c3f49cd68e
   requires_dist:
   - numpy
   - scipy
@@ -13200,6 +13211,13 @@ packages:
   - pkg:pypi/pre-commit?source=conda-forge-mapping
   size: 180526
   timestamp: 1725795837882
+- kind: pypi
+  name: prior-fields
+  version: 0.0.0
+  path: .
+  sha256: e0dfc48f4d80a88e46c8905ac7a80108209d4e7220c55e49cf0d2f7a2f36cefa
+  requires_python: '>=3.12'
+  editable: true
 - kind: conda
   name: proj
   version: 9.5.0
@@ -13543,8 +13561,8 @@ packages:
 - kind: pypi
   name: pyacvd
   version: 0.3.1
-  url: https://files.pythonhosted.org/packages/72/cc/7d55c62748422c448ef8754da23f3379edb6ae8652598475f10654485eb4/pyacvd-0.3.1-cp312-cp312-macosx_10_14_x86_64.whl
-  sha256: 2236235be6656c6bb9956b2c874cbef5b8791d0b322ac8b0fe98bf23126f294d
+  url: https://files.pythonhosted.org/packages/b6/41/707384c4c64930f378442d960dfb5f51e4a683b968324ae37a1ea13fd958/pyacvd-0.3.1-cp312-cp312-macosx_11_0_arm64.whl
+  sha256: 1767d44097e6406099499edec416274756a1c8067bf2b42b2b3d8940225f902f
   requires_dist:
   - numpy
   - pyvista>=0.37.0
@@ -13553,8 +13571,8 @@ packages:
 - kind: pypi
   name: pyacvd
   version: 0.3.1
-  url: https://files.pythonhosted.org/packages/b6/41/707384c4c64930f378442d960dfb5f51e4a683b968324ae37a1ea13fd958/pyacvd-0.3.1-cp312-cp312-macosx_11_0_arm64.whl
-  sha256: 1767d44097e6406099499edec416274756a1c8067bf2b42b2b3d8940225f902f
+  url: https://files.pythonhosted.org/packages/72/cc/7d55c62748422c448ef8754da23f3379edb6ae8652598475f10654485eb4/pyacvd-0.3.1-cp312-cp312-macosx_10_14_x86_64.whl
+  sha256: 2236235be6656c6bb9956b2c874cbef5b8791d0b322ac8b0fe98bf23126f294d
   requires_dist:
   - numpy
   - pyvista>=0.37.0
@@ -13738,16 +13756,16 @@ packages:
 - kind: pypi
   name: pykdtree
   version: 1.3.13
-  url: https://files.pythonhosted.org/packages/02/28/b06553552d1997de4624b3e37b979d70f7a1c094359638471917ec989e3f/pykdtree-1.3.13-cp312-cp312-macosx_12_0_x86_64.whl
-  sha256: ded3c7a6a20b9e5eddf8a3e2ce1506d45e91f1c139f1d6de0c7028bad5bad47e
+  url: https://files.pythonhosted.org/packages/d3/27/34337fdde14b29359e5e98d68052ab1a1c84f83e24c1d265c592ba68ac49/pykdtree-1.3.13-cp312-cp312-macosx_12_0_arm64.whl
+  sha256: 1ce7bb28aa469d032fe8f1a7068baba0b94bcd8da9e9b0b843c6d4c8fc6d362a
   requires_dist:
   - numpy
   requires_python: '>=3.9'
 - kind: pypi
   name: pykdtree
   version: 1.3.13
-  url: https://files.pythonhosted.org/packages/d3/27/34337fdde14b29359e5e98d68052ab1a1c84f83e24c1d265c592ba68ac49/pykdtree-1.3.13-cp312-cp312-macosx_12_0_arm64.whl
-  sha256: 1ce7bb28aa469d032fe8f1a7068baba0b94bcd8da9e9b0b843c6d4c8fc6d362a
+  url: https://files.pythonhosted.org/packages/02/28/b06553552d1997de4624b3e37b979d70f7a1c094359638471917ec989e3f/pykdtree-1.3.13-cp312-cp312-macosx_12_0_x86_64.whl
+  sha256: ded3c7a6a20b9e5eddf8a3e2ce1506d45e91f1c139f1d6de0c7028bad5bad47e
   requires_dist:
   - numpy
   requires_python: '>=3.9'
@@ -14540,8 +14558,8 @@ packages:
 - kind: pypi
   name: scipy
   version: 1.14.1
-  url: https://files.pythonhosted.org/packages/c0/04/2bdacc8ac6387b15db6faa40295f8bd25eccf33f1f13e68a72dc3c60a99e/scipy-1.14.1-cp312-cp312-macosx_10_13_x86_64.whl
-  sha256: 631f07b3734d34aced009aaf6fedfd0eb3498a97e581c3b1e5f14a04164a456d
+  url: https://files.pythonhosted.org/packages/c8/53/35b4d41f5fd42f5781dbd0dd6c05d35ba8aa75c84ecddc7d44756cd8da2e/scipy-1.14.1-cp312-cp312-macosx_12_0_arm64.whl
+  sha256: af29a935803cc707ab2ed7791c44288a682f9c8107bc00f0eccc4f92c08d6e07
   requires_dist:
   - numpy<2.3,>=1.23.5
   - pytest ; extra == 'test'
@@ -14582,8 +14600,8 @@ packages:
 - kind: pypi
   name: scipy
   version: 1.14.1
-  url: https://files.pythonhosted.org/packages/c8/53/35b4d41f5fd42f5781dbd0dd6c05d35ba8aa75c84ecddc7d44756cd8da2e/scipy-1.14.1-cp312-cp312-macosx_12_0_arm64.whl
-  sha256: af29a935803cc707ab2ed7791c44288a682f9c8107bc00f0eccc4f92c08d6e07
+  url: https://files.pythonhosted.org/packages/c0/04/2bdacc8ac6387b15db6faa40295f8bd25eccf33f1f13e68a72dc3c60a99e/scipy-1.14.1-cp312-cp312-macosx_10_13_x86_64.whl
+  sha256: 631f07b3734d34aced009aaf6fedfd0eb3498a97e581c3b1e5f14a04164a456d
   requires_dist:
   - numpy<2.3,>=1.23.5
   - pytest ; extra == 'test'
