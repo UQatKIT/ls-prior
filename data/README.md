@@ -2,7 +2,7 @@
 
 This folder contains the data used throughout this project.
 
-For some basic examples, we use a [unit sphere mesh](./sphere.xml) sourced from [here](https://a654cc05c43271a5d22f-f8befe5e0dcd44ae0dccf352c00b4664.ssl.cf5.rackcdn.com/data/meshes/), and a coarse triangular mesh of the [left atrium](./left_atrium.ply) originally published [here](?) TODO!!!.
+For some basic examples, we use a [unit sphere mesh](./sphere.xml) sourced from [here](https://a654cc05c43271a5d22f-f8befe5e0dcd44ae0dccf352c00b4664.ssl.cf5.rackcdn.com/data/meshes/), and a coarse triangular mesh of the [left atrium](./left_atrium.ply) originally published [here](https://github.com/fsahli/FiberNet/blob/main/data/LA_model.vtk) and converted to a .ply file using [meshio](https://github.com/nschloe/meshio).
 
 ## Human Atrial Fibre Data (Roney et al.)
 
