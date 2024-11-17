@@ -1,3 +1,8 @@
+"""
+This file shows how to use the `BiLaplacianPrior` class for triangular meshes of the unit
+square. We focus on the different possibilities to parameterize the prior.
+"""
+
 # %%
 import numpy as np
 from dolfin import Expression, FunctionSpace, UnitSquareMesh
@@ -13,8 +18,14 @@ from prior_fields.prior.prior import AnisotropicTensor2d, BiLaplacianPrior
 # %%
 # Minimal working example:
 # zero-mean, stationary, isotropic BiLaplacianPrior on UnitSquareMesh with 5x5 vertices
+
+# initialize mesh
 mesh = UnitSquareMesh(4, 4)
+
+# initialize prior
 prior = BiLaplacianPrior(mesh, sigma=0.1, ell=0.1)
+
+# draw and plot prior sample
 sample = prior.sample()
 plot_function(sample, show_mesh=True)
 
