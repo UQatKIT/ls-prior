@@ -27,6 +27,7 @@ ax2.plot(x_angles, y_sample, color="#009682")
 for axis in [ax1, ax2]:
     axis.spines["top"].set_visible(False)
     axis.spines["right"].set_visible(False)
+    axis.spines["bottom"].set_position("zero")
 
 ax1.margins(x=0)
 ax2.margins(y=0)
