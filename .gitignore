@@ -11,6 +11,9 @@ data/shape_model/*
 
 # figures
 figures/*
+!figures/vector_fields/
+figures/vector_fields/*
+!figures/vector_fields/*.gif
 
 # private files
 private_*
