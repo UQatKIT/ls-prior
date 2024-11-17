@@ -250,3 +250,31 @@ plotter.save_graphic("figures/vector_fields/samples_vs_mean.eps")
 plotter.show()
 
 # %%
+plotter = Plotter(window_size=(900, 500))
+plotter.add_mesh(get_poly_data(V, F), color="white")
+for i in range(n_samples):
+    plotter.add_arrows(V[idx], vector_samples[i][idx], mag=0.011, color="tab:blue")
+plotter.add_arrows(V[idx], mean_vectors[idx], mag=0.014, color="tab:orange")
+plotter.add_legend(  # type: ignore
+    labels=[["samples", "tab:blue"], ["mean", "tab:orange"]],
+    bcolor="white",
+    size=(0.14, 0.1),
+    loc="lower left",
+    face="none",
+    background_opacity=0.8,
+)
+
+plotter.open_gif("figures/vector_fields/samples_vs_mean_visualization.gif")
+
+n_frames = 90
+plotter.camera.zoom(1.2)
+plotter.camera.elevation += 40
+
+for i in range(n_frames):
+    plotter.camera.zoom(1.02)
+    plotter.camera.elevation -= 40 / n_frames
+    plotter.write_frame()
+
+plotter.close()
+
+# %%
