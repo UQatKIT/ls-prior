@@ -10,7 +10,7 @@ The background of this project is an infinite-dimensional formulation of the Bay
 
 
 ### Example: Fiber Field Prior Samples vs. Mean Fiber Field
-![Fiber Field Prior vs. Mean Fibers Field](figures/vector_fields/samples_vs_mean_visualization.gif)
+![Fiber Field Prior vs. Mean Fibers Field](./figures/vector_fields/samples_vs_mean_visualization.gif)
 
 
 ## Installation
