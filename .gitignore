@@ -2,9 +2,9 @@
 *.h5
 *.xdmf
 *.gz
-*.ply
 *.lon
 *.pts
+data/left_atrium.vtk
 
 # unused data files
 data/shape_model/*
