@@ -529,8 +529,12 @@ class BiLaplacianPriorNumpyWrapper:
         Array1d
             :math:`A M^{-1} A d`
         """
-        return self._prior.compute_hessian_vector_product(
-            numpy_to_vector(d, self._prior.Vh, map_vertex_values_to_dof=True)
+        return vector_to_numpy(
+            self._prior.compute_hessian_vector_product(
+                numpy_to_vector(d, self._prior.Vh, map_vertex_values_to_dof=True)
+            ),
+            self._prior.Vh,
+            get_vertex_values=True,
         )
 
     def _validate_inputs(self, sigma, ell):
