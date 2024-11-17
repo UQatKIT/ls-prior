@@ -139,6 +139,7 @@ for i in keys:
     plotter.camera.zoom(1.4)
 
 plotter.save_graphic(filename="figures/other/atrial_geometries.eps")
+plotter.save_graphic(filename="figures/other/atrial_geometries.svg")
 plotter.show()
 
 #######################

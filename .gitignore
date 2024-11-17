@@ -14,6 +14,9 @@ figures/*
 !figures/vector_fields/
 figures/vector_fields/*
 !figures/vector_fields/*.gif
+!figures/other/
+figures/other/*
+!figures/other/*.svg
 
 # private files
 private_*
