@@ -15,6 +15,7 @@ from dolfin import (
     cells,
 )
 from dolfin.function.argument import Argument
+from numpy.random import Generator
 from scipy.linalg import cholesky
 from scipy.sparse import block_diag, coo_array
 from ufl import Form, ds, dx, grad, inner
@@ -31,7 +32,6 @@ from prior_fields.prior.parameterization import (
     get_kappa_from_ell,
     get_tau_from_sigma_and_ell,
 )
-from prior_fields.prior.random import random_normal_vector
 
 
 class BiLaplacianPrior:
@@ -366,6 +366,25 @@ class BiLaplacianPrior:
         self.A.mult(MinvAd, Qd)
 
         return Qd
+
+
+def random_normal_vector(dim: int, prng: Generator) -> Vector:
+    """
+    Create a vector of standard normally distributed noise.
+
+    Parameters
+    ----------
+    dim : int
+        Length of the random vector
+    prng : np.random.Generator
+        Pseudo random number generator
+
+    Returns
+    -------
+    dl.Vector
+        Sample from standard normal distribution
+    """
+    return numpy_to_vector(prng.standard_normal(size=dim))
 
 
 class BiLaplacianPriorNumpyWrapper:
