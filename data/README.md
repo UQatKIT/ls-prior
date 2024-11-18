@@ -11,3 +11,27 @@ The main data source used in this project is the [human atrial fiber data set](h
 In this project, we use the data of the left atrial endocardium (see [`data/LGE-MRI-based/`](./LGE-MRI-based/)) to parameterize the prior distribution of the fiber field (see [`data/parameters/`](./parameters/)). We utilize the universal atrial coordinates to map data between the seven geometries. [`uacs_fibers_tags.npy`](./uacs_fibers_tags.npy) contains the fiber data as well as the anatomical tag corresponding to all vertices from all geometries mapped to the UAC system.
 
 <img src="../figures/other/atrial_geometries.svg" alt="Left atrial geometries" width="700">
+
+### Reading the data
+
+To read the data of one geometry, we provide the function [`read_raw_atrial_mesh()`](../prior_fields/tensor/reader.py#L20). The fibers and tags output by this function correspond to the faces of the mesh. To map all data to the vertices, as we do it before using it for our parameterization, use the function [`read_atrial_mesh_with_fibers_and_tags_mapped_to_vertices`](../prior_fields/tensor/reader.py#L101). You can also read the data of all geometries by using [`read_all_human_atrial_fiber_meshes()`](../prior_fields/tensor/reader.py#L217). This returns dictionaries with the outputs of `read_atrial_mesh_with_fibers_and_tags_mapped_to_vertices()`:
+
+```python
+from prior_fields.tensor.reader import (
+    read_all_human_atrial_fiber_meshes,
+    read_atrial_mesh_with_fibers_and_tags_mapped_to_vertices,
+    read_raw_atrial_mesh
+)
+from prior_fields.tensor.parameterization import Geometry
+
+g = Geometry(1)
+
+# Read raw data for geometry 1
+V, F, uac, fibers_F, tags_F = read_raw_atrial_mesh(g)
+
+# Read data for geometry 1, where fibers and tags are mapped to the vertices
+V, F, uac, fibers_V, tags_V = read_atrial_mesh_with_fibers_and_tags_mapped_to_vertices(g)
+
+# Read the pre-processed data for all seven geometries
+V_dict, F_dict, uac_dict, fibers_dict, tags_dict = read_all_human_atrial_fiber_meshes()
+```
