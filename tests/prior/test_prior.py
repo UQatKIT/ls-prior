@@ -103,6 +103,7 @@ def test_bilaplacianprior_cost_is_zero_at_true_mean(request, mesh, mean):
 )
 def test_bilaplacianprior_cost_decreases_towards_mean(request, mesh, mean):
     mesh = request.getfixturevalue(mesh)
+
     mean_expr = Expression(mean, degree=1)
     mean_vector = expression_to_vector(mean_expr, FunctionSpace(mesh, "CG", 1))
     mean_array = vector_to_numpy(mean_vector)
@@ -159,11 +160,13 @@ def test_bilaplacianprior_grad_is_zero_at_true_mean(request, mesh, mean):
 )
 def test_bilaplacianprior_negative_grad_points_towards_true_mean(request, mesh, mean):
     mesh = request.getfixturevalue(mesh)
+    Vh = FunctionSpace(mesh, "CG", 1)
+
     mean_expr = Expression(mean, degree=1)
     mean_vector = expression_to_vector(mean_expr, FunctionSpace(mesh, "CG", 1))
 
     mean_approx = numpy_to_vector(
-        np.random.normal(0, 1, vector_to_numpy(mean_vector).shape)
+        np.random.normal(0, 1, vector_to_numpy(mean_vector).shape), Vh
     )
 
     prior = BiLaplacianPrior(mesh, 5.0, 1.0, mean=mean_vector)
@@ -241,9 +244,12 @@ def test_bilaplacianprior_from_wrapper_with_seed_produces_different_samples():
 )
 def test_bilaplacianprior_from_wrapper_cost_is_zero_at_true_mean(request, mesh, mean):
     mesh = request.getfixturevalue(mesh)
+    Vh = FunctionSpace(mesh, "CG", 1)
     V = mesh.coordinates()
     F = mesh.cells()
-    mean_array = vector_to_numpy(str_to_vector(mean, mesh))
+
+    # Convert mean expression to array ordered as the vertices in `V`
+    mean_array = vector_to_numpy(str_to_vector(mean, mesh), Vh, get_vertex_values=True)
     prior = BiLaplacianPriorNumpyWrapper(V, F, 5.0, 1.0, mean=mean_array)
 
     assert prior.cost(mean_array) == 0
@@ -266,14 +272,17 @@ def test_bilaplacianprior_from_wrapper_cost_is_zero_at_true_mean(request, mesh, 
 )
 def test_bilaplacianprior_from_wrapper_cost_decreases_towards_mean(request, mesh, mean):
     mesh = request.getfixturevalue(mesh)
+    Vh = FunctionSpace(mesh, "CG", 1)
     V = mesh.coordinates()
     F = mesh.cells()
-    mean_array = vector_to_numpy(str_to_vector(mean, mesh))
+
+    # Convert mean expression to array ordered as the vertices in `V`
+    mean_array = vector_to_numpy(str_to_vector(mean, mesh), Vh, get_vertex_values=True)
 
     mean_approx = mean_array + np.ones_like(mean_array) / 1000
     mean_approx_worse = mean_array + np.ones_like(mean_array) / 900
 
-    prior = BiLaplacianPriorNumpyWrapper(V, F, 5.0, 1.0, mean=mean_array)
+    prior = BiLaplacianPriorNumpyWrapper(V, F, 10.0, 0.1, mean=mean_array)
 
     assert prior.cost(mean_approx) <= 1e-3
     assert prior.cost(mean_approx) < prior.cost(mean_approx_worse)
@@ -296,9 +305,12 @@ def test_bilaplacianprior_from_wrapper_cost_decreases_towards_mean(request, mesh
 )
 def test_bilaplacianprior_from_wrapper_grad_is_zero_at_true_mean(request, mesh, mean):
     mesh = request.getfixturevalue(mesh)
+    Vh = FunctionSpace(mesh, "CG", 1)
     V = mesh.coordinates()
     F = mesh.cells()
-    mean_array = vector_to_numpy(str_to_vector(mean, mesh))
+
+    # Convert mean expression to array ordered as the vertices in `V`
+    mean_array = vector_to_numpy(str_to_vector(mean, mesh), Vh, get_vertex_values=True)
     prior = BiLaplacianPriorNumpyWrapper(V, F, 5.0, 1.0, mean=mean_array)
     grad = prior.grad(mean_array)
 
@@ -325,9 +337,12 @@ def test_bilaplacianprior_from_wrapper_negative_grad_points_towards_true_mean(
     request, mesh, mean
 ):
     mesh = request.getfixturevalue(mesh)
+    Vh = FunctionSpace(mesh, "CG", 1)
     V = mesh.coordinates()
     F = mesh.cells()
-    mean_array = vector_to_numpy(str_to_vector(mean, mesh))
+
+    # Convert mean expression to array ordered as the vertices in `V`
+    mean_array = vector_to_numpy(str_to_vector(mean, mesh), Vh, get_vertex_values=True)
     mean_approx = np.random.normal(0, 1, mean_array.shape)
 
     prior = BiLaplacianPriorNumpyWrapper(V, F, 5.0, 1.0, mean=mean_array)

@@ -1,40 +1,37 @@
-import warnings
-
 import numpy as np
 from dolfin import (
-    Argument,
     Function,
     FunctionSpace,
     Matrix,
     Mesh,
     PETScKrylovSolver,
+    PETScPreconditioner,
     TestFunction,
     TrialFunction,
     UserExpression,
     Vector,
     assemble,
-    parameters,
+    assemble_local,
+    cells,
 )
-from ffc.quadrature.deprecation import QuadratureRepresentationDeprecationWarning
-from ufl import FiniteElement, Form, ds, dx, grad, inner
+from dolfin.function.argument import Argument
+from numpy.random import Generator
+from scipy.linalg import cholesky
+from scipy.sparse import block_diag, coo_array
+from ufl import Form, ds, dx, grad, inner
 
 from prior_fields.prior.converter import (
     create_triangle_mesh_from_coordinates,
-    function_to_numpy,
-    matrix_to_numpy,
     numpy_to_function,
+    numpy_to_matrix_sparse,
     numpy_to_vector,
     vector_to_numpy,
 )
 from prior_fields.prior.dtypes import Array1d, ArrayNx3
-from prior_fields.prior.linalg import multiply_matrices
 from prior_fields.prior.parameterization import (
     get_kappa_from_ell,
     get_tau_from_sigma_and_ell,
 )
-from prior_fields.prior.random import random_normal_vector
-
-warnings.simplefilter("ignore", QuadratureRepresentationDeprecationWarning)
 
 
 class BiLaplacianPrior:
@@ -80,7 +77,7 @@ class BiLaplacianPrior:
     tau : float | dl.Function
         Controls marginal variance
     beta : dl.Constant
-        Coefficient in Robin boundary condition (empircally optimal)
+        Coefficient in Robin boundary condition (empirically optimal)
     mean : dl.Vector
         Prior mean. Defaults to zero.
     theta : dl.UserExpression
@@ -96,7 +93,7 @@ class BiLaplacianPrior:
     Asolver : dl.PETScKrylovSolver
         Solver to efficiently solve :math:`Ax = y` using `Asolver.solve(x, y)`
     sqrtM : dl.Matrix
-        Quadrature implementation that behaves like :math:`M^{1/2}`.
+        Sparse decomposition :math:`M = sqrtM sqrtM^\\top`.
     prng : np.random.default_rng
         Pseudo random random generator used for sampling.
     """
@@ -110,7 +107,8 @@ class BiLaplacianPrior:
         theta: UserExpression | None = None,
         seed: int | None = None,
     ) -> None:
-        """Construct a bi-Laplacian prior.
+        """
+        Construct a bi-Laplacian prior.
 
         Parameters
         ----------
@@ -146,7 +144,7 @@ class BiLaplacianPrior:
         self.M, self.Msolver = self._init_operator(varfM, preconditioner="jacobi")
         self.A, self.Asolver = self._init_operator(varfA, preconditioner="petsc_amg")
 
-        self._init_sqrtm(test)
+        self._init_sqrtm(varfM)
 
         self.mean = mean
         if self.mean is None:
@@ -156,14 +154,14 @@ class BiLaplacianPrior:
         self.prng = np.random.default_rng(seed=seed)
 
     def sample(self) -> Function:
-        """Draw sample from bi-Laplacian prior.
+        """
+        Draw sample from bi-Laplacian prior.
 
         Returns
         ----------
         dl.Function
             bi-Laplacian sample
         """
-
         noise = random_normal_vector(dim=self.sqrtM.size(1), prng=self.prng)  # ~ N(0, I)
         return self._transform_standard_normal_noise_with_mean_and_covariance(noise)
 
@@ -192,7 +190,8 @@ class BiLaplacianPrior:
         return 0.5 * Qd.inner(d)
 
     def grad(self, m: Vector) -> Vector:
-        """Compute gradient of discrete cost functional :math:`A M^{-1} A (m - mean)`.
+        """
+        Compute gradient of discrete cost functional :math:`A M^{-1} A (m - mean)`.
 
         Parameters
         ----------
@@ -212,7 +211,8 @@ class BiLaplacianPrior:
         return Qd
 
     def compute_hessian_vector_product(self, d: Vector) -> Vector:
-        """Multiply hessian to given direction vector.
+        """
+        Multiply hessian to given direction vector.
 
         Parameters
         ----------
@@ -263,10 +263,12 @@ class BiLaplacianPrior:
         solver.parameters["nonzero_initial_guess"] = False
 
     @staticmethod
-    def _init_trial_test_functions(Vh) -> tuple[Argument, Argument]:
+    def _init_trial_test_functions(Vh: FunctionSpace) -> tuple[Argument, Argument]:
         return TrialFunction(Vh), TestFunction(Vh)
 
-    def _init_variational_forms(self, trial, test) -> tuple[Form, Form]:
+    def _init_variational_forms(
+        self, trial: Argument, test: Argument
+    ) -> tuple[Form, Form]:
         """Initialize variational forms of the operators M & A."""
         varfM = self.tau * self.kappa**2 * inner(trial, test) * dx
 
@@ -281,50 +283,37 @@ class BiLaplacianPrior:
 
         return varfM, varfA
 
-    def _init_operator(self, varf, preconditioner):
+    def _init_operator(
+        self, varf: Form, preconditioner: PETScPreconditioner | str
+    ) -> tuple[Matrix, PETScKrylovSolver]:
         """Assemble variational form of an operator, initialize corresponding solver."""
         mat = assemble(varf)
         solver = PETScKrylovSolver("cg", preconditioner)
         self._init_solver(solver, mat)
         return mat, solver
 
-    def _init_quadrature_space(self, qdegree):
-        """Initialize quadrature space for efficient computation of :math:`\\srqt{M}`."""
-        element = FiniteElement(
-            "Quadrature", self.Vh.mesh().ufl_cell(), qdegree, quad_scheme="default"
+    def _init_sqrtm(self, varfM: Form):
+        """Sparse decomposition :math:`M = sqrtM sqrtM^\\top`."""
+        H_e_list = []
+        idx = []
+
+        for i, cell in enumerate(cells(self.Vh.mesh())):
+            M_e = assemble_local(varfM, cell)
+            H_e = cholesky(M_e)
+            H_e_list.append(H_e)
+            idx.append(self.Vh.dofmap().cell_dofs(i))
+
+        H_block_diag = block_diag(H_e_list)
+        n_cells = self.Vh.mesh().num_cells()
+        L_transposed = coo_array(
+            (
+                np.ones(3 * n_cells, dtype=np.int32),
+                (np.hstack(idx), np.arange(3 * n_cells, dtype=np.int32)),
+            ),
+            dtype=np.int32,
         )
-        return FunctionSpace(self.Vh.mesh(), element)
 
-    def _init_sqrtm(self, test: Argument):
-        """Compute matrix that behaves like :math:`\\srqt{M}`."""
-        old_qdegree = parameters["form_compiler"]["quadrature_degree"]
-        representation_old = parameters["form_compiler"]["representation"]
-        parameters["form_compiler"]["quadrature_degree"] = -1
-        parameters["form_compiler"]["representation"] = "quadrature"
-        metadata = {"quadrature_degree": 2}
-
-        Qh = self._init_quadrature_space(qdegree=metadata["quadrature_degree"])
-        ph, qh = self._init_trial_test_functions(Qh)
-        # In Qh, the trial and test functions are function evaluations at the quadrature
-        # points. They are zero everywhere but at the corresponding quadrature point,
-        # i.e., non-overlapping.
-
-        M_Qh = assemble(inner(ph, qh) * dx(metadata=metadata))  # diagonal matrix
-
-        # make M_Qh diagonal to easily invert it and compute the sqrt
-        diag_M_Qh = np.diag(matrix_to_numpy(M_Qh))
-        M_Qh.zero()
-        M_Qh.set_diagonal(numpy_to_vector(1 / np.sqrt(diag_M_Qh)))
-
-        # projects the elements from Qh to Vh
-        M_mixed = assemble(inner(ph, test) * dx(metadata=metadata))
-
-        # not actually the square root,
-        # but behaves similarly in further computations and is computationally efficient
-        self.sqrtM = multiply_matrices(M_mixed, M_Qh)
-
-        parameters["form_compiler"]["quadrature_degree"] = old_qdegree
-        parameters["form_compiler"]["representation"] = representation_old
+        self.sqrtM = numpy_to_matrix_sparse(L_transposed @ H_block_diag)
 
     def _transform_standard_normal_noise_with_mean_and_covariance(
         self, noise: Vector
@@ -351,7 +340,8 @@ class BiLaplacianPrior:
         return f
 
     def _multiply_with_precision(self, d: Vector) -> Vector:
-        """Multiply vector with precision matrix :math:`Q = C^{-1} = A M^{-1} A`.
+        """
+        Multiply vector with precision matrix :math:`Q = C^{-1} = A M^{-1} A`.
 
         Parameters
         ----------
@@ -378,8 +368,28 @@ class BiLaplacianPrior:
         return Qd
 
 
+def random_normal_vector(dim: int, prng: Generator) -> Vector:
+    """
+    Create a vector of standard normally distributed noise.
+
+    Parameters
+    ----------
+    dim : int
+        Length of the random vector
+    prng : np.random.Generator
+        Pseudo random number generator
+
+    Returns
+    -------
+    dl.Vector
+        Sample from standard normal distribution
+    """
+    return numpy_to_vector(prng.standard_normal(size=dim))
+
+
 class BiLaplacianPriorNumpyWrapper:
-    """Wrapper to support numpy inputs and outputs for the BiLaplacianPrior.
+    """
+    Wrapper to support numpy inputs and outputs for the BiLaplacianPrior.
 
     Example
     -------
@@ -388,6 +398,12 @@ class BiLaplacianPriorNumpyWrapper:
     prior_numpy = BiLaplacianPriorNumpyWrapper(V, F, sigma=0.2, ell=10.0)
     sample = prior_numpy.sample()
     ```
+
+    Note
+    ----
+    If the parameters `sigma`, `ell`, and `mean` are arrays, they are assumed to be
+    ordered according to the vertex ordering in `V`. The class takes care of the
+    reordering according to the DOFs of the `FunctionSpace` in the `BiLaplacianPrior`.
 
     Attributes
     ----------
@@ -416,7 +432,8 @@ class BiLaplacianPriorNumpyWrapper:
         mean: Array1d | None = None,
         seed: int | None = None,
     ) -> None:
-        """Construct a bi-Laplacian prior from numpy inputs.
+        """
+        Construct a bi-Laplacian prior from numpy inputs.
 
         Parameters
         ----------
@@ -447,26 +464,39 @@ class BiLaplacianPriorNumpyWrapper:
         if self.mean is None:
             self.mean = np.zeros(V.shape[0])
 
+        mesh = create_triangle_mesh_from_coordinates(self.V, self.F)
+        Vh = FunctionSpace(mesh, "CG", 1)
+
         self._prior = BiLaplacianPrior(
-            mesh=create_triangle_mesh_from_coordinates(self.V, self.F),
-            sigma=sigma if isinstance(sigma, float) else numpy_to_vector(sigma),
-            ell=ell if isinstance(ell, float) else numpy_to_vector(ell),
-            mean=numpy_to_vector(self.mean),
+            mesh=mesh,
+            sigma=(
+                sigma
+                if isinstance(sigma, float)
+                else numpy_to_vector(sigma, Vh, map_vertex_values_to_dof=True)
+            ),
+            ell=(
+                ell
+                if isinstance(ell, float)
+                else numpy_to_vector(ell, Vh, map_vertex_values_to_dof=True)
+            ),
+            mean=numpy_to_vector(self.mean, Vh, map_vertex_values_to_dof=True),
             seed=seed,
         )
 
     def sample(self) -> Array1d:
-        """Draw sample from bi-Laplacian prior.
+        """
+        Draw sample from bi-Laplacian prior.
 
         Returns
         -------
         Array1d
             1d-array with sample values at each vertex in V.
         """
-        return function_to_numpy(self._prior.sample())
+        return self._prior.sample().compute_vertex_values(self._prior.Vh.mesh())
 
     def cost(self, m: Array1d) -> float:
-        """Compute cost functional of the prior field for given values at each vertex.
+        """
+        Compute cost functional of the prior field for given values at each vertex.
 
         Parameters
         ----------
@@ -478,10 +508,13 @@ class BiLaplacianPriorNumpyWrapper:
         float
             :math:`0.5 * (m - mean)' A M^{-1} A (m - mean)`
         """
-        return self._prior.cost(numpy_to_vector(m))
+        return self._prior.cost(
+            numpy_to_vector(m, self._prior.Vh, map_vertex_values_to_dof=True)
+        )
 
     def grad(self, m: Array1d) -> Array1d:
-        """Compute gradient of the cost functional for given values at each vertex.
+        """
+        Compute gradient of the cost functional for given values at each vertex.
 
         Parameters
         ----------
@@ -493,10 +526,17 @@ class BiLaplacianPriorNumpyWrapper:
         Array1d
             :math:`A M^{-1} A (m - mean)`
         """
-        return vector_to_numpy(self._prior.grad(numpy_to_vector(m)))
+        return vector_to_numpy(
+            self._prior.grad(
+                numpy_to_vector(m, self._prior.Vh, map_vertex_values_to_dof=True)
+            ),
+            self._prior.Vh,
+            get_vertex_values=True,
+        )
 
     def compute_hessian_vector_product(self, d: Array1d) -> Array1d:
-        """Multiply hessian to given direction vector.
+        """
+        Multiply hessian to given direction vector.
 
         Parameters
         ----------
@@ -508,7 +548,13 @@ class BiLaplacianPriorNumpyWrapper:
         Array1d
             :math:`A M^{-1} A d`
         """
-        return self._prior.compute_hessian_vector_product(numpy_to_vector(d))
+        return vector_to_numpy(
+            self._prior.compute_hessian_vector_product(
+                numpy_to_vector(d, self._prior.Vh, map_vertex_values_to_dof=True)
+            ),
+            self._prior.Vh,
+            get_vertex_values=True,
+        )
 
     def _validate_inputs(self, sigma, ell):
         if not (
@@ -525,7 +571,8 @@ class BiLaplacianPriorNumpyWrapper:
 
 
 class AnisotropicTensor2d(UserExpression):
-    """User expression to model anisotropy in :math:`\\mathbb{R}^2`.
+    """
+    User expression to model anisotropy in :math:`\\mathbb{R}^2`.
 
     Represents an anisotropic tensor of the form
     :math:`\\Theta =
@@ -561,24 +608,3 @@ class AnisotropicTensor2d(UserExpression):
 
     def value_shape(self):
         return (2, 2)
-
-
-class AnisotropicTensor3d(UserExpression):
-    """User expression to model anisotropy in :math:`\\mathbb{R}^3`."""
-
-    def __init__(self, **kwargs):
-        super().__init__(**kwargs)
-
-    def eval(self, values, x):
-        values[0] = 1
-        values[1] = 2
-        values[2] = 1
-        values[3] = 1
-        values[4] = 5
-        values[5] = 1
-        values[6] = 1
-        values[7] = 2
-        values[8] = 1
-
-    def value_shape(self):
-        return (3, 3)

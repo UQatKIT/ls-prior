@@ -4,12 +4,12 @@ from prior_fields.prior.converter import (
     matrix_to_numpy,
     matrix_to_petsc,
     petsc_to_matrix,
-    vector_to_numpy,
 )
 
 
 def multiply_matrices(A: Matrix, B: Matrix) -> Matrix:
-    """Compute the product of two matrices.
+    """
+    Compute the product of two matrices.
 
     Parameters
     ----------
@@ -27,7 +27,7 @@ def multiply_matrices(A: Matrix, B: Matrix) -> Matrix:
 
 
 def len_vector(v: Vector) -> int:
-    return len(vector_to_numpy(v))
+    return len(v.get_local())
 
 
 def ncol(M: Matrix) -> int:

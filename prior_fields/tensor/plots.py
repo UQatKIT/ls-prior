@@ -1,59 +1,27 @@
-import matplotlib.pyplot as plt
-from mpl_toolkits.mplot3d import axes3d
-
-from prior_fields.prior.dtypes import ArrayNx3
+from pyvista import Light, Plotter
 
 
-def add_3d_vectors_to_plot(
-    pos: ArrayNx3,
-    vecs: ArrayNx3,
-    ax: axes3d.Axes3D,
-    color="tab:blue",
-    zorder=2,
-    length=0.1,
-    lw=1,
-    **kwargs,
-):
-    """Add 3d vector field to plot axis.
-
-    Parameters
-    ----------
-    pos : ArrayNx3
-        (x, y, z) coordinates of vector positions.
-    vecs : ArrayNx3
-        (x, y, z) coordinates of vector directions.
-    ax : mpl_toolkits.mplot3d.axes3d.Axes3D
-    color
-    zorder
-    length
-    lw
-    """
-    ax.quiver(
-        *[pos[:, i] for i in range(3)],
-        *[vecs[:, i] for i in range(3)],
-        length=length,
-        lw=lw,
-        color=color,
-        zorder=zorder,
-        **kwargs,
+def initialize_vector_field_plotter(
+    poly_data,
+    title: str = "",
+    zoom: float = 1.25,
+    add_axes: bool = True,
+    window_size: tuple[int, int] = (500, 500),
+) -> Plotter:
+    """Initialize pyvista.Plotter() with defaults for vector plots."""
+    plotter = Plotter(lighting=None, window_size=window_size)
+    plotter.add_text(title)
+    plotter.add_mesh(poly_data, color="white")
+    if add_axes:
+        plotter.add_axes(x_color="black", y_color="black", z_color="black")  # type: ignore
+    plotter.add_light(
+        Light(
+            position=(0.3, 1.0, 1.0),
+            focal_point=(0, 0, 0),
+            color=[1.0, 0.95, 0.95, 1.0],
+            intensity=1,
+        )
     )
+    plotter.camera.zoom(zoom)
 
-
-def plot_vector_field(vecs: ArrayNx3, pos: ArrayNx3) -> None:
-    """Plot vector field in 3d space.
-
-    Parameters
-    ----------
-    vecs : ArrayNx3
-        (x, y, z) coordinates of vector directions.
-    pos : ArrayNx3
-        (x, y, z) coordinates of vector positions.
-    """
-    fig = plt.figure(figsize=(10, 10))
-    ax = fig.add_subplot(projection="3d")
-    ax = plt.gca()
-    ax.set_aspect("equal")
-
-    add_3d_vectors_to_plot(pos, vecs, ax, length=1, lw=0.5)
-
-    plt.show()
+    return plotter

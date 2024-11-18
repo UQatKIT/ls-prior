@@ -2,13 +2,21 @@
 *.h5
 *.xdmf
 *.gz
-*.ply
+*.lon
+*.pts
+data/left_atrium.vtk
 
-# raw mesh files
-data/cn617_*
+# unused data files
+data/shape_model/*
 
 # figures
 figures/*
+!figures/vector_fields/
+figures/vector_fields/*
+!figures/vector_fields/*.gif
+!figures/other/
+figures/other/*
+!figures/other/*.svg
 
 # private files
 private_*
@@ -16,3 +24,6 @@ private_*
 # pixi environments
 .pixi
 *.egg-info
+
+# vscode stuff
+.vscode/*
