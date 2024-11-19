@@ -16,19 +16,19 @@ import numpy as np
 from pyvista import Plotter
 from scipy.spatial import KDTree
 
-from prior_fields.prior.converter import scale_mesh_to_unit_cube
-from prior_fields.prior.plots import get_poly_data
-from prior_fields.prior.prior import BiLaplacianPriorNumpyWrapper
-from prior_fields.tensor.parameterization import Geometry, PriorParameters
-from prior_fields.tensor.reader import (
+from prior_fields.parameterization.parameters import Geometry, PriorParameters
+from prior_fields.parameterization.reader import (
     read_atrial_mesh_with_fibers_and_tags_mapped_to_vertices,
 )
-from prior_fields.tensor.tangent_space import get_vhm_based_coordinates
-from prior_fields.tensor.transformer import (
+from prior_fields.parameterization.tangent_space import get_vhm_based_coordinates
+from prior_fields.parameterization.transformer import (
     angles_to_3d_vector,
     sample_to_angles,
     shift_angles_by_mean,
 )
+from prior_fields.prior.converter import scale_mesh_to_unit_cube
+from prior_fields.prior.plots import get_poly_data
+from prior_fields.prior.prior import BiLaplacianPriorNumpyWrapper
 
 geometry = Geometry(1)
 

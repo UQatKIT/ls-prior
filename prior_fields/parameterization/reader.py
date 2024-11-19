@@ -7,14 +7,14 @@ import numpy as np
 from loguru import logger
 from scipy.stats import mode
 
-from prior_fields.prior.dtypes import Array1d, ArrayNx2, ArrayNx3
-from prior_fields.tensor.fiber_grid import DataUAC
-from prior_fields.tensor.parameterization import Geometry
-from prior_fields.tensor.tangent_space import (
+from prior_fields.parameterization.fiber_grid import DataUAC
+from prior_fields.parameterization.parameters import Geometry
+from prior_fields.parameterization.tangent_space import (
     get_angles_in_tangent_space,
     get_uac_based_coordinates,
 )
-from prior_fields.tensor.transformer import angles_between_vectors
+from prior_fields.parameterization.transformer import angles_between_vectors
+from prior_fields.prior.dtypes import Array1d, ArrayNx2, ArrayNx3
 
 
 def read_raw_atrial_mesh(

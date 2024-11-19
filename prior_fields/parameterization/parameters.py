@@ -10,14 +10,17 @@ from loguru import logger
 from scipy.spatial import KDTree
 from scipy.stats import circmean, mode
 
-from prior_fields.prior.dtypes import Array1d, ArrayNx2, ArrayNx3
-from prior_fields.tensor.fiber_grid import DataUAC, FiberGrid
-from prior_fields.tensor.tangent_space import (
+from prior_fields.parameterization.fiber_grid import DataUAC, FiberGrid
+from prior_fields.parameterization.tangent_space import (
     get_angles_in_tangent_space,
     get_uac_based_coordinates,
     get_vhm_based_coordinates,
 )
-from prior_fields.tensor.transformer import angles_to_3d_vector, angles_to_sample
+from prior_fields.parameterization.transformer import (
+    angles_to_3d_vector,
+    angles_to_sample,
+)
+from prior_fields.prior.dtypes import Array1d, ArrayNx2, ArrayNx3
 
 
 class Geometry(Enum):

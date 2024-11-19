@@ -7,6 +7,18 @@ from matplotlib import rc
 from pyvista import Plotter, global_theme
 from scipy.spatial import KDTree
 
+from prior_fields.parameterization.parameters import Geometry, PriorParameters
+from prior_fields.parameterization.plots import initialize_vector_field_plotter
+from prior_fields.parameterization.reader import (
+    read_all_human_atrial_fiber_meshes,
+    read_atrial_mesh_with_fibers_and_tags_mapped_to_vertices,
+)
+from prior_fields.parameterization.tangent_space import get_vhm_based_coordinates
+from prior_fields.parameterization.transformer import (
+    angles_to_3d_vector,
+    sample_to_angles,
+    shift_angles_by_mean,
+)
 from prior_fields.prior.converter import (
     expression_to_vector,
     scale_mesh_to_unit_cube,
@@ -15,18 +27,6 @@ from prior_fields.prior.converter import (
 )
 from prior_fields.prior.plots import get_poly_data, plot_function, plot_numpy_sample
 from prior_fields.prior.prior import BiLaplacianPrior, BiLaplacianPriorNumpyWrapper
-from prior_fields.tensor.parameterization import Geometry, PriorParameters
-from prior_fields.tensor.plots import initialize_vector_field_plotter
-from prior_fields.tensor.reader import (
-    read_all_human_atrial_fiber_meshes,
-    read_atrial_mesh_with_fibers_and_tags_mapped_to_vertices,
-)
-from prior_fields.tensor.tangent_space import get_vhm_based_coordinates
-from prior_fields.tensor.transformer import (
-    angles_to_3d_vector,
-    sample_to_angles,
-    shift_angles_by_mean,
-)
 
 global_theme.font.family = "times"
 global_theme.font.size = 20

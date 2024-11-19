@@ -4,8 +4,8 @@ from pathlib import Path
 import matplotlib.pyplot as plt
 import numpy as np
 
-from prior_fields.tensor.parameterization import Geometry, PriorParameters
-from prior_fields.tensor.transformer import angles_to_sample, sample_to_angles
+from prior_fields.parameterization.parameters import Geometry, PriorParameters
+from prior_fields.parameterization.transformer import angles_to_sample, sample_to_angles
 
 ###############################################################
 # Sigmoid and inverse transformations

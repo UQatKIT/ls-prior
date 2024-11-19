@@ -32,11 +32,11 @@ The main interface of the prior component is the `BiLaplacianPrior` class and it
 ```python
 import numpy as np
 
-from prior_fields.prior.prior import BiLaplacianPriorNumpyWrapper
-from prior_fields.tensor.parameterization import Geometry
-from prior_fields.tensor.reader import (
+from prior_fields.parameterization.parameters import Geometry
+from prior_fields.parameterization.reader import (
     read_atrial_mesh_with_fibers_and_tags_mapped_to_vertices,
 )
+from prior_fields.prior.prior import BiLaplacianPriorNumpyWrapper
 
 # Read data
 V, F, _, _, _ = read_atrial_mesh_with_fibers_and_tags_mapped_to_vertices(Geometry(1))
@@ -54,25 +54,25 @@ grad = prior.grad(sample)
 hessian_vector_product = prior.compute_hessian_vector_product(sample - mean)
 ```
 
-In [`examples/03_example_atrium.py`](./examples/03_example_atrium.py), we also incorporate data-informed parameters (mean, pointwise standard deviation). These are constructed based on the human atrial fiber data included in [`data/LGE-MRI-based/`](./data/LGE-MRI-based/). In order to compute these parameters from scratch, see the scripts in [`prior_fields/tensor/scripts/`](./prior_fields/tensor/scripts/).
+In [`examples/03_example_atrium.py`](./examples/03_example_atrium.py), we also incorporate data-informed parameters (mean, pointwise standard deviation). These are constructed based on the human atrial fiber data included in [`data/LGE-MRI-based/`](./data/LGE-MRI-based/). In order to compute these parameters from scratch, see the scripts in [`prior_fields/parameterization/scripts/`](./prior_fields/parameterization/scripts/).
 
 In particular,
 ```console
-pixi run -- python prior_fields/tensor/scripts/01_collect_data_on_uac_level.py 
+pixi run -- python prior_fields/parameterization/scripts/01_collect_data_on_uac_level.py 
 ```
-collects the fiber information from all seven geometries in the universal atrial coordinate (UAC) unit square and saves them to [`data/uacs_fibers_tags.npy`](./data/uacs_fibers_tags.npy). The implementation is mainly summarized in [`collect_data_from_human_atrial_fiber_meshes()`](./prior_fields/tensor/reader.py#L258). The fiber data is subsequently used when running
+collects the fiber information from all seven geometries in the universal atrial coordinate (UAC) unit square and saves them to [`data/uacs_fibers_tags.npy`](./data/uacs_fibers_tags.npy). The implementation is mainly summarized in [`collect_data_from_human_atrial_fiber_meshes()`](./prior_fields/parameterization/reader.py#L258). The fiber data is subsequently used when running
 ```console
-pixi run -- python prior_fields/tensor/scripts/02a_compute_prior_parameters.py 3
+pixi run -- python prior_fields/parameterization/scripts/02a_compute_prior_parameters.py 3
 ```
 to compute mean and standard deviation for geometry 3 and save them to [`data/parameters/params_3.npy`](./data/parameters/params_3.npy). You can replace the `3` by any geometry tag (1, ..., 7) to construct parameter fields for all of the geometries. Alternatively, you can use this script with your own atrial geometry, as long as the corresponding data set includes the UACs and is saved in the same format at the same path as the human atrial data sets used in this project. For more information on the data requirements, see [`data/README.md`](./data/README.md).
 
-The parameter computation mainly happens in [`get_fiber_parameters_from_uac_data()`](./prior_fields/tensor/parameterization.py#L91).
+The parameter computation mainly happens in [`get_fiber_parameters_from_uac_data()`](./prior_fields/parameterization/parameters.py#L94).
 
-An alternative to this parameterization, which I shortly discuss in my thesis, can be found in [`02b_compute_uac_fiber_grid.py`](./prior_fields/tensor/scripts/02b_compute_uac_fiber_grid.py). We there compute the parameters independent of the target geometry for adaptive grid cells over the UAC unit square.
+An alternative to this parameterization, which I shortly discuss in my thesis, can be found in [`02b_compute_uac_fiber_grid.py`](./prior_fields/parameterization/scripts/02b_compute_uac_fiber_grid.py). We there compute the parameters independent of the target geometry for adaptive grid cells over the UAC unit square.
 
-In [`03_compute_stats.py`](./prior_fields/tensor/scripts/03_compute_stats.py), we evaluate the computation times of the different components. We highlight the efficiency of the online computations (sampling, ...) related to the prior implementation, compared to the rather computationally expensive offline part (parameter computation, prior initialization, ...).
+In [`03_compute_stats.py`](./prior_fields/parameterization/scripts/03_compute_stats.py), we evaluate the computation times of the different components. We highlight the efficiency of the online computations (sampling, ...) related to the prior implementation, compared to the rather computationally expensive offline part (parameter computation, prior initialization, ...).
 
-The plots included in the thesis are created in [`04a_prior_plots_for_report.py`](./prior_fields/tensor/scripts/04a_prior_plots_for_report.py) and [`04b_other_plots_for_report.py`](./prior_fields/tensor/scripts/04b_other_plots_for_report.py).
+The plots included in the thesis are created in [`04a_prior_plots_for_report.py`](./prior_fields/parameterization/scripts/04a_prior_plots_for_report.py) and [`04b_other_plots_for_report.py`](./prior_fields/parameterization/scripts/04b_other_plots_for_report.py).
 
 For information on our data sources, see [`data/README.md`](./data/README.md).
 

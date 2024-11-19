@@ -8,21 +8,21 @@ import numpy as np
 from matplotlib import rc
 from pyacvd import Clustering
 
-from prior_fields.prior.converter import create_triangle_mesh_from_coordinates
-from prior_fields.prior.dtypes import ArrayNx3
-from prior_fields.prior.plots import get_poly_data
-from prior_fields.prior.prior import BiLaplacianPrior, BiLaplacianPriorNumpyWrapper
-from prior_fields.tensor.parameterization import (
+from prior_fields.parameterization.parameters import (
     Geometry,
     PriorParameters,
     get_fiber_parameters_from_uac_data,
 )
-from prior_fields.tensor.reader import (
+from prior_fields.parameterization.reader import (
     _map_fibers_and_tags_to_vertices,
     read_all_human_atrial_fiber_meshes,
     read_raw_atrial_mesh,
 )
-from prior_fields.tensor.tangent_space import get_uac_based_coordinates
+from prior_fields.parameterization.tangent_space import get_uac_based_coordinates
+from prior_fields.prior.converter import create_triangle_mesh_from_coordinates
+from prior_fields.prior.dtypes import ArrayNx3
+from prior_fields.prior.plots import get_poly_data
+from prior_fields.prior.prior import BiLaplacianPrior, BiLaplacianPriorNumpyWrapper
 
 font = {"family": "times", "size": 20}
 rc("font", **font)

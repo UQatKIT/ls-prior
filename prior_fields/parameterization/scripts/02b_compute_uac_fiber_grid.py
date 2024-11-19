@@ -2,7 +2,7 @@ from pathlib import Path
 
 import typer
 
-from prior_fields.tensor.fiber_grid import compute_uac_fiber_grid
+from prior_fields.parameterization.fiber_grid import compute_uac_fiber_grid
 
 app = typer.Typer(no_args_is_help=True)
 

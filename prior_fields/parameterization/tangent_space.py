@@ -2,8 +2,11 @@ import numpy as np
 from loguru import logger
 from potpourri3d import MeshVectorHeatSolver
 
+from prior_fields.parameterization.transformer import (
+    normalize,
+    vector_coefficients_2d_to_angles,
+)
 from prior_fields.prior.dtypes import Array1d, ArrayNx2, ArrayNx3
-from prior_fields.tensor.transformer import normalize, vector_coefficients_2d_to_angles
 
 
 def get_vhm_based_coordinates(

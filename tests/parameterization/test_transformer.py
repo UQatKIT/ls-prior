@@ -1,7 +1,7 @@
 import numpy as np
 import pytest
 
-from prior_fields.tensor.transformer import (
+from prior_fields.parameterization.transformer import (
     angles_to_2d_vector_coefficients,
     angles_to_sample,
     normalize,

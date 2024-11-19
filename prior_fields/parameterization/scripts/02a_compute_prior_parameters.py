@@ -3,15 +3,15 @@ from pathlib import Path
 import numpy as np
 import typer
 
-from prior_fields.prior.converter import scale_mesh_to_unit_cube
-from prior_fields.tensor.parameterization import (
+from prior_fields.parameterization.parameters import (
     Geometry,
     PriorParameters,
     get_fiber_parameters_from_uac_data,
 )
-from prior_fields.tensor.reader import (
+from prior_fields.parameterization.reader import (
     read_atrial_mesh_with_fibers_and_tags_mapped_to_vertices,
 )
+from prior_fields.prior.converter import scale_mesh_to_unit_cube
 
 app = typer.Typer(no_args_is_help=True)
 

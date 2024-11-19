@@ -10,8 +10,8 @@ from matplotlib import pyplot as plt
 from scipy.spatial import KDTree
 from scipy.stats import circmean, circvar, mode
 
+from prior_fields.parameterization.transformer import angles_to_2d_vector_coefficients
 from prior_fields.prior.dtypes import Array1d, ArrayNx2
-from prior_fields.tensor.transformer import angles_to_2d_vector_coefficients
 
 circ_kwargs = dict(low=-np.pi / 2, high=np.pi / 2, nan_policy="omit")
 

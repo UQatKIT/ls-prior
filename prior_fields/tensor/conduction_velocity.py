@@ -4,10 +4,8 @@ from typing import overload
 
 import numpy as np
 
+from prior_fields.parameterization.transformer import angles_to_2d_vector_coefficients
 from prior_fields.prior.dtypes import Array1d, ArrayNx3, ArrayNx3x3
-from prior_fields.tensor.transformer import (
-    angles_to_2d_vector_coefficients,
-)
 
 
 class AnatomicalTag(IntEnum):
