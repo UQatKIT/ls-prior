@@ -98,6 +98,31 @@ def get_fiber_parameters_from_uac_data(
     k: int = 20,
     file: Path | str = "data/uacs_fibers_tags.npy",
 ) -> tuple[Array1d, Array1d, Array1d]:
+    """
+    Compute fiber parameters for given mesh based on k nearest UAC-neighbors over all
+    source geometries.
+
+    Parameters
+    ----------
+    V : ArrayNx3
+        Vertex coordinates
+    F : ArrayNx3
+        Faces
+    uac : ArrayNx2
+        UACs of the vertices
+    k : int > 1, optional
+        Number of nearest neighbors considered within each source geometry,
+        defaults to 20.
+    file : Path | str, optional
+        Path to the fiber data collected in UACs,
+        defaults to 'data/uacs_fibers_tags.npy'.
+
+    Returns
+    -------
+    (Array1d, Array1d, Array1d)
+        Mean and pointwise standard deviation in the prior's range (not angles), tags for
+        anatomical structure of each vertex.
+    """
     data_uac = DataUAC.load(file)
     geometries = np.unique(data_uac.geometry)
 
