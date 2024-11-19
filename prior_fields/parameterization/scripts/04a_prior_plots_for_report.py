@@ -151,6 +151,7 @@ V_raw, F, uac, fibers, _ = read_atrial_mesh_with_fibers_and_tags_mapped_to_verti
     geometry
 )
 V = scale_mesh_to_unit_cube(V_raw)
+poly_data = get_poly_data(V, F)
 x_axes, y_axes, _ = get_vhm_based_coordinates(V, F)
 
 # Subsample vectors for plotting
@@ -200,7 +201,7 @@ plot_numpy_sample(
 
 # %%
 plotter = initialize_vector_field_plotter(
-    get_poly_data(V, F), zoom=4.5, add_axes=False, window_size=(900, 500)
+    poly_data, zoom=4.5, add_axes=False, window_size=(900, 500)
 )
 plotter.add_arrows(V[idx], fibers[idx], mag=0.011, color="tab:blue", label="Fibers")
 plotter.add_arrows(
@@ -234,7 +235,7 @@ for i in range(n_samples):
 
 # %%
 plotter = initialize_vector_field_plotter(
-    get_poly_data(V, F), zoom=4.5, add_axes=False, window_size=(900, 500)
+    poly_data, zoom=4.5, add_axes=False, window_size=(900, 500)
 )
 for i in range(n_samples):
     plotter.add_arrows(V[idx], vector_samples[i][idx], mag=0.011, color="tab:blue")
@@ -252,7 +253,7 @@ plotter.show()
 
 # %%
 plotter = Plotter(window_size=(900, 500))
-plotter.add_mesh(get_poly_data(V, F), color="white")
+plotter.add_mesh(poly_data, color="white")
 for i in range(n_samples):
     plotter.add_arrows(V[idx], vector_samples[i][idx], mag=0.011, color="tab:blue")
 plotter.add_arrows(V[idx], mean_vectors[idx], mag=0.014, color="tab:orange")
@@ -277,5 +278,28 @@ for i in range(n_frames):
     plotter.write_frame()
 
 plotter.close()
+
+# %%
+#############################################################################
+# Compare mean for different values of k
+plotter = Plotter(window_size=(900, 500), shape=(2, 2))
+
+for i, k in enumerate([2, 5, 20, 100]):
+    _params = PriorParameters.load(
+        Path(f"data/parameters/k{k}/params_{geometry.value}.npy")
+    )
+    _mean_angles = sample_to_angles(_params.mean)
+    _mean_vectors = angles_to_3d_vector(
+        angles=_mean_angles, x_axes=x_axes, y_axes=y_axes
+    )
+    plotter.subplot(int(i > 1), i % 2)
+    plotter.add_text(f"{k=}", font_size=10)
+    plotter.add_mesh(poly_data, color="white")
+    plotter.camera.zoom(4.5)
+    plotter.add_arrows(
+        V[idx], _mean_vectors[idx], mag=0.015, label=f"{k=}", color="#009682"
+    )
+plotter.save_graphic("figures/vector_fields/compare_mean_with_different_ks.eps")
+plotter.show()
 
 # %%
