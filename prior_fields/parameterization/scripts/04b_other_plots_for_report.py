@@ -3,9 +3,15 @@ from pathlib import Path
 
 import matplotlib.pyplot as plt
 import numpy as np
+from matplotlib import rc
 
+from prior_fields.parameterization.fiber_grid import FiberGrid
 from prior_fields.parameterization.parameters import Geometry, PriorParameters
 from prior_fields.parameterization.transformer import angles_to_sample, sample_to_angles
+
+font = {"family": "times", "size": 16}
+rc("font", **font)
+
 
 ###############################################################
 # Sigmoid and inverse transformations
@@ -45,7 +51,11 @@ s_lim = 20.5
 ax1.set_xlim(-s_lim, s_lim)
 ax2.set_ylim(-s_lim, s_lim)
 
-s_ticks = np.arange(-20, 21, 5)
+theta_ticks = np.linspace(-1.5, 1.5, 6)
+ax1.set_yticks(theta_ticks)
+ax2.set_xticks(theta_ticks)
+
+s_ticks = np.linspace(-18, 18, 7)
 ax1.set_xticks(s_ticks)
 ax2.set_yticks(s_ticks)
 
@@ -76,13 +86,13 @@ ax00.hist(s, label=f"N({mean}, {sigma:.2f})", **sample_kwargs)
 ax10.hist(sample_to_angles(s), **trafo_kwargs)
 
 mean = 0
-sigma = params.sigma.max()
+sigma = np.quantile(params.sigma, 0.95)
 s = np.random.normal(mean, sigma, int(1e7))
 ax01.hist(s, label=f"N({mean}, {sigma:.2f})", **sample_kwargs)
 ax11.hist(sample_to_angles(s), **trafo_kwargs)
 
-mean = params.mean.max()
-sigma = params.sigma[np.argmax(params.mean)]
+mean = np.quantile(params.mean, 0.95)  # type: ignore
+sigma = params.sigma.mean()
 s = np.random.normal(mean, sigma, int(1e7))
 ax02.hist(s, label=f"N({mean:.2f}, {sigma:.2f})", **sample_kwargs)
 ax12.hist(sample_to_angles(s), **trafo_kwargs)
@@ -95,5 +105,11 @@ plt.tight_layout()
 plt.savefig("figures/other/distribution_after_trafo.png")
 
 plt.show()
+
+
+###############################################################
+# UAC fiber grid
+# %%
+FiberGrid.load().plot("mean", file="figures/other/uac_fibers_with_circmean.png")
 
 # %%

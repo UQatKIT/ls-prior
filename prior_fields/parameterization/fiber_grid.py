@@ -7,6 +7,7 @@ from typing import Literal
 import numpy as np
 from loguru import logger
 from matplotlib import pyplot as plt
+from mpl_toolkits.axes_grid1 import make_axes_locatable
 from scipy.spatial import KDTree
 from scipy.stats import circmean, circvar, mode
 
@@ -183,7 +184,12 @@ class FiberGrid:
             anatomical_tag_mode=grid[:, 6],
         )
 
-    def plot(self, color: Literal["tag", "mean", "var"]) -> None:
+    def plot(
+        self,
+        color: Literal["tag", "mean", "var"],
+        file: str | None = None,
+        title: str | None = None,
+    ) -> None:
         """
         Plot the adaptive grid with mean fiber vector in each cell. The cells are colored
         according to the fiber properties or anatomical region.
@@ -235,22 +241,16 @@ class FiberGrid:
             width=0.001,
         )
 
-        plt.colorbar(c)
+        if title:
+            plt.title(title)
 
-        if color == "tag":
-            plt.title(
-                "Mean of fibers in UAC over 7 geometries with anatomical structures"
-            )
+        divider = make_axes_locatable(ax)
+        cax = divider.append_axes("right", size="5%", pad=0.1)
+        plt.colorbar(c, cax=cax)
+
+        if file:
             plt.tight_layout()
-            plt.savefig("figures/uac_fibers_with_tag.svg")
-        elif color == "mean":
-            plt.title("Circular mean of fiber angle")
-            plt.tight_layout()
-            plt.savefig("figures/uac_fibers_with_circmean.svg")
-        elif color == "var":
-            plt.title("Circular variance of fiber angle")
-            plt.tight_layout()
-            plt.savefig("figures/uac_fibers_with_circvar.svg")
+            plt.savefig(file)
 
         plt.show()
 
