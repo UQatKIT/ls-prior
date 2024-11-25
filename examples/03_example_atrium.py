@@ -96,7 +96,7 @@ angles_mean = sample_to_angles(params.mean)
 # Note that we do not use the mean field as mean of the `BiLaplacianPrior` since then
 # we would not properly account for periodicity in the angles and distributions for mean
 # values close to -pi/2 or pi/2 would be significantly skewed.
-angles = shift_angles_by_mean(angles_around_zero, angles_mean)
+angles = shift_angles_by_mean(angles_around_zero, angles_mean, adjust_range=True)
 
 # Compute VHM-based reference coordinates
 x_axes, y_axes, _ = get_vhm_based_coordinates(V, F)
@@ -132,9 +132,9 @@ for _ in range(10):  # type: ignore
     plotter.add_arrows(
         V[idx],
         angles_to_3d_vector(
-            angles=shift_angles_by_mean(sample_to_angles(prior.sample()), angles_mean)[
-                idx
-            ],
+            angles=shift_angles_by_mean(
+                sample_to_angles(prior.sample()), angles_mean, adjust_range=True
+            )[idx],
             x_axes=x_axes[idx],
             y_axes=y_axes[idx],
         ),

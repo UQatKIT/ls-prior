@@ -227,7 +227,9 @@ n_samples = 4
 vector_samples = []
 for i in range(n_samples):
     angles = shift_angles_by_mean(
-        sample_to_angles(prior_numpy.sample()), sample_to_angles(params.mean)
+        sample_to_angles(prior_numpy.sample()),
+        sample_to_angles(params.mean),
+        adjust_range=True,
     )
     vector_samples.append(
         angles_to_3d_vector(angles=angles, x_axes=x_axes, y_axes=y_axes)

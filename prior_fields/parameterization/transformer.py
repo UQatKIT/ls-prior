@@ -111,23 +111,33 @@ def sample_to_angles(x: Array1d) -> Array1d:
     return np.pi * (1 / (1 + np.exp(-x / 4)) - 0.5)
 
 
-def shift_angles_by_mean(angles: Array1d, mean: Array1d) -> Array1d:
+def shift_angles_by_mean(
+    angles: Array1d, mean: Array1d, adjust_range: bool = False
+) -> Array1d:
     """
-    Add mean to angles array respecting the restriction to (-pi/2, pi/2].
+    Add mean to angles.
 
     Parameters
     ----------
     angles : Array1d
         Array of angles within (-pi/2, pi/2].
     mean : Array1d
-        Array of mean angles within (-pi/2, pi/2] to add to the `angles`.
-
+        Array of mean angles within (-pi/2, pi/2] to add to `angles`.
+    adjust_range : bool, optional
+        Whether to map angles to interval (-pi/2, pi/2], defaults to False.
+        Note that the transformation is discontinuous for `adjust_range=True`.
     Returns
     -------
     Array1d
-        Array of angles within (-pi/2, pi/2] shifted by the mean.
+        Array of angles shifted by the mean.
     """
     angles_shifted = angles + mean
-    angles_shifted[angles_shifted > np.pi / 2] -= np.pi
-    angles_shifted[angles_shifted <= -np.pi / 2] += np.pi
+
+    if adjust_range:
+        if any(angles_shifted > np.pi) or any(angles_shifted <= -np.pi):
+            raise ValueError("'angles' and 'mean' have to lie within (-pi/2, pi/2].")
+
+        angles_shifted[angles_shifted > np.pi / 2] -= np.pi
+        angles_shifted[angles_shifted <= -np.pi / 2] += np.pi
+
     return angles_shifted
