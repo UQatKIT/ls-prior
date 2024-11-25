@@ -15,7 +15,7 @@ The background of this project is an infinite-dimensional formulation of the Bay
 
 ## Installation
 
-To run the project locally, clone this repository, `cd` into the project folder and run
+To run the project locally, clone this repository, `cd` into the project folder [`prior-fields-fenics/`](./) and run
 
 ```console
 pixi install
@@ -25,7 +25,7 @@ This installs the environment from the [lock file](./pixi.lock). We currently su
 ## Usage
 Besides examples on how to use use the bi-Laplacian prior implementation, we provide the scripts for reconstructing our parameter fields.
 
-In the [`examples/`](./examples/) folder you can find mainly four scripts, which introduce the use of the prior class starting from the unit square ([`01_example_unit_square.py`](./examples/01_example_unit_square.py)), moving on to curved surfaces in the unit sphere example ([`02_example_unit_sphere.py`](./examples/02_example_unit_sphere.py)), and finally turning to a geometry of the left atrium ([`03_example_atrium.py`](./examples/03_example_atrium.py)) and the assembly of the corresponding CV tensor ([`04_example_conduction_velocity_tensor.py`](./examples/04_example_conduction_velocity_tensor.py)).
+In the [`examples/`](./examples/) folder you can find mainly four scripts, which introduce the use of the prior class. The examples start from the unit square ([`01_example_unit_square.py`](./examples/01_example_unit_square.py)), moving on to curved surfaces in the unit sphere example ([`02_example_unit_sphere.py`](./examples/02_example_unit_sphere.py)), and finally turning to a geometry of the left atrium ([`03_example_atrium.py`](./examples/03_example_atrium.py)) and the assembly of the corresponding CV tensor ([`04_example_conduction_velocity_tensor.py`](./examples/04_example_conduction_velocity_tensor.py)). The paths included in the examples assume that the scripts are run from the project's root directory [`prior-fields-fenics/`](./).
 
 The main interface of the prior component is the `BiLaplacianPrior` class and its numpy wrapper. Both can be parameterized with mean, pointwise variance and correlation length. A prior instance provides methods for sampling and evaluation of the cost functional as well as first and second order derivatives. A basic usage example for the prior's interface is:
 
@@ -56,7 +56,7 @@ hessian_vector_product = prior.compute_hessian_vector_product(sample - mean)
 
 In [`examples/03_example_atrium.py`](./examples/03_example_atrium.py), we also incorporate data-informed parameters (mean, pointwise standard deviation). These are constructed based on the human atrial fiber data included in [`data/LGE-MRI-based/`](./data/LGE-MRI-based/). In order to compute these parameters from scratch, see the scripts in [`prior_fields/parameterization/scripts/`](./prior_fields/parameterization/scripts/).
 
-In particular,
+In particular, `cd` into [`prior-fields-fenics/`](./) and run
 ```console
 pixi run -- python prior_fields/parameterization/scripts/01_collect_data_on_uac_level.py 
 ```
