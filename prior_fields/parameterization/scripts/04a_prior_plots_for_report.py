@@ -169,7 +169,12 @@ prior_numpy = BiLaplacianPriorNumpyWrapper(V, F, sigma=0.2, ell=0.1, seed=1)
 sample = prior_numpy.sample()
 
 plot_numpy_sample(
-    sample, V=V, F=F, file="figures/priors/atrium_baseline_sample.eps", zoom=1.23
+    sample,
+    V=V,
+    F=F,
+    file="figures/priors/atrium_baseline_sample.eps",
+    zoom=1.23,
+    scalar_bar_title="sample",
 )
 
 # %%
@@ -223,23 +228,62 @@ plotter.show()
 prior_numpy = BiLaplacianPriorNumpyWrapper(
     V, F, sigma=params.sigma, ell=params.ell, seed=1
 )
-n_samples = 4
-vector_samples = []
+
+# takes almost 30 minutes
+n_samples = 1000
+angle_samples = []
 for i in range(n_samples):
-    angles = shift_angles_by_mean(
-        sample_to_angles(prior_numpy.sample()),
-        sample_to_angles(params.mean),
-        adjust_range=True,
+    angle_samples.append(
+        shift_angles_by_mean(sample_to_angles(prior_numpy.sample()), mean_angles)
     )
+
+angle_samples_shifted = np.array(angle_samples).T
+angle_samples_shifted[angle_samples_shifted > np.pi / 2] -= np.pi
+angle_samples_shifted[angle_samples_shifted <= -np.pi / 2] += np.pi
+
+# %%
+#############################################################################
+# empirical mean and standard deviation of parameterized angle prior
+empirical_mean = angle_samples_shifted.mean(axis=1)
+empirical_sigma = angle_samples_shifted.std(axis=1)
+
+plot_numpy_sample(
+    empirical_mean,
+    V=V,
+    F=F,
+    file="figures/priors/empirical_mean_geometry3.eps",
+    zoom=1.23,
+    # clim=[np.quantile(empirical_mean, 0.01), np.quantile(empirical_mean, 0.99)],
+    scalar_bar_title="mean",
+)
+plot_numpy_sample(
+    empirical_sigma,
+    V=V,
+    F=F,
+    file="figures/priors/empirical_sigma_geometry3.eps",
+    zoom=1.23,
+    clim=[0, np.quantile(empirical_sigma, 0.99)],
+    scalar_bar_title="sigma",
+)
+
+# %%
+#############################################################################
+# parameterized vector prior
+prior_numpy = BiLaplacianPriorNumpyWrapper(
+    V, F, sigma=params.sigma, ell=params.ell, seed=1
+)
+n_vector_samples = 4
+vector_samples = []
+for i in range(n_vector_samples):
     vector_samples.append(
-        angles_to_3d_vector(angles=angles, x_axes=x_axes, y_axes=y_axes)
+        angles_to_3d_vector(angles=angle_samples[i], x_axes=x_axes, y_axes=y_axes)
     )
 
 # %%
 plotter = initialize_vector_field_plotter(
     poly_data, zoom=4.5, add_axes=False, window_size=(900, 500)
 )
-for i in range(n_samples):
+for i in range(n_vector_samples):
     plotter.add_arrows(V[idx], vector_samples[i][idx], mag=0.011, color="tab:blue")
 plotter.add_arrows(V[idx], mean_vectors[idx], mag=0.014, color="tab:orange")
 plotter.add_legend(  # type: ignore
@@ -256,7 +300,7 @@ plotter.show()
 # %%
 plotter = Plotter(window_size=(900, 500))
 plotter.add_mesh(poly_data, color="white")
-for i in range(n_samples):
+for i in range(n_vector_samples):
     plotter.add_arrows(V[idx], vector_samples[i][idx], mag=0.011, color="tab:blue")
 plotter.add_arrows(V[idx], mean_vectors[idx], mag=0.014, color="tab:orange")
 plotter.add_legend(  # type: ignore
