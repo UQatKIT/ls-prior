@@ -54,7 +54,7 @@ angles = shift_angles_by_mean(
 ##############################
 # %%
 # Add CV information to angle field to assemble the corresponding CV tensor for the BIP
-cv_tensor = angles_to_cv_tensor(prior.sample(), tags, basis_x, basis_y)
+cv_tensor = angles_to_cv_tensor(angles, tags, basis_x, basis_y)
 cv_tensor
 
 # %%
