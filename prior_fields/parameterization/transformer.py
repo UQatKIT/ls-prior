@@ -134,7 +134,7 @@ def shift_angles_by_mean(
     angles_shifted = angles + mean
 
     if adjust_range:
-        if any(angles_shifted > np.pi) or any(angles_shifted <= -np.pi):
+        if (angles_shifted.max() > np.pi) or (angles_shifted.min() <= -np.pi):
             raise ValueError("'angles' and 'mean' have to lie within (-pi/2, pi/2].")
 
         angles_shifted[angles_shifted > np.pi / 2] -= np.pi
