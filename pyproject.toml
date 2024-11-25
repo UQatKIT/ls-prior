@@ -71,7 +71,7 @@ fenics = ">=2019.1.0,<2019.2"
 
 # --------------------------------- PARAMETERIZATION ---------------------------------- #
 
-[tool.pixi.feature.parameterization.pypi-dependencies]
+[tool.pixi.feature.parameterization.dependencies]
 potpourri3d = ">=1.1.0"
 
 # -------------------------------------- TESTING -------------------------------------- #
@@ -92,7 +92,7 @@ trame-vuetify = ">=2.7.1,<2.8"
 
 # ------------------------------------- ANALYTICS ------------------------------------- #
 
-[tool.pixi.feature.analytics.pypi-dependencies]
+[tool.pixi.feature.analytics.dependencies]
 pyacvd = ">=0.3.1"
 
 # ------------------------------------------------------------------------------------- #
