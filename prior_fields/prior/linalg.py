@@ -1,7 +1,6 @@
 from dolfin import Matrix, Vector
 
 from prior_fields.prior.converter import (
-    matrix_to_numpy,
     matrix_to_petsc,
     petsc_to_matrix,
 )
@@ -28,11 +27,3 @@ def multiply_matrices(A: Matrix, B: Matrix) -> Matrix:
 
 def len_vector(v: Vector) -> int:
     return len(v.get_local())
-
-
-def ncol(M: Matrix) -> int:
-    return matrix_to_numpy(M).shape[0]
-
-
-def nrow(M: Matrix) -> int:
-    return matrix_to_numpy(M).shape[1]
