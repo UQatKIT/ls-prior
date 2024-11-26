@@ -93,8 +93,8 @@ def angles_to_2d_vector_coefficients(angles: Array1d) -> tuple[Array1d, Array1d]
     coeff_y = np.tan(angles)
 
     coeff_sum = abs(coeff_x) + abs(coeff_y)
-    coeff_x = coeff_x / coeff_sum
-    coeff_y = coeff_y / coeff_sum
+    coeff_x = coeff_x / (coeff_sum**2)
+    coeff_y = coeff_y / (coeff_sum**2)
 
     return coeff_x, coeff_y
 
