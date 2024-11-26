@@ -92,9 +92,9 @@ def angles_to_2d_vector_coefficients(angles: Array1d) -> tuple[Array1d, Array1d]
     coeff_x = np.ones_like(angles)
     coeff_y = np.tan(angles)
 
-    coeff_sum = abs(coeff_x) + abs(coeff_y)
-    coeff_x = coeff_x / (coeff_sum**2)
-    coeff_y = coeff_y / (coeff_sum**2)
+    normalization_constant = np.sqrt(abs(coeff_x) ** 2 + abs(coeff_y) ** 2)
+    coeff_x = coeff_x / normalization_constant
+    coeff_y = coeff_y / normalization_constant
 
     return coeff_x, coeff_y
 
