@@ -27,3 +27,6 @@ private_*
 
 # vscode stuff
 .vscode/*
+
+# rattler-build
+output/

@@ -1,0 +1,46 @@
+# yaml-language-server: $schema=https://raw.githubusercontent.com/prefix-dev/recipe-format/main/schema.json
+
+package:
+  name: prior-fields
+  version: ${{ env.get('GIT_DESCRIBE_TAG') | trim('v') }}
+
+source:
+  path: ../
+
+build:
+  number: 0
+  noarch: python
+  script:
+    - python -m pip install . --no-deps --ignore-installed -vv --no-build-isolation --disable-pip-version-check
+
+requirements:
+  host:
+    - python >=3.12
+    - pip
+    - setuptools-scm
+  run:
+    - python >=3.12
+    - matplotlib >=3.9.1,<3.9.2
+    - numpy >=1.26.4
+    - scipy >=1.14.1,<2
+    - meshio >=5.3.5
+    - loguru >=0.7.2,<0.8
+    - typer >=0.12.5,<0.13
+    - fenics >=2019.1.0,<2019.2
+    - potpourri3d >=1.1.0
+    - pyvista >=0.44.1,<0.45
+    - pyacvd >=0.3.1
+
+tests:
+  - python:
+      imports:
+        - prior_fields
+        - prior_fields.prior.prior
+      pip_check: false
+
+about:
+  homepage: https://github.com/ElisabethBrockhaus/prior-fields
+  summary: Prior fields for atrial conduction properties
+  license: MIT
+  license_file:
+    - LICENSE
