@@ -2,13 +2,13 @@
 from pyvista import Plotter
 from scipy.spatial import KDTree
 
+from prior_fields.parameterization.parameters import Geometry
+from prior_fields.parameterization.reader import (
+    read_atrial_mesh_with_fibers_and_tags_mapped_to_vertices,
+)
 from prior_fields.prior.converter import scale_mesh_to_unit_cube
 from prior_fields.prior.plots import get_poly_data
 from prior_fields.prior.prior import BiLaplacianPriorNumpyWrapper
-from prior_fields.tensor.parameterization import Geometry
-from prior_fields.tensor.reader import (
-    read_atrial_mesh_with_fibers_and_tags_mapped_to_vertices,
-)
 
 # %%
 V_raw, F, uac, fibers_atlas, _ = (

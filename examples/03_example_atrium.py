@@ -16,19 +16,19 @@ import numpy as np
 from pyvista import Plotter
 from scipy.spatial import KDTree
 
-from prior_fields.prior.converter import scale_mesh_to_unit_cube
-from prior_fields.prior.plots import get_poly_data
-from prior_fields.prior.prior import BiLaplacianPriorNumpyWrapper
-from prior_fields.tensor.parameterization import Geometry, PriorParameters
-from prior_fields.tensor.reader import (
+from prior_fields.parameterization.parameters import Geometry, PriorParameters
+from prior_fields.parameterization.reader import (
     read_atrial_mesh_with_fibers_and_tags_mapped_to_vertices,
 )
-from prior_fields.tensor.tangent_space import get_vhm_based_coordinates
-from prior_fields.tensor.transformer import (
+from prior_fields.parameterization.tangent_space import get_vhm_based_coordinates
+from prior_fields.parameterization.transformer import (
     angles_to_3d_vector,
     sample_to_angles,
     shift_angles_by_mean,
 )
+from prior_fields.prior.converter import scale_mesh_to_unit_cube
+from prior_fields.prior.plots import get_poly_data
+from prior_fields.prior.prior import BiLaplacianPriorNumpyWrapper
 
 geometry = Geometry(1)
 
@@ -96,7 +96,7 @@ angles_mean = sample_to_angles(params.mean)
 # Note that we do not use the mean field as mean of the `BiLaplacianPrior` since then
 # we would not properly account for periodicity in the angles and distributions for mean
 # values close to -pi/2 or pi/2 would be significantly skewed.
-angles = shift_angles_by_mean(angles_around_zero, angles_mean)
+angles = shift_angles_by_mean(angles_around_zero, angles_mean, adjust_range=True)
 
 # Compute VHM-based reference coordinates
 x_axes, y_axes, _ = get_vhm_based_coordinates(V, F)
@@ -132,9 +132,9 @@ for _ in range(10):  # type: ignore
     plotter.add_arrows(
         V[idx],
         angles_to_3d_vector(
-            angles=shift_angles_by_mean(sample_to_angles(prior.sample()), angles_mean)[
-                idx
-            ],
+            angles=shift_angles_by_mean(
+                sample_to_angles(prior.sample()), angles_mean, adjust_range=True
+            )[idx],
             x_axes=x_axes[idx],
             y_axes=y_axes[idx],
         ),

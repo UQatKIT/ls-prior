@@ -69,9 +69,9 @@ typos = ">=1.23.6,<1.24"
 [tool.pixi.feature.prior.dependencies]
 fenics = ">=2019.1.0,<2019.2"
 
-# -------------------------------------- TENSOR --------------------------------------- #
+# --------------------------------- PARAMETERIZATION ---------------------------------- #
 
-[tool.pixi.feature.tensor.pypi-dependencies]
+[tool.pixi.feature.parameterization.dependencies]
 potpourri3d = ">=1.1.0"
 
 # -------------------------------------- TESTING -------------------------------------- #
@@ -92,7 +92,7 @@ trame-vuetify = ">=2.7.1,<2.8"
 
 # ------------------------------------- ANALYTICS ------------------------------------- #
 
-[tool.pixi.feature.analytics.pypi-dependencies]
+[tool.pixi.feature.analytics.dependencies]
 pyacvd = ">=0.3.1"
 
 # ------------------------------------------------------------------------------------- #
@@ -100,9 +100,9 @@ pyacvd = ">=0.3.1"
 # ------------------------------------------------------------------------------------- #
 
 [tool.pixi.environments]
-default = { features = ["dev", "lint", "prior", "tensor", "test", "plotting", "analytics"], solve-group = "default" }
+default = { features = ["dev", "lint", "prior", "parameterization", "test", "plotting", "analytics"], solve-group = "default" }
 prior = { features = ["prior"], solve-group = "default" }
-tensor = { features = ["tensor"], solve-group = "default" }
+parameterization = { features = ["parameterization"], solve-group = "default" }
 
 
 # ------------------------------------------------------------------------------------- #

@@ -9,11 +9,14 @@ vector-valued random fields.
 from dolfin import BoundaryMesh, Mesh
 from pyvista import Plotter
 
+from prior_fields.parameterization.tangent_space import get_vhm_based_coordinates
+from prior_fields.parameterization.transformer import (
+    angles_to_3d_vector,
+    sample_to_angles,
+)
 from prior_fields.prior.converter import function_to_numpy
 from prior_fields.prior.plots import get_poly_data, plot_function
 from prior_fields.prior.prior import BiLaplacianPrior
-from prior_fields.tensor.tangent_space import get_vhm_based_coordinates
-from prior_fields.tensor.transformer import angles_to_3d_vector, sample_to_angles
 
 # %%
 # baseline parameters

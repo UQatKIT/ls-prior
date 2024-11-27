@@ -7,20 +7,23 @@ from pyvista import Plotter
 from scipy.spatial import KDTree
 from scipy.stats import circmean, circvar
 
-from prior_fields.prior.converter import scale_mesh_to_unit_cube
-from prior_fields.prior.plots import get_poly_data
-from prior_fields.tensor.parameterization import (
+from prior_fields.parameterization.parameters import (
     Geometry,
     get_fiber_parameters_from_uac_grid,
 )
-from prior_fields.tensor.reader import (
+from prior_fields.parameterization.reader import (
     read_atrial_mesh_with_fibers_and_tags_mapped_to_vertices,
 )
-from prior_fields.tensor.tangent_space import (
+from prior_fields.parameterization.tangent_space import (
     get_uac_based_coordinates,
     map_fibers_to_tangent_space,
 )
-from prior_fields.tensor.transformer import angles_between_vectors, angles_to_3d_vector
+from prior_fields.parameterization.transformer import (
+    angles_between_vectors,
+    angles_to_3d_vector,
+)
+from prior_fields.prior.converter import scale_mesh_to_unit_cube
+from prior_fields.prior.plots import get_poly_data
 
 # %%
 # Read atlas data
