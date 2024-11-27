@@ -23,7 +23,7 @@ def main(geometry: int, k: int = 20, path: Path = Path().cwd() / "data/parameter
     )
     V = scale_mesh_to_unit_cube(V_raw)
     mean, sigma, _ = get_fiber_parameters_from_uac_data(V, F, uac, k=k)
-    ell = 0.2 * np.ones_like(sigma)
+    ell = 0.05 * np.ones_like(sigma)
 
     PriorParameters(Geometry(geometry), mean, sigma, ell).save(path)
 

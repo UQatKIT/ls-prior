@@ -33,7 +33,7 @@ global_theme.font.size = 20
 global_theme.font.title_size = 20
 global_theme.font.label_size = 20
 
-font = {"family": "times", "size": 20}
+font = {"family": "times", "size": 14}
 rc("font", **font)
 
 ###############
@@ -165,7 +165,7 @@ _, idx = tree.query(grid, k=1)
 # %%
 #############################################################################
 # baseline
-prior_numpy = BiLaplacianPriorNumpyWrapper(V, F, sigma=0.2, ell=0.1, seed=1)
+prior_numpy = BiLaplacianPriorNumpyWrapper(V, F, sigma=0.2, ell=0.05, seed=1)
 sample = prior_numpy.sample()
 
 plot_numpy_sample(
@@ -229,41 +229,49 @@ prior_numpy = BiLaplacianPriorNumpyWrapper(
     V, F, sigma=params.sigma, ell=params.ell, seed=1
 )
 
-# takes almost 30 minutes
 n_samples = 1000
-angle_samples = []
+samples_list = []
 for i in range(n_samples):
-    angle_samples.append(
-        shift_angles_by_mean(sample_to_angles(prior_numpy.sample()), mean_angles)
-    )
+    samples_list.append(prior_numpy.sample())
 
-angle_samples_shifted = np.array(angle_samples).T
-angle_samples_shifted[angle_samples_shifted > np.pi / 2] -= np.pi
-angle_samples_shifted[angle_samples_shifted <= -np.pi / 2] += np.pi
+samples = np.array(samples_list).T
 
 # %%
 #############################################################################
 # empirical mean and standard deviation of parameterized angle prior
-empirical_mean = angle_samples_shifted.mean(axis=1)
-empirical_sigma = angle_samples_shifted.std(axis=1)
+empirical_mean_samples = samples.mean(axis=1)
+empirical_std_samples = samples.std(axis=1)
 
+empirical_mean = shift_angles_by_mean(
+    sample_to_angles(empirical_mean_samples), mean_angles
+)
+
+plot_numpy_sample(
+    mean_angles,
+    V=V,
+    F=F,
+    file="figures/priors/angle_mean_geometry3.eps",
+    zoom=1.23,
+    clim=[-np.pi / 2, np.pi / 2],
+    scalar_bar_title="mean function",
+)
 plot_numpy_sample(
     empirical_mean,
     V=V,
     F=F,
-    file="figures/priors/empirical_mean_geometry3.eps",
+    file="figures/priors/empirical_mean_angles_geometry3.eps",
     zoom=1.23,
-    # clim=[np.quantile(empirical_mean, 0.01), np.quantile(empirical_mean, 0.99)],
-    scalar_bar_title="mean",
+    clim=[-np.pi / 2, np.pi / 2],
+    scalar_bar_title="empirical mean",
 )
 plot_numpy_sample(
-    empirical_sigma,
+    empirical_std_samples,
     V=V,
     F=F,
-    file="figures/priors/empirical_sigma_geometry3.eps",
+    file="figures/priors/empirical_sigma_samples_geometry3.eps",
     zoom=1.23,
-    clim=[0, np.quantile(empirical_sigma, 0.99)],
-    scalar_bar_title="sigma",
+    clim=[0, np.quantile(empirical_std_samples, 0.99)],
+    scalar_bar_title="empirical standard deviation",
 )
 
 # %%
@@ -276,7 +284,11 @@ n_vector_samples = 4
 vector_samples = []
 for i in range(n_vector_samples):
     vector_samples.append(
-        angles_to_3d_vector(angles=angle_samples[i], x_axes=x_axes, y_axes=y_axes)
+        angles_to_3d_vector(
+            angles=shift_angles_by_mean(sample_to_angles(samples[:, i]), mean_angles),
+            x_axes=x_axes,
+            y_axes=y_axes,
+        )
     )
 
 # %%
