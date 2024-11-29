@@ -9,7 +9,7 @@ from prior_fields.parameterization.fiber_grid import FiberGrid
 from prior_fields.parameterization.parameters import Geometry, PriorParameters
 from prior_fields.parameterization.transformer import angles_to_sample, sample_to_angles
 
-font = {"family": "times", "size": 16}
+font = {"family": "times", "size": 12}
 rc("font", **font)
 
 
@@ -38,8 +38,8 @@ for axis in [ax1, ax2]:
 ax1.margins(x=0)
 ax2.margins(y=0)
 
-ax1.set_xlabel("s", loc="right")
-ax2.set_ylabel("s", loc="top", rotation=0)
+ax1.set_xlabel("s", loc="right", fontsize=14)
+ax2.set_ylabel("s", loc="top", rotation=0, fontsize=14)
 
 theta_label = r"$\theta$"
 ax1.set_ylabel(theta_label, loc="top", rotation=0)

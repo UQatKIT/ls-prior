@@ -155,7 +155,8 @@ def _get_directions_with_no_change_in_one_uac(
                 ][0]
                 direction_no_change = V[v_idx_neighbor_no_change] - V[v_idx]
 
-                found_direction = True
+                if (direction_no_change != 0).any():
+                    found_direction = True
 
             # 2.
             elif (uac_changes.max() > 0) & (uac_changes.min() < 0):
@@ -168,7 +169,8 @@ def _get_directions_with_no_change_in_one_uac(
                     weights_no_change * (V[v_indices_face] - V[v_idx]).T
                 ).T.sum(axis=0)
 
-                found_direction = True
+                if (direction_no_change != 0).any():
+                    found_direction = True
 
             # post-processing of no-change direction
             if found_direction:
@@ -184,13 +186,16 @@ def _get_directions_with_no_change_in_one_uac(
                 ).sum()
                 direction_no_change = np.sign(change_other_uac) * direction_no_change
 
-                break
+                if (direction_no_change != 0).any():
+                    break
+                else:
+                    found_direction = False
 
         if found_direction:
             basis_uac.append(direction_no_change)
         else:
             count_missing += 1
-            basis_uac.append(np.zeros(3))
+            basis_uac.append(np.array(3 * [np.nan]))
 
     if count_missing > 0:
         logger.warning(
@@ -248,6 +253,15 @@ def map_fibers_to_tangent_space(fibers: ArrayNx3, x: ArrayNx3, y: ArrayNx3) -> A
         Fibers mapped to the tangent spaces.
     """
     fiber_coeff_x, fiber_coeff_y = get_coefficients(normalize(fibers), x, y)
+
+    # Exclude fibers where at least one coordinate x or y is not well-defined
+    mask_undefined_axis = np.isnan(fiber_coeff_x) | np.isnan(fiber_coeff_y)
+    logger.warning(
+        f"Excluding {100 * mask_undefined_axis.sum() / fibers.shape[0]:.2f}% of the "
+        "fibers as at least one of the coordinate axes it not well-defined."
+    )
+    fiber_coeff_x[mask_undefined_axis] = np.nan
+    fiber_coeff_y[mask_undefined_axis] = np.nan
 
     # Exclude fibers which are almost orthogonal to tangent space
     thresh = 0.25  # corresponds to approximately 75 degrees

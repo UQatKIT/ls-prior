@@ -307,21 +307,18 @@ def collect_data_from_human_atrial_fiber_meshes() -> DataUAC:
 
 
 def _validate_uac_bases(basis_x, basis_y):
-    critical_value = 30
+    critical_value = 15
     angles = angles_between_vectors(basis_x, basis_y)
     angles = np.array([degrees(a) for a in angles])
-    angles[
-        (np.linalg.norm(basis_x, axis=1) == 0) | (np.linalg.norm(basis_y, axis=1) == 0)
-    ] = np.nan
     logger.warning(
-        f"{100 * (angles == 0).sum() / basis_x.shape[0]:.4f}% of the bases vectors are "
+        f"{100 * (angles == 0).sum() / basis_x.shape[0]:.2f}% of the bases vectors are "
         "parallel."
     )
     logger.warning(
-        f"{100 * (angles < critical_value).sum() / basis_x.shape[0]:.4f}% of the bases "
+        f"{100 * (angles < critical_value).sum() / basis_x.shape[0]:.2f}% of the bases "
         f"vectors are almost parallel (angle < {critical_value} degrees)."
     )
     logger.warning(
-        f"{100 * np.isnan(angles).sum() / basis_x.shape[0]:.4f}% of the vertices are "
+        f"{100 * np.isnan(angles).sum() / basis_x.shape[0]:.2f}% of the vertices are "
         "missing one or both basis vectors."
     )

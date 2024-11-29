@@ -1,0 +1,41 @@
+name: Package
+on:
+  push:
+    branches: [main]
+  pull_request:
+  release:
+    types: [published]
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build:
+    name: Build conda package
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Get latest tag
+        run: echo "GIT_DESCRIBE_TAG=`echo $(git describe --tags --abbrev=0)`" >> $GITHUB_ENV
+      - name: Run rattler-build
+        uses: prefix-dev/rattler-build-action@v0.2.10
+        env:
+          CONDA_BLD_PATH: ../output
+        with:
+          upload-artifact: true
+          build-args: --output-dir ../output
+      - name: Move conda package
+        run: mv ../output .
+      - name: Upload to prefix.dev
+        if: github.ref_type == 'tag'
+        run: |
+          for pkg in $(find output -type f \( -name "*.conda" -o -name "*.tar.bz2" \) ); do
+            echo "Uploading ${pkg}"
+            rattler-build upload prefix -c prior-fields "${pkg}"
+          done
+        env:
+          PREFIX_API_KEY: ${{ secrets.PREFIX_API_KEY }}

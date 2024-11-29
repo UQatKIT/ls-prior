@@ -57,12 +57,12 @@ mean_zero = str_to_vector("0", mesh)
 # Baseline: zero-mean, stationary, isotropic BiLaplacianPrior
 prior_dolfin = BiLaplacianPrior(mesh, sigma=0.2, ell=0.1, mean=mean_zero, seed=1)
 sample = prior_dolfin.sample()
-plot_function(sample, file="figures/priors/square_baseline.png", vmin=-2.0, vmax=2.0)
+plot_function(sample, file="figures/priors/square_baseline.png", vmin=-3.5, vmax=3.5)
 
 prior_dolfin = BiLaplacianPrior(mesh, sigma=0.1, ell=0.1, mean=mean_zero, seed=1)
 sample = prior_dolfin.sample()
 plot_function(
-    sample, file="figures/priors/square_baseline_smaller_sigma.png", vmin=-2.0, vmax=2.0
+    sample, file="figures/priors/square_baseline_smaller_sigma.png", vmin=-3.5, vmax=3.5
 )
 
 prior_dolfin = BiLaplacianPrior(mesh, sigma=0.2, ell=0.02, mean=mean_zero, seed=1)
@@ -78,7 +78,7 @@ prior_dolfin = BiLaplacianPrior(
     mesh, sigma=0.2, ell=0.1, mean=str_to_vector(mean_str, mesh), seed=1
 )
 sample = prior_dolfin.sample()
-plot_function(sample, file="figures/priors/square_non-zero_mean.png")
+plot_function(sample, file="figures/priors/square_non-zero_mean.png", vmin=-3.5)
 
 # %%
 # pointwise variance
@@ -139,7 +139,6 @@ for i in keys:
     plotter.camera.zoom(1.4)
 
 plotter.save_graphic(filename="figures/other/atrial_geometries.eps")
-plotter.save_graphic(filename="figures/other/atrial_geometries.svg")
 plotter.show()
 
 #######################
@@ -153,14 +152,6 @@ V_raw, F, uac, fibers, _ = read_atrial_mesh_with_fibers_and_tags_mapped_to_verti
 V = scale_mesh_to_unit_cube(V_raw)
 poly_data = get_poly_data(V, F)
 x_axes, y_axes, _ = get_vhm_based_coordinates(V, F)
-
-# Subsample vectors for plotting
-axis = np.linspace(0, 1, 120, endpoint=True)
-x, y = np.meshgrid(axis.tolist(), axis.tolist())
-grid = np.c_[x.ravel(), y.ravel()]
-
-tree = KDTree(uac)
-_, idx = tree.query(grid, k=1)
 
 # %%
 #############################################################################
@@ -185,26 +176,14 @@ mean_angles = sample_to_angles(params.mean)
 mean_vectors = angles_to_3d_vector(angles=mean_angles, x_axes=x_axes, y_axes=y_axes)
 
 # %%
-plot_numpy_sample(
-    params.mean,
-    V=V,
-    F=F,
-    file="figures/priors/params_mean_geometry3.eps",
-    zoom=1.23,
-    clim=[np.quantile(params.mean, 0.01), np.quantile(params.mean, 0.99)],
-    scalar_bar_title="mean",
-)
-plot_numpy_sample(
-    params.sigma,
-    V=V,
-    F=F,
-    file="figures/priors/params_sigma_geometry3.eps",
-    zoom=1.23,
-    clim=[0, np.quantile(params.sigma, 0.99)],
-    scalar_bar_title="sigma",
-)
+# Subsample vectors for plotting
+axis = np.linspace(0, 1, 120, endpoint=True)
+x, y = np.meshgrid(axis.tolist(), axis.tolist())
+grid = np.c_[x.ravel(), y.ravel()]
 
-# %%
+tree = KDTree(uac)
+_, idx = tree.query(grid, k=1)
+
 plotter = initialize_vector_field_plotter(
     poly_data, zoom=4.5, add_axes=False, window_size=(900, 500)
 )
@@ -253,7 +232,16 @@ plot_numpy_sample(
     file="figures/priors/angle_mean_geometry3.eps",
     zoom=1.23,
     clim=[-np.pi / 2, np.pi / 2],
-    scalar_bar_title="mean function",
+    scalar_bar_title="mean",
+)
+plot_numpy_sample(
+    params.sigma,
+    V=V,
+    F=F,
+    file="figures/priors/params_sigma_geometry3.eps",
+    zoom=1.23,
+    clim=[0, np.quantile(params.sigma, 0.99)],
+    scalar_bar_title="sigma",
 )
 plot_numpy_sample(
     empirical_mean,
@@ -270,8 +258,8 @@ plot_numpy_sample(
     F=F,
     file="figures/priors/empirical_sigma_samples_geometry3.eps",
     zoom=1.23,
-    clim=[0, np.quantile(empirical_std_samples, 0.99)],
-    scalar_bar_title="empirical standard deviation",
+    clim=[0, np.quantile(params.sigma, 0.99)],
+    scalar_bar_title="empirical std",
 )
 
 # %%
@@ -292,6 +280,14 @@ for i in range(n_vector_samples):
     )
 
 # %%
+# Subsample vectors for plotting
+axis = np.linspace(0, 1, 80, endpoint=True)
+x, y = np.meshgrid(axis.tolist(), axis.tolist())
+grid = np.c_[x.ravel(), y.ravel()]
+
+tree = KDTree(uac)
+_, idx = tree.query(grid, k=1)
+
 plotter = initialize_vector_field_plotter(
     poly_data, zoom=4.5, add_axes=False, window_size=(900, 500)
 )
