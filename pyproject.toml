@@ -8,6 +8,7 @@ name = "prior-fields"
 description = "Implementation of a bi-Laplacian prior"
 dynamic = ["version"]
 authors = [{name = "Elisabeth Brockhaus", email = "elisabeth.brockhaus@student.kit.edu"}]
+maintainers = [{name = "Maximilian Kruse", email = "maximilian.kruse@kit.edu"}]
 classifiers = [
   "Programming Language :: Python :: 3",
   "Programming Language :: Python :: 3.12",
@@ -16,7 +17,7 @@ requires-python = ">=3.12"
 
 
 [project.urls]
-repository = "https://gitlab.kit.edu/kit/scc-uq/projects/large-scale-bayesian-inversion/prior-fields/prior-fields-fenics"
+repository = "https://github.com/UQatKIT/ls-prior"
 
 
 [tool.setuptools.packages.find]
